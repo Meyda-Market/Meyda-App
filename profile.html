@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Meyda Market</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --water-blue: #0096c7; 
+            --white: #ffffff; 
+            --bg-color: #f0f4f8; 
+            --text-color: #333; 
+            --gray-text: #777; 
+            --border-color: #eee;
+            --input-bg: #fafafa;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        body.dark-mode { 
+            --white: #1e1e1e; 
+            --bg-color: #121212; 
+            --text-color: #e0e0e0; 
+            --gray-text: #aaa;
+            --border-color: #444;
+            --input-bg: #2a2a2a;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.5); 
+        }
+        
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 80px; transition: 0.3s; }
+
+        /* Top Header */
+        .top-header { background: var(--white); display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .top-header h2 { margin: 0; font-size: 18px; color: var(--text-color); }
+        .header-actions { display: flex; gap: 15px; }
+        .header-btn { background: none; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; }
+
+        /* Banner & Profile */
+        .profile-header { background: var(--white); position: relative; padding-bottom: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
+        .banner-container { width: 100%; height: 160px; background: #ccd5ae; position: relative; overflow: hidden; }
+        .banner-img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .cam-btn-banner { position: absolute; bottom: 10px; right: 15px; background: rgba(0,0,0,0.6); color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; border: 2px solid rgba(255,255,255,0.5); }
+
+        .profile-info { text-align: center; margin-top: -50px; position: relative; }
+        .avatar-wrapper { position: relative; display: inline-block; cursor: pointer; }
+        .profile-pic { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--white); background: var(--bg-color); object-fit: cover; box-shadow: var(--shadow); }
+        .cam-btn-profile { position: absolute; bottom: 5px; right: 0; background: var(--water-blue); color: white; border: 2px solid var(--white); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+
+        .user-name { font-size: 20px; font-weight: bold; margin: 10px 0 5px 0; }
+        .user-bio { font-size: 14px; color: var(--gray-text); margin-bottom: 15px; padding: 0 20px; line-height: 1.4; }
+        
+        /* Stats */
+        .profile-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; }
+        .stat-item { text-align: center; }
+        .stat-number { display: block; font-size: 16px; font-weight: bold; color: var(--text-color); }
+        .stat-label { font-size: 12px; color: var(--gray-text); }
+
+        .edit-btn { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .edit-btn:hover { background: var(--border-color); }
+
+        /* Tabs Navigation */
+        .profile-tabs { display: flex; justify-content: space-around; background: var(--white); border-bottom: 1px solid var(--border-color); position: sticky; top: 48px; z-index: 99;}
+        .tab { padding: 12px; cursor: pointer; font-weight: 600; color: var(--gray-text); flex: 1; text-align: center; border-bottom: 3px solid transparent; transition: 0.3s; font-size: 14px; }
+        .tab.active { color: var(--water-blue); border-bottom: 3px solid var(--water-blue); }
+
+        /* Content Area */
+        .tab-content { padding: 15px; }
+        .tab-pane { display: none; animation: fadeIn 0.3s; }
+        .tab-pane.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Products Grid (My Ads & Saved) */
+        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .product-card { background: var(--white); border-radius: 12px; padding: 10px; box-shadow: var(--shadow); position: relative; }
+        .product-img { width: 100%; height: 120px; background: var(--input-bg); border-radius: 8px; object-fit: cover; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--border-color);}
+        .product-price { font-weight: bold; color: var(--water-blue); font-size: 15px; }
+        .product-title { font-size: 13px; margin: 4px 0; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* Actions on My Ads */
+        .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; }
+        .action-icon { background: rgba(255,255,255,0.9); color: var(--text-color); width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; font-size: 12px; transition: 0.2s;}
+        .action-icon:hover { background: var(--water-blue); color: white; }
+        .action-icon.delete:hover { background: #ff4d4d; color: white; }
+        
+        /* Actions on Saved */
+        .saved-icon { color: var(--water-blue); }
+
+        /* Messages List */
+        .msg-list { display: flex; flex-direction: column; gap: 10px; }
+        .msg-item { background: var(--white); padding: 12px; border-radius: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--shadow); cursor: pointer; border-left: 4px solid transparent; }
+        .msg-item.unread { border-left-color: var(--water-blue); background: var(--input-bg); }
+        .msg-item.order { border-left-color: #f39c12; } /* Orders are orange */
+        .msg-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 20px; flex-shrink: 0;}
+        .msg-info { flex-grow: 1; overflow: hidden; }
+        .msg-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .msg-sender { font-weight: bold; font-size: 14px; color: var(--text-color); }
+        .msg-type { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #eee; color: #555; }
+        .msg-type.order-badge { background: rgba(243, 156, 18, 0.2); color: #d35400; }
+        .msg-preview { font-size: 13px; color: var(--gray-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .msg-time { font-size: 11px; color: var(--gray-text); }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px);}
+        .modal-content { background: var(--white); width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; max-height: 85vh; overflow-y: auto; color: var(--text-color);}
+        
+        .image-preview-area { width: 100%; height: 180px; background: var(--input-bg); border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .image-preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-text); margin-bottom: 5px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-color); font-size: 14px; outline: none;}
+        .form-group input:focus, .form-group select:focus { border-color: var(--water-blue); }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-save { flex: 1; background: var(--water-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-save:hover { background: #0077a3; }
+        .btn-cancel { flex: 1; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; cursor: pointer; }
+         /* Bottom Nav */
+       .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--white); display: flex; justify-content: space-around; padding: 12px 0 15px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000;}
+
+        /* እዛ position: relative; ዝብል ተወሲኹዋ ኣሎ */
+        .nav-item { color: var(--gray-text); font-size: 22px; text-decoration: none; position: relative; transition: 0.3s;}
+
+        .nav-item.active { color: var(--water-blue); }
+
+        /* እዛ ዝስዕብ ኮድ እያ ነታ ነጥቢ ተምጽኣ (The Active Dot) */
+        .nav-item.active::after {
+    content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+    width: 5px; height: 5px; background: var(--water-blue); border-radius: 50%;
+}
+
+.nav-item.add-btn { background: var(--water-blue); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,150,199,0.3);}
+body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <h2><i class="fas fa-user-circle"></i> Profile</h2>
+        <div class="header-actions">
+            <button class="header-btn" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <button class="header-btn"><i class="fas fa-cog"></i></button>
+        </div>
+    </div>
+
+    <div class="profile-header">
+        <div class="banner-container">
+            <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=800" id="mainBannerImg" class="banner-img">
+            <label for="bannerInput" class="cam-btn-banner"><i class="fas fa-camera"></i></label>
+            <input type="file" id="bannerInput" accept="image/*" hidden onchange="openImageModal(this, 'banner')">
+        </div>
+
+        <div class="profile-info">
+            <label for="profileInput" class="avatar-wrapper">
+                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200" id="mainProfileImg" class="profile-pic">
+                <div class="cam-btn-profile"><i class="fas fa-camera"></i></div>
+            </label>
+            <input type="file" id="profileInput" accept="image/*" hidden onchange="openImageModal(this, 'profile')">
+
+            <div class="user-name" id="displayTitle">Jentra Tech Store</div>
+            <div class="user-bio" id="displayBio">እንቋዕ ናብ Meyda Market ብደሓን መጻእኩም። ጽሬት ዘለዎም ናይ ቴክኖሎጂ ኣቕሑት ነቕርብ።</div>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-number">12.5K</span>
+                    <span class="stat-label">Followers</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">45</span>
+                    <span class="stat-label">Ads</span>
+                </div>
+            </div>
+
+            <button class="edit-btn" onclick="openProfileEditModal()"><i class="fas fa-pen" style="font-size: 12px;"></i> Edit Profile</button>
+        </div>
+    </div>
+
+    <div class="profile-tabs">
+        <div class="tab active" onclick="switchTab('postsTab', this)"><i class="fas fa-box"></i> My Ads</div>
+        <div class="tab" onclick="switchTab('savedTab', this)"><i class="fas fa-bookmark"></i> Saved</div>
+        <div class="tab" onclick="switchTab('messagesTab', this)"><i class="fas fa-envelope"></i> Inbox</div>
+    </div>
+
+    <div id="contentDisplay" class="tab-content">
+        
+        <div id="postsTab" class="tab-pane active">
+            <div class="products-grid">
+                <div class="product-card" id="myProd1">
+                    <div class="card-actions">
+                        <div class="action-icon" onclick="openEditProductModal('Samsung S21 Ultra', '15000', 'mobile')" title="Edit"><i class="fas fa-edit"></i></div>
+                        <div class="action-icon delete" onclick="deleteProduct('myProd1')" title="Delete"><i class="fas fa-trash"></i></div>
+                    </div>
+                    <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=200" class="product-img">
+                    <div class="product-price">15,000 Br</div>
+                    <div class="product-title">Samsung S21 Ultra</div>
+                </div>
+                <div class="product-card" id="myProd2">
+                    <div class="card-actions">
+                        <div class="action-icon" onclick="openEditProductModal('HP Envy x360', '35000', 'laptop')" title="Edit"><i class="fas fa-edit"></i></div>
+                        <div class="action-icon delete" onclick="deleteProduct('myProd2')" title="Delete"><i class="fas fa-trash"></i></div>
+                    </div>
+                    <div class="product-img"><i class="fas fa-laptop"></i></div>
+                    <div class="product-price">35,000 Br</div>
+                    <div class="product-title">HP Envy x360 Core i7</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="savedTab" class="tab-pane">
+            <div class="products-grid">
+                <div class="product-card" id="savedProd1">
+                    <div class="card-actions">
+                        <div class="action-icon saved-icon" onclick="deleteProduct('savedProd1')" title="Remove"><i class="fas fa-bookmark"></i></div>
+                    </div>
+                    <div class="product-img"><i class="fas fa-car"></i></div>
+                    <div class="product-price">450k Br</div>
+                    <div class="product-title">Toyota Vitz 2018</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="messagesTab" class="tab-pane">
+            <div class="msg-list">
+                <div class="msg-item order unread">
+                    <div class="msg-avatar" style="background: #f39c12;"><i class="fas fa-shopping-bag"></i></div>
+                    <div class="msg-info">
+                        <div class="msg-header">
+                            <span class="msg-sender">Dawit M.</span>
+                            <span class="msg-time">10:45 AM</span>
+                        </div>
+                        <span class="msg-type order-badge">New Order</span>
+                        <div class="msg-preview">HP Envy x360 ንምግዛእ ትእዛዝ ሂቡ ኣሎ።</div>
+                    </div>
+                </div>
+                
+                <div class="msg-item unread">
+                    <div class="msg-avatar"><i class="fas fa-user"></i></div>
+                    <div class="msg-info">
+                        <div class="msg-header">
+                            <span class="msg-sender">Sami</span>
+                            <span class="msg-time">Yesterday</span>
+                        </div>
+                        <span class="msg-type">Direct</span>
+                        <div class="msg-preview">ሰላም ጀንትራ፣ እቲ ሳምሰንግ ብ 14,000 ክትውድኣለይ ትኽእልዶ?</div>
+                    </div>
+                </div>
+                
+                <div class="msg-item">
+                    <div class="msg-avatar" style="background: #ccc;"><i class="fas fa-user"></i></div>
+                    <div class="msg-info">
+                        <div class="msg-header">
+                            <span class="msg-sender">Admin</span>
+                            <span class="msg-time">Mon</span>
+                        </div>
+                        <span class="msg-type">System</span>
+                        <div class="msg-preview">ፓኬጅኩም ብዓወት ተሓዲሱ ኣሎ።</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="modal-overlay" id="imageModal">
+        <div class="modal-content" style="text-align: center;">
+            <h3 id="imageModalTitle" style="margin-top: 0;">Preview Image</h3>
+            <div class="image-preview-area">
+                <img id="previewImgElement" src="">
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal('imageModal')">Cancel</button>
+                <button class="btn-save" onclick="applyImage()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Profile</h3>
+            <div class="form-group">
+                <label>ስም (Name)</label>
+                <input type="text" id="inputName">
+            </div>
+            <div class="form-group">
+                <label>ባዮ (Bio)</label>
+                <textarea id="inputBio" rows="3"></textarea>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal('editProfileModal')">Cancel</button>
+                <button class="btn-save" onclick="saveProfileInfo()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="editProductModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Ad (ንብረት ኣተዓራሪ)</h3>
+            <div class="form-group">
+                <label>ስም ንብረት (Title)</label>
+                <input type="text" id="editProdTitle">
+            </div>
+            <div class="form-group">
+                <label>ዋጋ (Price)</label>
+                <input type="number" id="editProdPrice">
+            </div>
+            <div class="form-group">
+                <label>ምድብ (Category)</label>
+                <select id="editProdCat">
+                    <option value="mobile">ሞባይል (Mobile)</option>
+                    <option value="laptop">ላፕቶፕ (Laptop)</option>
+                    <option value="vehicles">መካይን (Vehicles)</option>
+                    <option value="fashion">ፋሽን (Fashion)</option>
+                </select>
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal('editProductModal')">Cancel</button>
+                <button class="btn-save" onclick="saveProductEdit()">Update Ad</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="news.html" class="nav-item"><i class="fas fa-newspaper"></i></a>
+        <a href="sell.html" class="nav-item add-btn"><i class="fas fa-plus"></i></a>
+        <a href="notification.html" class="nav-item"><i class="fas fa-bell"></i></a>
+        <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i></a>
+    </div>
+
+    <script>
+        // Dark Mode Logic
+        window.onload = () => { 
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            } 
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Image Preview Logic
+        let currentImageType = ''; 
+        let tempImageData = '';
+
+        function openImageModal(input, type) {
+            if (input.files && input.files[0]) {
+                currentImageType = type;
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempImageData = e.target.result;
+                    document.getElementById('previewImgElement').src = tempImageData;
+                    document.getElementById('imageModalTitle').innerText = (type === 'profile') ? 'Update Profile Picture' : 'Update Banner';
+                    document.getElementById('imageModal').style.display = 'flex';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+            input.value = ''; 
+        }
+
+        function applyImage() {
+            if (currentImageType === 'profile') {
+                document.getElementById('mainProfileImg').src = tempImageData;
+            } else if (currentImageType === 'banner') {
+                document.getElementById('mainBannerImg').src = tempImageData;
+            }
+            closeModal('imageModal');
+        }
+
+        // Profile Edit Logic
+        function openProfileEditModal() {
+            document.getElementById('inputName').value = document.getElementById('displayTitle').innerText;
+            document.getElementById('inputBio').value = document.getElementById('displayBio').innerText;
+            document.getElementById('editProfileModal').style.display = 'flex';
+        }
+
+        function saveProfileInfo() {
+            document.getElementById('displayTitle').innerText = document.getElementById('inputName').value;
+            document.getElementById('displayBio').innerText = document.getElementById('inputBio').value;
+            closeModal('editProfileModal');
+        }
+
+        // Product Edit & Delete Logic
+        function openEditProductModal(title, price, category) {
+            document.getElementById('editProdTitle').value = title;
+            document.getElementById('editProdPrice').value = price;
+            document.getElementById('editProdCat').value = category;
+            document.getElementById('editProductModal').style.display = 'flex';
+        }
+
+        function saveProductEdit() {
+            alert("ምትዕርራይኩም ብትኽክል ተዓቂቡ ኣሎ (Changes Saved)!");
+            closeModal('editProductModal');
+        }
+
+        function deleteProduct(id) {
+            if(confirm("እዚ ንብረት ካብ Meyda ክድምሰስ ድዩ? (Are you sure you want to delete this?)")) {
+                document.getElementById(id).style.display = 'none';
+            }
+        }
+
+        // Generic Modal Closer
+        function closeModal(id) { 
+            document.getElementById(id).style.display = 'none'; 
+        }
+
+        // Tab Switching Logic
+        function switchTab(tabId, element) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            element.classList.add('active');
+
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Ad - Meyda Market</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --water-blue: #0096c7; 
+            --white: #ffffff; 
+            --bg-color: #f0f4f8; 
+            --text-color: #333; 
+            --gray-text: #777; 
+            --accent: #fb8500;
+            --input-bg: #fafafa;
+            --border-color: #eee;
+            --shadow: 0 2px 5px rgba(0,0,0,0.05);
+            --light-blue: #e6f4f1;
+        }
+        body.dark-mode { 
+            --white: #1e1e1e; 
+            --bg-color: #121212; 
+            --text-color: #e0e0e0; 
+            --gray-text: #aaa;
+            --input-bg: #2a2a2a;
+            --border-color: #444;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.5); 
+            --light-blue: #2a2a2a;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-color);
+            margin: 0; 
+            padding-bottom: 100px; 
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Header */
+        .header { 
+            background: var(--white); padding: 15px 20px; display: flex; 
+            align-items: center; justify-content: space-between;
+            box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; 
+        }
+        .header h2 { margin: 0; font-size: 18px; color: var(--water-blue); }
+        .back-btn { font-size: 20px; color: var(--text-color); text-decoration: none; }
+        .theme-toggle { background: none; border: none; color: var(--text-color); font-size: 20px; cursor: pointer; }
+
+        .container { padding: 20px; max-width: 600px; margin: 0 auto; }
+
+        /* Rent a Shop Section */
+        .shop-promo-card { 
+            background: linear-gradient(135deg, #023e8a, #0096c7); color: white; 
+            padding: 20px; border-radius: 15px; margin-bottom: 25px; text-align: center; 
+            box-shadow: 0 4px 15px rgba(0,150,199,0.3); transition: 0.3s;
+        }
+        .shop-promo-card h3 { margin: 0 0 10px 0; font-size: 18px; }
+        .shop-promo-card p { font-size: 13px; opacity: 0.9; margin-bottom: 15px; line-height: 1.4; }
+        .btn-rent { 
+            background: var(--accent); color: white; border: none; padding: 10px 25px; 
+            border-radius: 20px; font-weight: bold; cursor: pointer; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: 0.3s;
+        }
+        .btn-rent:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+
+        .vendor-status {
+            display: none; background: rgba(46, 204, 113, 0.1); color: #2ecc71;
+            padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: bold;
+            border: 1px solid #2ecc71;
+        }
+
+        /* Image Upload Section */
+        .image-upload-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
+        .image-upload-container::-webkit-scrollbar { display: none; }
+        
+        .upload-box { 
+            min-width: 100px; height: 100px; background: var(--input-bg); 
+            border-radius: 12px; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; cursor: pointer; 
+            color: var(--water-blue); border: 2px dashed var(--water-blue); transition: 0.3s;
+        }
+        .upload-box:hover { background: rgba(0, 150, 199, 0.1); }
+        
+        .preview-wrapper { position: relative; min-width: 100px; height: 100px; }
+        .preview-img { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: var(--shadow); }
+        .remove-img { 
+            position: absolute; top: -5px; right: -5px; background: #ff4d4d; color: white; 
+            border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; 
+            justify-content: center; font-size: 12px; cursor: pointer; border: 2px solid var(--white); 
+        }
+
+        /* Form Styling */
+        .form-group { 
+            background: var(--white); border-radius: 12px; padding: 15px; 
+            margin-bottom: 15px; box-shadow: var(--shadow); 
+        }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-text); margin-bottom: 8px; }
+        .form-group input, .form-group textarea, .form-group select { 
+            width: 100%; border: 1px solid var(--border-color); padding: 12px; 
+            border-radius: 8px; font-size: 15px; outline: none; box-sizing: border-box; 
+            background: var(--input-bg); color: var(--text-color); transition: 0.3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--water-blue); }
+
+        /* Custom Location Selector */
+        .location-selector {
+            width: 100%; border: 1px solid var(--border-color); padding: 12px; 
+            border-radius: 8px; font-size: 15px; box-sizing: border-box; 
+            background: var(--input-bg); color: var(--text-color); cursor: pointer;
+            display: flex; justify-content: space-between; align-items: center; transition: 0.3s;
+        }
+        .location-selector:hover { border-color: var(--water-blue); }
+
+        .submit-btn { 
+            width: 100%; background: var(--water-blue); color: white; border: none; 
+            padding: 16px; border-radius: 12px; font-size: 16px; font-weight: bold; 
+            cursor: pointer; margin-top: 10px; box-shadow: var(--shadow); transition: 0.3s;
+        }
+        .submit-btn:hover { background: #0077a3; transform: translateY(-2px); }
+
+        /* Modals & Overlays */
+        .modal-overlay, .success-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: flex-end; 
+            backdrop-filter: blur(3px);
+        }
+        .modal-content { 
+            background: var(--white); width: 100%; max-width: 500px; 
+            border-radius: 25px 25px 0 0; padding: 25px; box-sizing: border-box;
+            animation: slideUp 0.3s ease-out; color: var(--text-color); max-height: 80vh; overflow-y: auto;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        /* Region List Styles (from home.html) */
+        .list-item {
+            padding: 15px; border-bottom: 1px solid var(--border-color);
+            cursor: pointer; display: flex; justify-content: space-between; font-size: 15px; transition: 0.2s;
+        }
+        .list-item:last-child { border-bottom: none; }
+        .list-item:hover { background: var(--light-blue); border-radius: 10px; }
+
+        /* Package & Payment Styles */
+        .package-list { display: flex; flex-direction: column; gap: 12px; margin: 20px 0; }
+        .package-item { 
+            border: 2px solid var(--border-color); padding: 15px; border-radius: 12px; 
+            display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--input-bg);
+        }
+        .package-item.selected { border-color: var(--water-blue); background: rgba(0, 150, 199, 0.1); }
+        .payment-methods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 20px; }
+        .pay-box { text-align: center; padding: 15px 10px; border: 1px solid var(--border-color); border-radius: 10px; cursor: pointer; background: var(--input-bg);}
+
+        /* Success Screen */
+        .success-overlay { background: var(--bg-color); align-items: center; text-align: center; padding: 20px; flex-direction: column;}
+        .success-icon { font-size: 80px; color: #4CAF50; margin-bottom: 20px; animation: popIn 0.5s ease-out;}
+        @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* Bottom Nav */
+        .bottom-nav { 
+            position: fixed; bottom: 0; width: 100%; background: var(--white); 
+            display: flex; justify-content: space-around; padding: 12px 0 15px 0; 
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000;
+        }
+        .nav-item { color: var(--gray-text); font-size: 22px; text-decoration: none; transition: 0.3s;}
+        .nav-item.active { color: var(--water-blue); }
+        .nav-item.add-btn { 
+            background: var(--water-blue); color: white !important; width: 50px; height: 50px; 
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+            margin-top: -30px; border: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,150,199,0.3);
+        }
+        body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="home.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
+        <h2>ንብረት መዝግብ (Post Ad)</h2>
+        <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+    </div>
+
+    <div class="container">
+        
+        <div class="vendor-status" id="vendorStatus">
+            <i class="fas fa-check-circle"></i> ፓኬጅኩም ንጡፍ እዩ (Premium Shop)
+        </div>
+
+        <div class="shop-promo-card" id="promoCard">
+            <h3><i class="fas fa-store"></i> ድኳን ተኻረዩ</h3>
+            <p>ንብረትኩም ቀልጢፉ ንኽሽየጥን ንብዙሓት ሰባት ንኽበጽሕን ብዝተፈላለዩ ኣማራጺታት ፓኬጅ ምረጹ።</p>
+            <button class="btn-rent" onclick="openPaymentModal()">ፓኬጅ ምረጽ & ክፈል</button>
+        </div>
+
+        <div class="form-group" style="background: transparent; box-shadow: none; padding: 0;">
+            <label style="color: var(--text-color); font-size: 15px;">ስእልታት ንብረት (<span id="imgCount">0</span>/5)</label>
+            <div class="image-upload-container" id="imageArea">
+                <label class="upload-box" for="fileInput" id="uploadBox">
+                    <i class="fas fa-camera" style="font-size: 28px;"></i>
+                    <span style="font-size: 13px; margin-top: 8px; font-weight: 600;">ስእሊ ወሰኽ</span>
+                </label>
+                <input type="file" id="fileInput" accept="image/*" multiple hidden onchange="handleImages(this)">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>ስም ንብረት (Title)</label>
+            <input type="text" id="title" placeholder="ንኣብነት፦ Samsung S21 Ultra" required>
+        </div>
+
+        <div class="form-group">
+            <label>ዋጋ (Price in ETB)</label>
+            <input type="number" id="price" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group">
+            <label>ቦታ (Location)</label>
+            <div class="location-selector" onclick="openRegionModal()">
+                <span id="selectedLocationDisplay" style="color: var(--gray-text);">ክልልን ከተማን ምረጽ...</span>
+                <i class="fas fa-chevron-down" style="color: var(--gray-text);"></i>
+            </div>
+            <input type="hidden" id="finalLocation" value="">
+        </div>
+
+        <div style="display: flex; gap: 15px;">
+            <div class="form-group" style="flex: 1;">
+                <label>ምድብ (Category)</label>
+                <select id="category" required>
+                    <option value="" disabled selected>ምድብ ምረጽ...</option>
+                    <option value="vehicles">ተሽከርከርቲ</option>
+                    <option value="electronics">ኤሌክትሮኒክስ</option>
+                    <option value="mobile">ሞባይል</option>
+                    <option value="music">ሙዚቃ መሳርሒ</option>
+                    <option value="fashion">ፋሽን</option>
+                    <option value="houses">ገዛውቲ</option>
+                    <option value="sports">ስፖርት</option>
+                    <option value="furniture">ፈርኒቸር</option>
+                    <option value="books">መፃሕፍቲ</option>
+                    <option value="cosmetics">ኮስሞቲክስ</option>
+                    <option value="laptop">ላፕቶፕ</option>
+                </select>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label>ኩነታት (Condition)</label>
+                <select id="condition">
+                    <option value="new">ሓድሽ (New)</option>
+                    <option value="slightly_used">ቁሩብ ዝተጠቐመ (Slightly Used)</option>
+                    <option value="used">ዝተጠቐመ (Used)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>መግለጺ (Description)</label>
+            <textarea id="desc" rows="4" placeholder="ብዛዕባቲ ንብረት ዝርዝር ሓበሬታ ጸሓፍ..."></textarea>
+        </div>
+
+        <button class="submit-btn" onclick="postFinal()"><i class="fas fa-paper-plane"></i> ሕጂ ለጥፍ (Post Ad)</button>
+    </div>
+
+    <div class="modal-overlay" id="regionModal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border-color); padding-bottom:15px;">
+                <button id="backBtn" onclick="showRegions()" style="display:none; border:none; background:none; color:var(--water-blue); cursor:pointer; font-size:18px;"><i class="fas fa-arrow-left"></i></button>
+                <h3 id="modalTitle" style="margin:0; flex-grow:1; text-align:center;">ክልል ምረጽ</h3>
+                <button onclick="closeRegionModal()" style="border:none; background:none; font-size:24px; color:var(--gray-text); cursor:pointer;">&times;</button>
+            </div>
+            <ul id="locationList" style="list-style:none; padding:0; margin-top:15px; margin-bottom:0;"></ul>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 15px;">
+                <h3 style="margin:0; color: var(--water-blue);">ፓኬጅ ምረጹ</h3>
+                <i class="fas fa-times" onclick="closePaymentModal()" style="cursor:pointer; font-size:22px; color:var(--gray-text);"></i>
+            </div>
+            <div class="package-list">
+                <div class="package-item" onclick="selectPkg(this, '50')">
+                    <div><div style="font-weight:bold; font-size: 15px;">ናይ ሰሙን ፓኬጅ</div></div>
+                    <div style="font-weight:bold; color:var(--water-blue); font-size: 16px;">50 ETB</div>
+                </div>
+                <div class="package-item" onclick="selectPkg(this, '150')">
+                    <div><div style="font-weight:bold; font-size: 15px;">ናይ ወርሒ ፓኬጅ</div></div>
+                    <div style="font-weight:bold; color:var(--water-blue); font-size: 16px;">150 ETB</div>
+                </div>
+            </div>
+            <h4 style="margin:20px 0 10px 0; font-size: 14px;">ከፈሊ ኣገባብ ምረጽ</h4>
+            <div class="payment-methods">
+                <div class="pay-box" onclick="confirmPayment('Telebirr')"><i class="fas fa-mobile-alt" style="color: #0088cc;"></i><span>Telebirr</span></div>
+                <div class="pay-box" onclick="confirmPayment('CBE Birr')"><i class="fas fa-university" style="color: #ffaa00;"></i><span>CBE Birr</span></div>
+                <div class="pay-box" onclick="confirmPayment('Bank Card')"><i class="far fa-credit-card" style="color: #555;"></i><span>Card</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="success-overlay" id="successScreen">
+        <div class="success-icon"><i class="fas fa-check-circle"></i></div>
+        <h2 style="color: var(--text-color);">ብጽቡቕ ተለጢፉ!</h2>
+        <p style="color: var(--gray-text); margin-bottom: 30px;">ንብረትካ ሕጂ ኣብ ዕዳጋ Meyda Market ይርአ ኣሎ።</p>
+        <button class="submit-btn" style="width:250px;" onclick="window.location.href='home.html'"><i class="fas fa-home"></i> ናብ ዕዳጋ ተመለስ</button>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item"><i class="fas fa-home"></i></a>
+        <a href="news.html" class="nav-item"><i class="fas fa-newspaper"></i></a>
+        <a href="sell.html" class="nav-item active add-btn"><i class="fas fa-plus"></i></a>
+        <a href="notification.html" class="nav-item"><i class="fas fa-bell"></i></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i></a>
+    </div>
+
+    <script>
+        // Dark Mode Logic
+        window.onload = () => { 
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            } 
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // =====================================================================
+        // Image Preview & File Storage Logic
+        // =====================================================================
+        let totalImages = 0;
+        const maxImages = 5;
+        let selectedFiles = []; // <--- ሓዱሽ: ነቶም ናይ ሓቂ ስእልታት (Files) ኣብዚ ንዕቅቦም
+
+        function handleImages(input) {
+            const imageArea = document.getElementById('imageArea');
+            const uploadBox = document.getElementById('uploadBox');
+            const counter = document.getElementById('imgCount');
+            const files = input.files;
+            
+            for (let i = 0; i < files.length; i++) {
+                if (totalImages >= maxImages) {
+                    alert(`ይቕሬታ! ካብ ${maxImages} ስእልታት ንላዕሊ ምጽዓን ኣይከኣልን እዩ።`);
+                    break;
+                }
+                
+                // ነቲ ስእሊ ኣብቲ ናይ ዕቋር ዝርዝር ንውስኾ
+                selectedFiles.push(files[i]);
+                const fileIndex = selectedFiles.length - 1; 
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'preview-wrapper';
+                    wrapper.innerHTML = `
+                        <img src="${e.target.result}" class="preview-img">
+                        <div class="remove-img" onclick="removeImage(this, ${fileIndex})">
+                            <i class="fas fa-times"></i>
+                        </div>
+                    `;
+                    imageArea.insertBefore(wrapper, uploadBox);
+                    totalImages++;
+                    counter.innerText = totalImages;
+                    
+                    if (totalImages >= maxImages) {
+                        uploadBox.style.display = 'none';
+                    }
+                }
+                reader.readAsDataURL(files[i]);
+            }
+            input.value = ''; 
+        }
+
+        function removeImage(btn, index) {
+            btn.parentElement.remove();
+            selectedFiles[index] = null; // ነቲ ስእሊ ካብቲ ዝርዝር ነጥፍኦ (null ንገብሮ)
+            totalImages--;
+            document.getElementById('imgCount').innerText = totalImages;
+            document.getElementById('uploadBox').style.display = 'flex'; 
+        }
+
+        // =====================================================================
+        // Region & City Logic
+        // =====================================================================
+        const locationsData = {
+            "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
+            "Afar": ["Semera", "Asayta", "Awash"],
+            "Amhara": ["Bahirdar", "Gonder", "Dessie"],
+            "Oromia": ["Adama", "Gimma", "Bishoftu", "Shashemane"],
+            "Somali": ["Jigjiga", "Degahabur"],
+            "Debub": ["Hawassa", "Gamo"],
+            "Addis Ababa": ["Bole", "Piasa", "Megenagna", "Kality"],
+            "Harar": [], "Gambela": [], "Benshangul": [], "Driedawa": []
+        };
+
+        const locationList = document.getElementById('locationList');
+        const modalTitle = document.getElementById('modalTitle');
+        const backBtn = document.getElementById('backBtn');
+        const selectedLocationDisplay = document.getElementById('selectedLocationDisplay');
+        const finalLocation = document.getElementById('finalLocation');
+        let currentRegion = "";
+
+        function openRegionModal() { document.getElementById('regionModal').style.display = 'flex'; showRegions(); }
+        function closeRegionModal() { document.getElementById('regionModal').style.display = 'none'; }
+
+        function showRegions() {
+            modalTitle.innerText = "ክልል ምረጽ"; backBtn.style.display = 'none';
+            locationList.innerHTML = "";
+            for (const region in locationsData) {
+                let li = document.createElement('li'); li.className = 'list-item';
+                li.innerHTML = `${region} ${locationsData[region].length > 0 ? '<i class="fas fa-chevron-right" style="font-size:12px; color:var(--gray-text);"></i>' : ''}`;
+                li.onclick = () => {
+                    if(locationsData[region].length > 0) { currentRegion = region; showCities(locationsData[region]); }
+                    else { setLocation(region); }
+                };
+                locationList.appendChild(li);
+            }
+        }
+
+        function showCities(cities) {
+            modalTitle.innerText = currentRegion; backBtn.style.display = 'inline-block';
+            locationList.innerHTML = "";
+            cities.forEach(city => {
+                let li = document.createElement('li'); li.className = 'list-item';
+                li.innerText = city;
+                li.onclick = () => { setLocation(`${currentRegion}, ${city}`); };
+                locationList.appendChild(li);
+            });
+        }
+
+        function setLocation(locText) {
+            selectedLocationDisplay.innerText = locText;
+            selectedLocationDisplay.style.color = "var(--text-color)";
+            finalLocation.value = locText;
+            closeRegionModal();
+        }
+
+        // =====================================================================
+        // Payment Modal Controls
+        // =====================================================================
+        function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
+        function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
+
+        let selectedPrice = 0;
+        function selectPkg(el, price) {
+            document.querySelectorAll('.package-item').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedPrice = price;
+        }
+
+        function confirmPayment(method) {
+            if(selectedPrice === 0) { alert("በጃኹም ቅድም ፓኬጅ ምረጹ!"); return; }
+            alert(method + " ተጠቒምካ " + selectedPrice + " ETB ንምኽፋል ትእዛዝ ተቐቢልና ኣለና።");
+            closePaymentModal();
+            document.getElementById('promoCard').style.display = 'none';
+            document.getElementById('vendorStatus').style.display = 'block';
+        }
+
+        // =====================================================================
+        // ንብረት ናብ ዳታቤዝ ምልኣኽ (Post Product) - ሓዱሽ FormData ሎጂክ
+        // =====================================================================
+        async function postFinal() {
+            const titleValue = document.getElementById('title').value;
+            const priceValue = document.getElementById('price').value;
+            const locationValue = document.getElementById('finalLocation').value;
+            const categoryValue = document.getElementById('category').value;
+            const conditionValue = document.getElementById('condition').value;
+            const descValue = document.getElementById('desc').value;
+
+            if(!titleValue || !priceValue || !locationValue || !categoryValue) { 
+                alert("በጃኹም ስም ንብረት፣ ዋጋ፣ ካታጎሪን ቦታን ብትኽክል ምልኡ!"); 
+                return; 
+            }
+
+            let iconValue = 'fa-box';
+            if(categoryValue === 'vehicles') iconValue = 'fa-car';
+            if(categoryValue === 'electronics') iconValue = 'fa-tv';
+            if(categoryValue === 'mobile') iconValue = 'fa-mobile-alt';
+            if(categoryValue === 'music') iconValue = 'fa-guitar';
+            if(categoryValue === 'fashion') iconValue = 'fa-tshirt';
+            if(categoryValue === 'houses') iconValue = 'fa-home';
+            if(categoryValue === 'sports') iconValue = 'fa-futbol';
+            if(categoryValue === 'furniture') iconValue = 'fa-couch';
+            if(categoryValue === 'laptop') iconValue = 'fa-laptop';
+
+            // <--- ሓዱሽ: FormData ንጥቀም --->
+            // እዚ ስእልን ጽሑፍን ብሓንሳብ ጠርኒፉ ዝሰድድ ናይ ጃቫስክሪፕት ፍሉይ ፎርማት እዩ።
+            const formData = new FormData();
+            formData.append('title', titleValue);
+            formData.append('price', priceValue + " Br");
+            formData.append('category', categoryValue);
+            formData.append('condition', conditionValue);
+            formData.append('location', locationValue);
+            formData.append('description', descValue);
+            formData.append('icon', iconValue);
+
+            // እቶም ዝተመርጹ ናይ ሓቂ ስእልታት ናብቲ FormData ንውስኾም
+            for(let i = 0; i < selectedFiles.length; i++) {
+                if(selectedFiles[i] !== null) {
+                    formData.append('images', selectedFiles[i]);
+                }
+            }
+
+            try {
+                // ኣስተውዕል: headers ('Content-Type': 'application/json') ኣየድልየናን እዩ!
+                // ብራውዘር ባዕሉ 'multipart/form-data' ምዃኑ ኣለልዩ ይሰዶ።
+                const response = await fetch('http://localhost:5000/api/products', {
+                    method: 'POST',
+                    body: formData 
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('successScreen').style.display = 'flex';
+                } else {
+                    alert('❌ ጌጋ: ' + data.message);
+                }
+
+            } catch (error) {
+                console.error('Post Error:', error);
+                alert('❌ ምስ ሰርቨር ክራኸብ ኣይከኣለን። ሰርቨር Run ምግባሩ ኣረጋግጹ።');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="ti">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meyda Market - Home</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root { 
+            --water-blue: #0096c7; 
+            --water-blue-hover: #0077a3;
+            --light-blue: #e6f4f1;
+            --white: #ffffff; 
+            --bg-color: #f5f8fa; 
+            --text-color: #333; 
+            --gray-text: #777;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.05); 
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        body.dark-mode { 
+            --white: #1e1e1e; 
+            --bg-color: #121212; 
+            --light-blue: #2a2a2a;
+            --text-color: #e0e0e0; 
+            --gray-text: #aaa;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.5); 
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-color); 
+            margin: 0; 
+            padding-bottom: 70px; 
+            transition: background 0.3s, color 0.3s; 
+        }
+
+        /* Top Header */
+        .top-header {
+            display: flex; align-items: center; padding: 15px 20px;
+            background: var(--white); gap: 15px; position: sticky; top: 0;
+            z-index: 100; box-shadow: var(--shadow);
+        }
+        .region-btn {
+            background: var(--water-blue); color: white; border: none; padding: 10px 15px;
+            border-radius: 20px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+            white-space: nowrap; transition: 0.3s;
+        }
+        .region-btn:hover { background: var(--water-blue-hover); }
+        
+        .search-wrapper { flex-grow: 1; position: relative; }
+        .search-wrapper i { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: var(--gray-text); }
+        .search-bar {
+            width: 100%; background: var(--bg-color); border: 1px solid #ddd;
+            padding: 10px 15px 10px 40px; border-radius: 20px; color: var(--text-color); 
+            outline: none; box-sizing: border-box; transition: 0.3s;
+        }
+        .search-bar:focus { border-color: var(--water-blue); }
+        
+        .theme-toggle {
+            background: var(--light-blue); border: none; color: var(--water-blue);
+            padding: 10px 12px; border-radius: 50%; cursor: pointer; transition: 0.3s;
+        }
+        .theme-toggle:hover { background: var(--water-blue); color: var(--white); }
+
+        /* Hero Banner Carousel (Premium Ads) */
+        .hero-carousel-container {
+            position: relative; margin: 15px 20px; border-radius: 15px; overflow: hidden; box-shadow: var(--card-shadow);
+        }
+        .hero-carousel {
+            display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; scroll-behavior: smooth;
+        }
+        .hero-carousel::-webkit-scrollbar { display: none; }
+        
+        .carousel-slide {
+            min-width: 100%; height: 180px; scroll-snap-align: center;
+            background-size: cover; background-position: center; display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .carousel-slide::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4);
+        }
+        .carousel-content { position: relative; z-index: 1; text-align: center; color: white; width: 90%; }
+        .carousel-tag {
+            background: #ff4757; color: white; padding: 4px 10px; border-radius: 5px;
+            font-size: 11px; font-weight: bold; display: inline-block; margin-bottom: 8px; text-transform: uppercase;
+        }
+        .carousel-title { font-size: 22px; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        
+        .carousel-indicators {
+            position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; z-index: 10;
+        }
+        .indicator { width: 8px; height: 8px; background: rgba(255, 255, 255, 0.5); border-radius: 50%; cursor: pointer; transition: 0.3s; }
+        .indicator.active { background: white; width: 20px; border-radius: 10px; }
+
+        /* Categories */
+        .categories-container {
+            display: flex; align-items: center; background: var(--bg-color); padding: 5px 15px 10px 15px; position: relative; z-index: 10;
+        }
+        .categories-wrapper {
+            display: flex; overflow-x: auto; scroll-behavior: smooth; gap: 10px; padding: 5px 0; 
+            flex: 1; min-width: 0; /* min-width:0 is crucial here for scrolling to work perfectly */ scrollbar-width: none;
+        }
+        .categories-wrapper::-webkit-scrollbar { display: none; }
+        
+        .scroll-btn {
+            background: var(--white); border: 1px solid #ddd; border-radius: 50%; min-width: 32px; width: 32px; height: 32px; 
+            display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--water-blue); box-shadow: var(--shadow); z-index: 10; margin: 0 5px;
+        }
+
+        .cat-pill {
+            background: var(--white); border: 1px solid #ddd; padding: 8px 18px; border-radius: 20px; font-size: 13px; 
+            font-weight: 500; white-space: nowrap; cursor: pointer; box-shadow: var(--shadow); color: var(--text-color); transition: 0.3s;
+        }
+        .cat-pill:hover { border-color: var(--water-blue); }
+        .cat-pill.active { background: var(--water-blue); color: white; border-color: var(--water-blue); }
+
+        /* Products Grid */
+        .products-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; padding: 10px 20px 20px 20px;
+        }
+        .product-card {
+            background: var(--white); border-radius: 15px; padding: 12px; box-shadow: var(--card-shadow); position: relative; cursor: pointer; transition: transform 0.2s;
+        }
+        .product-card:hover { transform: translateY(-3px); }
+        
+        .product-img-placeholder { 
+            width: 100%; height: 140px; background: #e0e0e0; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 30px;
+        }
+        
+        /* Wishlist and User Icons - FIXED pointer-events and z-index */
+        .wishlist-icon {
+            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.9); color: #ff4757; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); z-index: 20; cursor: pointer; transition: 0.2s;
+        }
+        .wishlist-icon:hover { transform: scale(1.1); background: #fff; }
+        
+        .user-icon {
+            position: absolute; top: 130px; left: 20px; background: var(--water-blue); color: white; width: 36px; height: 36px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--white); z-index: 20; cursor: pointer; transition: 0.2s;
+        }
+        .user-icon:hover { transform: scale(1.1); }
+        
+        .product-price { font-weight: bold; color: var(--water-blue); font-size: 18px; margin-top: 25px; }
+        .product-title { font-size: 14px; margin: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
+        .product-location { font-size: 12px; color: var(--gray-text); display: flex; align-items: center; gap: 4px; }
+
+        /* Mobile View - 2 items per row */
+        @media (max-width: 600px) {
+            .hero-carousel-container { height: 160px; margin: 10px 15px; }
+            .carousel-slide { height: 160px; }
+            .carousel-title { font-size: 18px; }
+            .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px 15px; }
+            .product-card { padding: 10px; }
+            .product-img-placeholder { height: 120px; }
+            .product-price { font-size: 15px; margin-top: 20px; }
+            .product-title { font-size: 13px; }
+            .user-icon { width: 28px; height: 28px; top: 115px; left: 15px; font-size: 12px; border-width: 2px;}
+            .wishlist-icon { width: 28px; height: 28px; top: 15px; right: 15px; font-size: 12px; }
+            .top-header { padding: 10px 15px; gap: 10px;}
+            .region-btn { padding: 8px 12px; font-size: 12px;}
+        }
+
+        /* Modals */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background: var(--white); width: 90%; max-width: 400px; border-radius: 20px;
+            padding: 20px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .detail-modal-content { max-width: 500px; }
+        .list-item { padding: 15px; border-bottom: 1px solid var(--bg-color); cursor: pointer; display: flex; justify-content: space-between; font-size: 15px; transition: 0.2s; }
+        .list-item:hover { background: var(--light-blue); border-radius: 10px; }
+        .info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--bg-color); font-size: 14px; }
+        .msg-btn { background: var(--water-blue); color: white; width: 100%; border: none; padding: 14px; border-radius: 12px; margin-top: 20px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
+        .msg-btn:hover { background: var(--water-blue-hover); }
+
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed; bottom: 0; width: 100%; background: var(--white);
+            display: flex; justify-content: space-around; padding: 12px 0 15px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 100;
+        }
+        .nav-item { color: var(--gray-text); font-size: 22px; text-decoration: none; position: relative; transition: 0.3s; }
+        .nav-item:hover { color: var(--water-blue); }
+        .nav-item.active { color: var(--water-blue); }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
+            width: 5px; height: 5px; background: var(--water-blue); border-radius: 50%;
+        }
+        .add-btn {
+            background: var(--water-blue); color: white; width: 50px; height: 50px;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-top: -25px;
+            box-shadow: 0 4px 10px rgba(0, 150, 199, 0.4); border: 4px solid var(--white);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-header">
+        <button class="region-btn" onclick="openRegionModal()">
+            <i class="fas fa-map-marker-alt"></i> <span id="selectedLocation">Region</span>
+        </button>
+        <div class="search-wrapper">
+            <i class="fas fa-search"></i>
+            <input type="text" class="search-bar" placeholder="ድለይ (Search)...">
+        </div>
+        <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+    </div>
+
+    <div class="hero-carousel-container">
+        <div class="hero-carousel" id="heroCarousel" onscroll="updateCarouselDots()">
+            <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800');">
+                <div class="carousel-content">
+                    <div class="carousel-tag">ፍሉይ ቅናሽ (Flash Sale)</div>
+                    <div class="carousel-title">ክሳብ 50% ቅናሽ ኣብ ኤሌክትሮኒክስ</div>
+                </div>
+            </div>
+            <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800');">
+                <div class="carousel-content">
+                    <div class="carousel-tag" style="background: var(--water-blue);">ሓደስቲ ኣቕሑት</div>
+                    <div class="carousel-title">ዘመናዊ ክዳውንቲ ንደቂ ተባዕትዮን ደቂ ኣንስትዮን</div>
+                </div>
+            </div>
+            <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1550009158-9ebf6d1736eb?auto=format&fit=crop&q=80&w=800');">
+                <div class="carousel-content">
+                    <div class="carousel-tag" style="background: #f1c40f; color: #333;">Premium Shop</div>
+                    <div class="carousel-title">Meyda Market: ንብረትኩም ቀልጢፍኩም ሽጡ!</div>
+                </div>
+            </div>
+        </div>
+        <div class="carousel-indicators" id="carouselIndicators">
+            <div class="indicator active" onclick="scrollToSlide(0)"></div>
+            <div class="indicator" onclick="scrollToSlide(1)"></div>
+            <div class="indicator" onclick="scrollToSlide(2)"></div>
+        </div>
+    </div>
+
+    <div class="categories-container">
+        <div class="scroll-btn" onclick="scrollCats(-1)"><i class="fas fa-chevron-left"></i></div>
+        <div class="categories-wrapper" id="catWrapper">
+            <div class="cat-pill active" onclick="selectCat(this, 'all')">All</div>
+            <div class="cat-pill" onclick="selectCat(this, 'vehicles')">ተሽከርከርቲ</div>
+            <div class="cat-pill" onclick="selectCat(this, 'electronics')">ኤሌክትሮኒክስ</div>
+            <div class="cat-pill" onclick="selectCat(this, 'mobile')">ሞባይል</div>
+            <div class="cat-pill" onclick="selectCat(this, 'music')">ሙዚቃ መሳርሒ</div>
+            <div class="cat-pill" onclick="selectCat(this, 'fashion')">ፋሽን</div>
+            <div class="cat-pill" onclick="selectCat(this, 'houses')">ገዛውቲ</div>
+            <div class="cat-pill" onclick="selectCat(this, 'sports')">ስፖርት</div>
+            <div class="cat-pill" onclick="selectCat(this, 'furniture')">ፈርኒቸር</div>
+            <div class="cat-pill" onclick="selectCat(this, 'books')">መፃሕፍቲ</div>
+            <div class="cat-pill" onclick="selectCat(this, 'cosmetics')">ኮስሞቲክስ</div>
+            <div class="cat-pill" onclick="selectCat(this, 'laptop')">ላፕቶፕ</div>
+        </div>
+        <div class="scroll-btn" onclick="scrollCats(1)"><i class="fas fa-chevron-right"></i></div>
+    </div>
+
+    <div class="products-grid">
+        <div class="product-card" onclick="openProduct('Toyota Vitz 2018', '450,000 Br', 'Used', 'Addis Ababa', 'ጽቡቕ ኩነታት ዘለዋ ንክትሽየጥ ዝቐረበት መኪና።')">
+            <div class="product-img-placeholder"><i class="fas fa-car"></i></div>
+            
+            <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this)"><i class="far fa-heart"></i></div>
+            <div class="user-icon" onclick="event.stopPropagation(); goToProfile()"><i class="fas fa-user"></i></div>
+            
+            <div class="product-price">450k Br</div>
+            <div class="product-title">Toyota Vitz 2018</div>
+            <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> Addis Ababa</div>
+        </div>
+        
+        <div class="product-card" onclick="openProduct('Samsung S21', '15,000 Br', 'New', 'Mekelle', 'ሓዳስ ሞባይል ብዋጋ ሕዳር')">
+            <div class="product-img-placeholder"><i class="fas fa-mobile-alt"></i></div>
+            <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this)"><i class="far fa-heart"></i></div>
+            <div class="user-icon" onclick="event.stopPropagation(); goToProfile()"><i class="fas fa-user"></i></div>
+            <div class="product-price">15,000 Br</div>
+            <div class="product-title">Samsung S21</div>
+            <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> Mekelle</div>
+        </div>
+        
+        <div class="product-card" onclick="openProduct('Men\'s Jacket', '3,500 Br', 'New', 'Adama', 'ጽቡቕ ጃኬት')">
+            <div class="product-img-placeholder"><i class="fas fa-tshirt"></i></div>
+            <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this)"><i class="far fa-heart"></i></div>
+            <div class="user-icon" onclick="event.stopPropagation(); goToProfile()"><i class="fas fa-user"></i></div>
+            <div class="product-price">3,500 Br</div>
+            <div class="product-title">Men's Jacket</div>
+            <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> Adama</div>
+        </div>
+        
+        <div class="product-card" onclick="openProduct('HP Laptop', '25,000 Br', 'Used', 'Bahirdar', 'Core i5 Laptop')">
+            <div class="product-img-placeholder"><i class="fas fa-laptop"></i></div>
+            <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this)"><i class="far fa-heart"></i></div>
+            <div class="user-icon" onclick="event.stopPropagation(); goToProfile()"><i class="fas fa-user"></i></div>
+            <div class="product-price">25,000 Br</div>
+            <div class="product-title">HP Laptop</div>
+            <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> Bahirdar</div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="regionModal">
+        <div class="modal-content">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--bg-color); padding-bottom:15px;">
+                <button id="backBtn" onclick="showRegions()" style="display:none; border:none; background:none; color:var(--water-blue); cursor:pointer; font-size:18px;"><i class="fas fa-arrow-left"></i></button>
+                <h3 id="modalTitle" style="margin:0; flex-grow:1; text-align:center;">ክልል ምረጽ</h3>
+                <button onclick="closeRegionModal()" style="border:none; background:none; font-size:24px; color:var(--gray-text); cursor:pointer;">&times;</button>
+            </div>
+            <ul id="locationList" style="list-style:none; padding:0; margin-top:15px; margin-bottom:0;"></ul>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="productModal">
+        <div class="modal-content detail-modal-content">
+            <div style="display:flex; justify-content:flex-end;">
+                <button onclick="closeProduct()" style="border:none; background:none; font-size:26px; cursor:pointer; color:var(--gray-text);">&times;</button>
+            </div>
+            <div id="modalImageArea" style="height:200px; margin-top:5px; position:relative;"></div>
+            <h2 id="detTitle" style="color:var(--water-blue); margin:15px 0 10px 0;"></h2>
+            <div class="info-row"><span>ዋጋ:</span> <b id="detPrice" style="color:var(--water-blue); font-size:18px;"></b></div>
+            <div class="info-row"><span>ኩነታት:</span> <b id="detCond"></b></div>
+            <div class="info-row"><span>ቦታ:</span> <b id="detLoc"></b></div>
+            <div style="margin-top:20px;">
+                <strong>ዝርዝር ሓበሬታ (Description):</strong>
+                <p id="detDesc" style="font-size:14px; color:var(--gray-text); line-height:1.6; margin-top:8px;"></p>
+            </div>
+            <button class="msg-btn"><i class="fas fa-comment-dots"></i> መልእኽቲ ስደድ (Message)</button>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item active"><i class="fas fa-home"></i></a>
+        <a href="news.html" class="nav-item"><i class="fas fa-newspaper"></i></a>
+        <a href="sell.html" class="nav-item add-btn"><i class="fas fa-plus"></i></a>
+        <a href="notification.html" class="nav-item"><i class="fas fa-bell"></i></a>
+        <a href="profile.html" class="nav-item"><i class="fas fa-user"></i></a>
+    </div>
+
+    <script>
+        // Theme Logic
+        window.onload = () => { 
+            if(localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeIcon').className = 'fas fa-sun';
+            } 
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Hero Carousel Logic
+        function updateCarouselDots() {
+            const carousel = document.getElementById('heroCarousel');
+            const indicators = document.querySelectorAll('.indicator');
+            const slideWidth = carousel.clientWidth;
+            const scrollLeft = carousel.scrollLeft;
+            const index = Math.round(scrollLeft / slideWidth);
+            
+            indicators.forEach((ind, i) => {
+                if(i === index) ind.classList.add('active');
+                else ind.classList.remove('active');
+            });
+        }
+
+        function scrollToSlide(index) {
+            const carousel = document.getElementById('heroCarousel');
+            const slideWidth = carousel.clientWidth;
+            carousel.scrollTo({ left: slideWidth * index, behavior: 'smooth' });
+        }
+
+        setInterval(() => {
+            const carousel = document.getElementById('heroCarousel');
+            if(carousel) {
+                const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+                if (carousel.scrollLeft >= maxScroll - 10) {
+                    carousel.scrollTo({ left: 0, behavior: 'smooth' });
+                } else {
+                    carousel.scrollBy({ left: carousel.clientWidth, behavior: 'smooth' });
+                }
+            }
+        }, 4000);
+
+        // Category Selection & Scroll - FIXED
+        function scrollCats(dir) { 
+            const wrapper = document.getElementById('catWrapper');
+            wrapper.scrollBy({ left: dir * 200, behavior: 'smooth' }); 
+        }
+        
+        function selectCat(el) {
+            document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        // Heart Icon & Profile Click Logic - FIXED (No more modal overlap)
+        function toggleHeart(el) {
+            const icon = el.querySelector('i');
+            if(icon.classList.contains('far')) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+            } else {
+                icon.classList.remove('fas');
+                icon.classList.add('far');
+            }
+        }
+
+        function goToProfile() {
+            window.location.href = 'profile.html';
+        }
+
+        // Product Details Modal
+        function openProduct(title, price, cond, loc, desc) {
+            document.getElementById('detTitle').innerText = title;
+            document.getElementById('detPrice').innerText = price;
+            document.getElementById('detCond').innerText = cond;
+            document.getElementById('detLoc').innerText = loc;
+            document.getElementById('detDesc').innerText = desc;
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        function closeProduct() { document.getElementById('productModal').style.display = 'none'; }
+
+        // Region Modal Logic
+        const locationsData = {
+            "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
+            "Afar": ["Semera", "Asayta", "Awash"],
+            "Amhara": ["Bahirdar", "Gonder", "Dessie"],
+            "Oromia": ["Adama", "Gimma", "Bishoftu", "Shashemane"],
+            "Somali": ["Jigjiga", "Degahabur"],
+            "Debub": ["Hawassa", "Gamo"],
+            "Addis Ababa": ["Bole", "Piasa", "Megenagna", "Kality"],
+            "Harar": [], "Gambela": [], "Benshangul": [], "Driedawa": []
+        };
+
+        const locationList = document.getElementById('locationList');
+        const modalTitle = document.getElementById('modalTitle');
+        const backBtn = document.getElementById('backBtn');
+        let currentRegion = "";
+
+        function openRegionModal() { document.getElementById('regionModal').style.display = 'flex'; showRegions(); }
+        function closeRegionModal() { document.getElementById('regionModal').style.display = 'none'; }
+
+        function showRegions() {
+            modalTitle.innerText = "ክልል ምረጽ"; backBtn.style.display = 'none';
+            locationList.innerHTML = "";
+            for (const region in locationsData) {
+                let li = document.createElement('li'); li.className = 'list-item';
+                li.innerHTML = `${region} ${locationsData[region].length > 0 ? '<i class="fas fa-chevron-right" style="font-size:12px; color:var(--gray-text);"></i>' : ''}`;
+                li.onclick = () => {
+                    if(locationsData[region].length > 0) { currentRegion = region; showCities(locationsData[region]); }
+                    else { document.getElementById('selectedLocation').innerText = region; closeRegionModal(); }
+                };
+                locationList.appendChild(li);
+            }
+        }
+
+        function showCities(cities) {
+            modalTitle.innerText = currentRegion; backBtn.style.display = 'inline-block';
+            locationList.innerHTML = "";
+            let allLi = document.createElement('li');
+            allLi.className = 'list-item';
+            allLi.innerHTML = `<b style="color:var(--water-blue);">ሙሉእ ${currentRegion}</b>`;
+            allLi.onclick = () => { document.getElementById('selectedLocation').innerText = `ሙሉእ ${currentRegion}`; closeRegionModal(); };
+            locationList.appendChild(allLi);
+
+            cities.forEach(city => {
+                let li = document.createElement('li'); li.className = 'list-item';
+                li.innerText = city;
+                li.onclick = () => { document.getElementById('selectedLocation').innerText = city; closeRegionModal(); };
+                locationList.appendChild(li);
+            });
+        }
+
+        // Close Modals on click outside
+        window.onclick = function(event) {
+            const pModal = document.getElementById('productModal');
+            const rModal = document.getElementById('regionModal');
+            if (event.target == pModal) pModal.style.display = 'none';
+            if (event.target == rModal) rModal.style.display = 'none';
+        }
+ // =====================================================================
+        // 7. Dynamic Products & Category Filtering
+        // =====================================================================
+        
+        let allProducts = []; // ኩሎም ካብ ዳታቤዝ ዝመጹ ኣቕሑት ኣብዚ Global ቨርያብል ንዕቅቦም
+
+        async function loadProducts() {
+            const productsGrid = document.querySelector('.products-grid');
+            try {
+                // 1. ዳታ ካብ ሰርቨር ንሓትት
+                const response = await fetch('http://localhost:5000/api/products');
+                allProducts = await response.json(); // ነቲ ዝመጸ ዳታ ኣብታ Global ቨርያብል ንዕቅቦ
+
+                // 2. ምስ መጹ፡ ቀጥታ ንኹሎም ንክዝርግሖም (Display ክገብሮም) ንእዝዝ
+                displayProducts(allProducts);
+
+            } catch (error) {
+                console.error("Error loading products:", error);
+                productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:red;">ምስ ዳታቤዝ ክራኸብ ኣይከኣለን።</p>';
+            }
+        }
+
+        function displayProducts(productsToShow) {
+            const productsGrid = document.querySelector('.products-grid');
+            productsGrid.innerHTML = ''; 
+
+            if (productsToShow.length === 0) {
+                productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:var(--gray-text);">ኣብዚ ምድብ ዝተመዝገበ ንብረት የለን።</p>';
+                return;
+            }
+
+            productsToShow.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                // ሓዱሽ: ንኹሉ ሓበሬታ ናይቲ ንብረት (product) ብሓንሳብ ናብቲ ፖፕ-ኣፕ ንሰዶ
+                productCard.onclick = () => openProduct(product);
+
+                let imageHTML = '';
+                if (product.images && product.images.length > 0) {
+                    imageHTML = `<img src="http://localhost:5000${product.images[0]}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px;">`;
+                } else {
+                    imageHTML = `<div class="product-img-placeholder"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
+                }
+
+                productCard.innerHTML = `
+                    ${imageHTML}
+                    <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this)"><i class="far fa-heart"></i></div>
+                    <div class="user-icon" onclick="event.stopPropagation(); goToProfile()"><i class="fas fa-user"></i></div>
+                    <div class="product-price">${product.price}</div>
+                    <div class="product-title">${product.title}</div>
+                    <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ${product.location}</div>
+                `;
+                productsGrid.appendChild(productCard);
+            });
+        }
+
+        // ሓዱሽ: እዚኣ ነቲ ፖፕ-ኣፕ ትኸፍት (ስላይድ ዝገብሩ ስእልታት ሓዊሱ)
+        function openProduct(product) {
+            document.getElementById('detTitle').innerText = product.title;
+            document.getElementById('detPrice').innerText = product.price;
+            document.getElementById('detCond').innerText = product.condition;
+            document.getElementById('detLoc').innerText = product.location;
+            document.getElementById('detDesc').innerText = product.description;
+
+            const modalImgArea = document.getElementById('modalImageArea');
+
+            // ስእልታት እንተልዮም (スライド/Carousel ንሰርሕ)
+            if (product.images && product.images.length > 0) {
+                let imgHTML = '<div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; border-radius: 10px; scrollbar-width: none;">';
+                product.images.forEach(img => {
+               imgHTML += `<img src="http://localhost:5000${img}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
+                });
+                imgHTML += '</div>';
+                
+                // ካብ ሓደ ንላዕሊ ስእሊ እንተልዩ "ስሓቦ" ዝብል መምርሒ ንውስኽ
+                if(product.images.length > 1) {
+                    imgHTML += '<div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; pointer-events: none;">↔️ ስሓቦ (Swipe)</div>';
+                }
+                modalImgArea.innerHTML = imgHTML;
+            } else {
+                // ስእሊ እንተዘየለ ናይ ቀደም ምልክት ነርኢ
+                modalImgArea.innerHTML = `<div class="product-img-placeholder" style="height:100%; width:100%; display:flex; align-items:center; justify-content:center; background:#e0e0e0; border-radius:10px; font-size:50px; color:#999;"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
+            }
+
+            document.getElementById('productModal').style.display = 'flex';
+        }
+
+        // ሓደ ሰብ ኣብ ሓንቲ ካታጎሪ ምስ ዝጠውቕ እዚኣ ትሰርሕ
+        function selectCat(el, categoryName) {
+            // 1. ሕብሪ ናይቲ መጥወቒ ንቕይር (Active class)
+            document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
+            el.classList.add('active');
+
+            // 2. ዳታ ነጻሪ (Filter)
+            if (categoryName === 'all') {
+                // 'All' ምስ ዝጠውቕ፡ ንኹሎም ኣቕሑት ኣርኢ ንብሎ
+                displayProducts(allProducts);
+            } else {
+                // ካልእ እንተጠዊቑ (ንኣብነት 'music'): ካብቶም ኩሎም ኣቕሑት ነቶም ምድቦም (category) 'music' ዝኾኑ ጥራሕ ፈልየ (filter) ኣውጽኣዮም ንብሎ
+                const filteredProducts = allProducts.filter(product => product.category === categoryName);
+                
+                // ነቶም ዝተጻረዩ ጥራሕ ኣብ ስክሪን ኣርእዮም ንብሎ
+                displayProducts(filteredProducts);
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html>
