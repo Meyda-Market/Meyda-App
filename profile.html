@@ -7,25 +7,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
-            --water-blue: #0096c7; 
-            --white: #ffffff; 
-            --bg-color: #f0f4f8; 
-            --text-color: #333; 
-            --gray-text: #777; 
-            --border-color: #eee;
-            --input-bg: #fafafa;
-            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --water-blue: #0096c7; --white: #ffffff; --bg-color: #f0f4f8; 
+            --text-color: #333; --gray-text: #777; --border-color: #eee;
+            --input-bg: #fafafa; --shadow: 0 2px 8px rgba(0,0,0,0.08);
         }
         body.dark-mode { 
-            --white: #1e1e1e; 
-            --bg-color: #121212; 
-            --text-color: #e0e0e0; 
-            --gray-text: #aaa;
-            --border-color: #444;
-            --input-bg: #2a2a2a;
+            --white: #1e1e1e; --bg-color: #121212; --text-color: #e0e0e0; 
+            --gray-text: #aaa; --border-color: #444; --input-bg: #2a2a2a;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.5); 
         }
-        
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 80px; transition: 0.3s; }
 
         /* Top Header */
@@ -36,20 +26,19 @@
 
         /* Banner & Profile */
         .profile-header { background: var(--white); position: relative; padding-bottom: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
-        .banner-container { width: 100%; height: 160px; background: #ccd5ae; position: relative; overflow: hidden; }
-        .banner-img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .cam-btn-banner { position: absolute; bottom: 10px; right: 15px; background: rgba(0,0,0,0.6); color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; border: 2px solid rgba(255,255,255,0.5); }
+        .banner-container { width: 100%; height: 25vh; min-height: 160px; max-height: 350px; background: var(--input-bg); position: relative; overflow: hidden; }
+        .banner-img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+
+        .cam-btn-banner { position: absolute; bottom: 10px; right: 15px; z-index: 10; background: rgba(0,0,0,0.6); color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; border: 2px solid rgba(255,255,255,0.5); user-select: none; }
 
         .profile-info { text-align: center; margin-top: -50px; position: relative; }
         .avatar-wrapper { position: relative; display: inline-block; cursor: pointer; }
         .profile-pic { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--white); background: var(--bg-color); object-fit: cover; box-shadow: var(--shadow); }
-        .cam-btn-profile { position: absolute; bottom: 5px; right: 0; background: var(--water-blue); color: white; border: 2px solid var(--white); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .cam-btn-profile { position: absolute; bottom: 5px; right: 0; background: var(--water-blue); color: white; border: 2px solid var(--white); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; user-select: none; }
 
         .user-name { font-size: 20px; font-weight: bold; margin: 10px 0 5px 0; }
         .user-bio { font-size: 14px; color: var(--gray-text); margin-bottom: 15px; padding: 0 20px; line-height: 1.4; }
         
-        /* Stats */
         .profile-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; }
         .stat-item { text-align: center; }
         .stat-number { display: block; font-size: 16px; font-weight: bold; color: var(--text-color); }
@@ -60,7 +49,7 @@
 
         /* Tabs Navigation */
         .profile-tabs { display: flex; justify-content: space-around; background: var(--white); border-bottom: 1px solid var(--border-color); position: sticky; top: 48px; z-index: 99;}
-        .tab { padding: 12px; cursor: pointer; font-weight: 600; color: var(--gray-text); flex: 1; text-align: center; border-bottom: 3px solid transparent; transition: 0.3s; font-size: 14px; }
+        .tab { padding: 12px; cursor: pointer; font-weight: 600; color: var(--gray-text); flex: 1; text-align: center; border-bottom: 3px solid transparent; transition: 0.3s; font-size: 14px; user-select: none; }
         .tab.active { color: var(--water-blue); border-bottom: 3px solid var(--water-blue); }
 
         /* Content Area */
@@ -69,37 +58,35 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Products Grid (My Ads & Saved) */
-        .products-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        /* Products Grid */
+        .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
         .product-card { background: var(--white); border-radius: 12px; padding: 10px; box-shadow: var(--shadow); position: relative; }
-        .product-img { width: 100%; height: 120px; background: var(--input-bg); border-radius: 8px; object-fit: cover; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--border-color);}
+        .product-img { width: 100%; height: 140px; background: var(--input-bg); border-radius: 8px; object-fit: contain; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--border-color);}
         .product-price { font-weight: bold; color: var(--water-blue); font-size: 15px; }
         .product-title { font-size: 13px; margin: 4px 0; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         
-        /* Actions on My Ads */
         .card-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 8px; }
-        .action-icon { background: rgba(255,255,255,0.9); color: var(--text-color); width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; font-size: 12px; transition: 0.2s;}
+        .action-icon { background: rgba(255,255,255,0.9); color: var(--text-color); width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); cursor: pointer; font-size: 12px; transition: 0.2s; user-select: none;}
         .action-icon:hover { background: var(--water-blue); color: white; }
         .action-icon.delete:hover { background: #ff4d4d; color: white; }
-        
-        /* Actions on Saved */
         .saved-icon { color: var(--water-blue); }
 
-        /* Messages List */
+        /* Messages List CSS */
         .msg-list { display: flex; flex-direction: column; gap: 10px; }
-        .msg-item { background: var(--white); padding: 12px; border-radius: 12px; display: flex; gap: 12px; align-items: center; box-shadow: var(--shadow); cursor: pointer; border-left: 4px solid transparent; }
+        .msg-item { background: var(--white); padding: 12px; border-radius: 12px; display: flex; gap: 12px; align-items: flex-start; box-shadow: var(--shadow); border-left: 4px solid transparent; }
         .msg-item.unread { border-left-color: var(--water-blue); background: var(--input-bg); }
-        .msg-item.order { border-left-color: #f39c12; } /* Orders are orange */
-        .msg-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 20px; flex-shrink: 0;}
+        .msg-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 20px; flex-shrink: 0; margin-top: 5px;}
         .msg-info { flex-grow: 1; overflow: hidden; }
         .msg-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
         .msg-sender { font-weight: bold; font-size: 14px; color: var(--text-color); }
-        .msg-type { font-size: 10px; padding: 2px 6px; border-radius: 10px; background: #eee; color: #555; }
-        .msg-type.order-badge { background: rgba(243, 156, 18, 0.2); color: #d35400; }
-        .msg-preview { font-size: 13px; color: var(--gray-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .msg-time { font-size: 11px; color: var(--gray-text); }
+        .msg-product { font-size: 11px; background: rgba(0, 150, 199, 0.1); padding: 2px 6px; border-radius: 4px; color: var(--water-blue); display: inline-block; margin-bottom: 4px; font-weight: bold;}
+        .msg-preview { font-size: 13px; color: var(--gray-text); line-height: 1.4; margin-bottom: 8px;}
+        
+        .reply-btn { background: var(--light-blue); color: var(--water-blue); border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .reply-btn:hover { background: var(--water-blue); color: white; }
 
-        /* Modals */
+        /* Modals & Bottom Nav */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px);}
         .modal-content { background: var(--white); width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; max-height: 85vh; overflow-y: auto; color: var(--text-color);}
         
@@ -108,29 +95,17 @@
 
         .form-group { text-align: left; margin-bottom: 15px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-text); margin-bottom: 5px; }
-        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-color); font-size: 14px; outline: none;}
-        .form-group input:focus, .form-group select:focus { border-color: var(--water-blue); }
-
+        .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-color); font-size: 14px; outline: none;}
+        
         .btn-group { display: flex; gap: 10px; margin-top: 20px; }
         .btn-save { flex: 1; background: var(--water-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;}
-        .btn-save:hover { background: #0077a3; }
         .btn-cancel { flex: 1; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; cursor: pointer; }
-         /* Bottom Nav */
-       .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--white); display: flex; justify-content: space-around; padding: 12px 0 15px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000;}
 
-        /* እዛ position: relative; ዝብል ተወሲኹዋ ኣሎ */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--white); display: flex; justify-content: space-around; padding: 12px 0 15px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 1000;}
         .nav-item { color: var(--gray-text); font-size: 22px; text-decoration: none; position: relative; transition: 0.3s;}
-
         .nav-item.active { color: var(--water-blue); }
-
-        /* እዛ ዝስዕብ ኮድ እያ ነታ ነጥቢ ተምጽኣ (The Active Dot) */
-        .nav-item.active::after {
-    content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-    width: 5px; height: 5px; background: var(--water-blue); border-radius: 50%;
-}
-
-.nav-item.add-btn { background: var(--water-blue); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,150,199,0.3);}
-body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
+        .nav-item.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--water-blue); border-radius: 50%; }
+        .nav-item.add-btn { background: var(--water-blue); color: white !important; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-top: -30px; border: 4px solid var(--white); box-shadow: 0 4px 10px rgba(0,150,199,0.3);}
     </style>
 </head>
 <body>
@@ -145,28 +120,28 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
 
     <div class="profile-header">
         <div class="banner-container">
-            <img src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?auto=format&fit=crop&q=80&w=800" id="mainBannerImg" class="banner-img">
+            <img src="" id="mainBannerImg" class="banner-img">
             <label for="bannerInput" class="cam-btn-banner"><i class="fas fa-camera"></i></label>
             <input type="file" id="bannerInput" accept="image/*" hidden onchange="openImageModal(this, 'banner')">
         </div>
 
         <div class="profile-info">
             <label for="profileInput" class="avatar-wrapper">
-                <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&q=80&w=200" id="mainProfileImg" class="profile-pic">
+                <img src="" id="mainProfileImg" class="profile-pic">
                 <div class="cam-btn-profile"><i class="fas fa-camera"></i></div>
             </label>
             <input type="file" id="profileInput" accept="image/*" hidden onchange="openImageModal(this, 'profile')">
 
-            <div class="user-name" id="displayTitle">Jentra Tech Store</div>
-            <div class="user-bio" id="displayBio">እንቋዕ ናብ Meyda Market ብደሓን መጻእኩም። ጽሬት ዘለዎም ናይ ቴክኖሎጂ ኣቕሑት ነቕርብ።</div>
+            <div class="user-name" id="displayTitle">Loading...</div>
+            <div class="user-bio" id="displayBio">...</div>
             
             <div class="profile-stats">
                 <div class="stat-item">
-                    <span class="stat-number">12.5K</span>
+                    <span class="stat-number" id="followersCount">0</span>
                     <span class="stat-label">Followers</span>
                 </div>
                 <div class="stat-item">
-                    <span class="stat-number">45</span>
+                    <span class="stat-number" id="adsCount">0</span>
                     <span class="stat-label">Ads</span>
                 </div>
             </div>
@@ -182,83 +157,28 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
     </div>
 
     <div id="contentDisplay" class="tab-content">
-        
         <div id="postsTab" class="tab-pane active">
-            <div class="products-grid">
-                <div class="product-card" id="myProd1">
-                    <div class="card-actions">
-                        <div class="action-icon" onclick="openEditProductModal('Samsung S21 Ultra', '15000', 'mobile')" title="Edit"><i class="fas fa-edit"></i></div>
-                        <div class="action-icon delete" onclick="deleteProduct('myProd1')" title="Delete"><i class="fas fa-trash"></i></div>
-                    </div>
-                    <img src="https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&q=80&w=200" class="product-img">
-                    <div class="product-price">15,000 Br</div>
-                    <div class="product-title">Samsung S21 Ultra</div>
-                </div>
-                <div class="product-card" id="myProd2">
-                    <div class="card-actions">
-                        <div class="action-icon" onclick="openEditProductModal('HP Envy x360', '35000', 'laptop')" title="Edit"><i class="fas fa-edit"></i></div>
-                        <div class="action-icon delete" onclick="deleteProduct('myProd2')" title="Delete"><i class="fas fa-trash"></i></div>
-                    </div>
-                    <div class="product-img"><i class="fas fa-laptop"></i></div>
-                    <div class="product-price">35,000 Br</div>
-                    <div class="product-title">HP Envy x360 Core i7</div>
+            <div class="products-grid" id="myProductsGrid">
+                <div style="grid-column: span 2; text-align: center; color: var(--gray-text); padding: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i> ኣቕሑት ይጽዕን ኣሎ...
                 </div>
             </div>
         </div>
 
         <div id="savedTab" class="tab-pane">
-            <div class="products-grid">
-                <div class="product-card" id="savedProd1">
-                    <div class="card-actions">
-                        <div class="action-icon saved-icon" onclick="deleteProduct('savedProd1')" title="Remove"><i class="fas fa-bookmark"></i></div>
-                    </div>
-                    <div class="product-img"><i class="fas fa-car"></i></div>
-                    <div class="product-price">450k Br</div>
-                    <div class="product-title">Toyota Vitz 2018</div>
+            <div class="products-grid" id="savedProductsGrid">
+                <div style="grid-column: span 2; text-align: center; color: var(--gray-text); padding: 20px;">
+                    <i class="fas fa-spinner fa-spin"></i> ሴቭ ዝኾኑ ይጽዕን ኣሎ...
                 </div>
             </div>
         </div>
 
         <div id="messagesTab" class="tab-pane">
-            <div class="msg-list">
-                <div class="msg-item order unread">
-                    <div class="msg-avatar" style="background: #f39c12;"><i class="fas fa-shopping-bag"></i></div>
-                    <div class="msg-info">
-                        <div class="msg-header">
-                            <span class="msg-sender">Dawit M.</span>
-                            <span class="msg-time">10:45 AM</span>
-                        </div>
-                        <span class="msg-type order-badge">New Order</span>
-                        <div class="msg-preview">HP Envy x360 ንምግዛእ ትእዛዝ ሂቡ ኣሎ።</div>
-                    </div>
-                </div>
-                
-                <div class="msg-item unread">
-                    <div class="msg-avatar"><i class="fas fa-user"></i></div>
-                    <div class="msg-info">
-                        <div class="msg-header">
-                            <span class="msg-sender">Sami</span>
-                            <span class="msg-time">Yesterday</span>
-                        </div>
-                        <span class="msg-type">Direct</span>
-                        <div class="msg-preview">ሰላም ጀንትራ፣ እቲ ሳምሰንግ ብ 14,000 ክትውድኣለይ ትኽእልዶ?</div>
-                    </div>
-                </div>
-                
-                <div class="msg-item">
-                    <div class="msg-avatar" style="background: #ccc;"><i class="fas fa-user"></i></div>
-                    <div class="msg-info">
-                        <div class="msg-header">
-                            <span class="msg-sender">Admin</span>
-                            <span class="msg-time">Mon</span>
-                        </div>
-                        <span class="msg-type">System</span>
-                        <div class="msg-preview">ፓኬጅኩም ብዓወት ተሓዲሱ ኣሎ።</div>
-                    </div>
-                </div>
+            <div id="inboxArea" style="text-align: center; color: var(--gray-text); padding: 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size:30px;"></i>
+                <p>መልእኽትታት ይጽዕን ኣሎ...</p>
             </div>
         </div>
-
     </div>
 
     <div class="modal-overlay" id="imageModal">
@@ -301,20 +221,23 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
             </div>
             <div class="form-group">
                 <label>ዋጋ (Price)</label>
-                <input type="number" id="editProdPrice">
-            </div>
-            <div class="form-group">
-                <label>ምድብ (Category)</label>
-                <select id="editProdCat">
-                    <option value="mobile">ሞባይል (Mobile)</option>
-                    <option value="laptop">ላፕቶፕ (Laptop)</option>
-                    <option value="vehicles">መካይን (Vehicles)</option>
-                    <option value="fashion">ፋሽን (Fashion)</option>
-                </select>
+                <input type="text" id="editProdPrice">
             </div>
             <div class="btn-group">
                 <button class="btn-cancel" onclick="closeModal('editProductModal')">Cancel</button>
                 <button class="btn-save" onclick="saveProductEdit()">Update Ad</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="replyModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">መልእኽቲ ምለስ (Reply)</h3>
+            <p style="font-size: 13px; color: var(--gray-text); margin-bottom: 10px;">ናብ: <b id="replyToName" style="color: var(--water-blue);">...</b></p>
+            <textarea id="replyText" rows="3" placeholder="መልእኽትኹም ጽሓፉ..." style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-color); outline: none; resize: none;"></textarea>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal('replyModal')">Cancel</button>
+                <button class="btn-save" onclick="sendReply()"><i class="fas fa-paper-plane"></i> ስደድ</button>
             </div>
         </div>
     </div>
@@ -327,15 +250,273 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
         <a href="profile.html" class="nav-item active"><i class="fas fa-user"></i></a>
     </div>
 
-    <script>
-        // Dark Mode Logic
-        window.onload = () => { 
+   <script>
+        window.onload = async () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
+
+            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            if (!loggedInUser) {
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // ==========================================================
+            // ሓዱሽ ማጂክ: ንመን ንርኢ ኣለና? (Is it My Profile or Seller's?)
+            // ==========================================================
+            const urlParams = new URLSearchParams(window.location.search);
+            const sellerIdFromUrl = urlParams.get('seller');
+            
+            // "seller" ዝብል ኣብ URL እንተዘየለ፣ ወይ ድማ እቲ ID ናተይ እንተኾይኑ = ናተይ ፕሮፋይል እዩ
+            const isMyProfile = !sellerIdFromUrl || sellerIdFromUrl === loggedInUser.id;
+            
+            // ናይቲ ሕጂ ፕሮፋይሉ ክረአ ዘለዎ ሰብ ID (ናተይ ወይ ናይ ሸያጢ)
+            const profileUserId = sellerIdFromUrl || loggedInUser.id;
+
+            try {
+                // ናይቲ ሰብ (ወይ ሸያጢ) ሓበሬታ ካብ ዳታቤዝ ነምጽእ
+                const response = await fetch(`http://localhost:5000/api/users/${profileUserId}`);
+                const userData = await response.json();
+
+                if (response.ok) {
+                    document.getElementById('displayTitle').innerText = userData.name;
+                    document.getElementById('displayBio').innerText = userData.bio;
+                    document.getElementById('mainProfileImg').src = userData.profilePic;
+                    document.getElementById('mainBannerImg').src = userData.bannerPic;
+                    document.getElementById('followersCount').innerText = userData.followers ? userData.followers.length : 0;
+                    
+                    // ናተይ ፕሮፋይል እንተዘይኮይኑ፡ ንብሕታዊ (Private) ነገራት ንሓብኦም!
+                    if (!isMyProfile) {
+                        // 1. ካሜራታት ንሓብእ
+                        const camBanner = document.querySelector('.cam-btn-banner');
+                        if (camBanner) camBanner.style.display = 'none';
+                        const camProfile = document.querySelector('.cam-btn-profile');
+                        if (camProfile) camProfile.style.display = 'none';
+                        
+                        // 2. Edit Profile መጥወቒት ንሓብእ
+                        const editBtn = document.querySelector('.edit-btn');
+                        if (editBtn) editBtn.style.display = 'none';
+                        
+                        // 3. ናይ Saved ን Inbox ን ታብ ንሓብእ
+                        const tabs = document.querySelectorAll('.profile-tabs .tab');
+                        if (tabs.length > 1) tabs[1].style.display = 'none'; // Saved
+                        if (tabs.length > 2) tabs[2].style.display = 'none'; // Inbox
+                        
+                        // 4. ስም ናይቲ "My Ads" ታብ ናብ "ናይዚ ሸያጢ ኣቕሑት" ንቕይሮ
+                        if (tabs.length > 0) tabs[0].innerHTML = '<i class="fas fa-box"></i> ናይዚ ሸያጢ ኣቕሑት';
+                    }
+
+                    // ኣቕሑት ነምጽእ (ናተይ ምዃኑን ዘይምዃኑን ንነግሮ መታን ኤዲት ከይህቦ)
+                    fetchMyProducts(profileUserId, isMyProfile);
+
+                    // ናተይ ፕሮፋይል እንተኾይኑ ጥራሕ ሴቭ ዝኾኑን ኢንቦክስን ኣምጽእ ንብሎ
+                    if (isMyProfile) {
+                        fetchSavedProducts(loggedInUser.id);
+                        fetchMessages(loggedInUser.id);
+                    }
+                }
+            } catch (error) {
+                console.error("Error loading profile:", error);
+            }
+        };
+
+        // ኣብዚኣ 'isMyProfile' ትብል ሓዳስ ቨርያብል ወሲኽና ኣለና
+        async function fetchMyProducts(userId, isMyProfile = true) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/products/user/${userId}`);
+                const products = await response.json();
+
+                if (response.ok) {
+                    const grid = document.getElementById('myProductsGrid');
+                    grid.innerHTML = ''; 
+                    document.getElementById('adsCount').innerText = products.length;
+
+                    if (products.length === 0) {
+                        grid.innerHTML = '<div style="grid-column: span 100%; text-align: center; color: var(--gray-text); padding: 20px;">ዛጊት ዝተጻዕነ ንብረት የለን።</div>';
+                        return;
+                    }
+
+                    products.forEach(prod => {
+                        let imgContent = prod.images && prod.images.length > 0 
+                            ? `<img src="http://localhost:5000${prod.images[0]}" class="product-img">` 
+                            : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
+
+                        // ናተይ ፕሮፋይል እንተኾይኑ ጥራሕ 'Edit' ን 'Delete' ን ምልክት ንህቦ
+                        let actionsHTML = '';
+                        if (isMyProfile) {
+                            actionsHTML = `
+                                <div class="card-actions">
+                                    <div class="action-icon" onclick="openEditProductModal('${prod._id}', '${prod.title}', '${prod.price}')" title="Edit"><i class="fas fa-edit"></i></div>
+                                    <div class="action-icon delete" onclick="deleteProduct('${prod._id}')" title="Delete"><i class="fas fa-trash"></i></div>
+                                </div>
+                            `;
+                        }
+
+                        grid.innerHTML += `
+                            <div class="product-card" id="${prod._id}">
+                                ${actionsHTML}
+                                ${imgContent}
+                                <div class="product-price">${prod.price}</div>
+                                <div class="product-title">${prod.title}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (error) {
+                document.getElementById('myProductsGrid').innerHTML = '<div style="color: red;">ጌጋ ኣጋጢሙ።</div>';
+            }
         }
 
+        async function fetchSavedProducts(userId) {
+            try {
+                const resProducts = await fetch('http://localhost:5000/api/products');
+                const allProducts = await resProducts.json();
+
+                const resUser = await fetch(`http://localhost:5000/api/users/${userId}`);
+                const userData = await resUser.json();
+
+                if (resProducts.ok && resUser.ok) {
+                    const savedGrid = document.getElementById('savedProductsGrid');
+                    savedGrid.innerHTML = ''; 
+
+                    const savedIds = userData.savedProducts || [];
+                    const savedProducts = allProducts.filter(prod => savedIds.includes(String(prod._id)));
+
+                    if (savedProducts.length === 0) {
+                        savedGrid.innerHTML = '<div style="grid-column: span 100%; text-align: center; color: var(--gray-text); padding: 20px;">ዛጊት ሴቭ ዝገበርኩምዎ ንብረት የለን። ኣብ ዕዳጋ (Home) ኬድኩም ናይ ልቢ ምልክት ጠውቑ።</div>';
+                        return;
+                    }
+
+                    savedProducts.forEach(prod => {
+                        let imgContent = prod.images && prod.images.length > 0 
+                            ? `<img src="http://localhost:5000${prod.images[0]}" class="product-img">` 
+                            : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
+
+                        savedGrid.innerHTML += `
+                            <div class="product-card" id="saved-${prod._id}">
+                                <div class="card-actions">
+                                    <div class="action-icon saved-icon" onclick="deleteSavedProduct('${prod._id}')" title="Remove"><i class="fas fa-bookmark"></i></div>
+                                </div>
+                                ${imgContent}
+                                <div class="product-price">${prod.price}</div>
+                                <div class="product-title">${prod.title}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching saved products:", error);
+            }
+        }
+
+        async function deleteSavedProduct(productId) {
+            if(confirm("እዚ ንብረት ካብ 'Saved' ክጠፍእ ድዩ?")) {
+                const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+                try {
+                    const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}/save`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ productId: productId, action: 'remove' })
+                    });
+                    const data = await response.json();
+                    if(response.ok) {
+                        loggedInUser.savedProducts = data.savedProducts;
+                        localStorage.setItem('meydaUser', JSON.stringify(loggedInUser));
+                        fetchSavedProducts(loggedInUser.id);
+                    }
+                } catch(error) {
+                    alert("ምስ ሰርቨር ኣይተራኸበን።");
+                }
+            }
+        }
+
+        // =====================================================================
+        // MESSAGES LOGIC (INBOX)
+        // =====================================================================
+        let currentReplyReceiverId = null; 
+        let currentReplyReceiverName = null;
+
+        async function fetchMessages(userId) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/messages/${userId}`);
+                const messages = await response.json();
+
+                const inboxArea = document.getElementById('inboxArea');
+
+                if (response.ok && messages.length > 0) {
+                    let html = '<div class="msg-list">';
+                    
+                    messages.forEach(msg => {
+                        const dateObj = new Date(msg.createdAt);
+                        const timeString = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        const dateString = dateObj.toLocaleDateString();
+
+                        html += `
+                            <div class="msg-item unread">
+                                <div class="msg-avatar"><i class="fas fa-user"></i></div>
+                                <div class="msg-info">
+                                    <div class="msg-header">
+                                        <span class="msg-sender">${msg.senderName}</span>
+                                        <span class="msg-time">${dateString} ${timeString}</span>
+                                    </div>
+                                    ${msg.productTitle ? `<div class="msg-product"><i class="fas fa-box"></i> ${msg.productTitle}</div>` : ''}
+                                    <div class="msg-preview">${msg.text}</div>
+                                    <button class="reply-btn" onclick="openReplyModal('${msg.senderId}', '${msg.senderName}')"><i class="fas fa-reply"></i> ምለስ (Reply)</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                    inboxArea.innerHTML = html;
+                } else {
+                    inboxArea.innerHTML = `
+                        <i class="fas fa-envelope-open-text" style="font-size:40px; color: #ddd; margin-bottom:10px;"></i>
+                        <p>ዛጊት ዝመጸኩም መልእኽቲ የለን።</p>
+                    `;
+                }
+            } catch (error) {
+                console.error("Error fetching messages:", error);
+                document.getElementById('inboxArea').innerHTML = '<div style="color: red;">መልእኽትታት ኣብ ምምጻእ ጌጋ ኣጋጢሙ።</div>';
+            }
+        }
+
+        function openReplyModal(senderId, senderName) {
+            currentReplyReceiverId = senderId;
+            currentReplyReceiverName = senderName;
+            document.getElementById('replyToName').innerText = senderName;
+            document.getElementById('replyText').value = '';
+            document.getElementById('replyModal').style.display = 'flex';
+        }
+
+        async function sendReply() {
+            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            if (!loggedInUser) return;
+
+            const text = document.getElementById('replyText').value.trim();
+            if (!text) { alert("በጃኹም መልእኽትኹም ጽሓፉ!"); return; }
+
+            const msgData = {
+                senderId: loggedInUser.id, senderName: loggedInUser.name,
+                receiverId: currentReplyReceiverId, productId: "", 
+                productTitle: "Re: Message", text: text, type: 'message'
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/messages', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(msgData)
+                });
+                if (response.ok) { alert("መልእኽትኹም ብዓወት ተመሊሱ ኣሎ! ✅"); closeModal('replyModal'); } 
+                else { alert("መልእኽቲ ክምለስ ኣይከኣለን።"); }
+            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
+        }
+
+        // =====================================================================
+        // UI Functions
+        // =====================================================================
         function toggleTheme() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -343,10 +524,7 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
             document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
 
-        // Image Preview Logic
-        let currentImageType = ''; 
-        let tempImageData = '';
-
+        let currentImageType = ''; let tempImageData = '';
         function openImageModal(input, type) {
             if (input.files && input.files[0]) {
                 currentImageType = type;
@@ -363,15 +541,11 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
         }
 
         function applyImage() {
-            if (currentImageType === 'profile') {
-                document.getElementById('mainProfileImg').src = tempImageData;
-            } else if (currentImageType === 'banner') {
-                document.getElementById('mainBannerImg').src = tempImageData;
-            }
-            closeModal('imageModal');
+            if (currentImageType === 'profile') document.getElementById('mainProfileImg').src = tempImageData;
+            else if (currentImageType === 'banner') document.getElementById('mainBannerImg').src = tempImageData;
+            closeModal('imageModal'); updateProfileOnServer(); 
         }
 
-        // Profile Edit Logic
         function openProfileEditModal() {
             document.getElementById('inputName').value = document.getElementById('displayTitle').innerText;
             document.getElementById('inputBio').value = document.getElementById('displayBio').innerText;
@@ -381,41 +555,63 @@ body.dark-mode .nav-item.add-btn { border-color: var(--bg-color); }
         function saveProfileInfo() {
             document.getElementById('displayTitle').innerText = document.getElementById('inputName').value;
             document.getElementById('displayBio').innerText = document.getElementById('inputBio').value;
-            closeModal('editProfileModal');
+            closeModal('editProfileModal'); updateProfileOnServer();
         }
 
-        // Product Edit & Delete Logic
-        function openEditProductModal(title, price, category) {
-            document.getElementById('editProdTitle').value = title;
-            document.getElementById('editProdPrice').value = price;
-            document.getElementById('editProdCat').value = category;
-            document.getElementById('editProductModal').style.display = 'flex';
+        async function updateProfileOnServer() {
+            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            if (!loggedInUser) return;
+            const updatedData = { name: document.getElementById('displayTitle').innerText, bio: document.getElementById('displayBio').innerText, profilePic: document.getElementById('mainProfileImg').src, bannerPic: document.getElementById('mainBannerImg').src };
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
+                const data = await response.json();
+                if (response.ok) {
+                    loggedInUser.name = data.user.name; loggedInUser.profilePic = data.user.profilePic;
+                    localStorage.setItem('meydaUser', JSON.stringify(loggedInUser));
+                }
+            } catch (error) { console.error(error); }
         }
 
-        function saveProductEdit() {
-            alert("ምትዕርራይኩም ብትኽክል ተዓቂቡ ኣሎ (Changes Saved)!");
-            closeModal('editProductModal');
+        let currentEditProductId = null;
+        function openEditProductModal(id, title, price) {
+            currentEditProductId = id; document.getElementById('editProdTitle').value = title;
+            document.getElementById('editProdPrice').value = price; document.getElementById('editProductModal').style.display = 'flex';
         }
 
-        function deleteProduct(id) {
-            if(confirm("እዚ ንብረት ካብ Meyda ክድምሰስ ድዩ? (Are you sure you want to delete this?)")) {
-                document.getElementById(id).style.display = 'none';
+        async function saveProductEdit() {
+            if (!currentEditProductId) return;
+            const newTitle = document.getElementById('editProdTitle').value;
+            let newPrice = document.getElementById('editProdPrice').value;
+            if(!newPrice.includes('Br')) newPrice += ' Br';
+            try {
+                const response = await fetch(`http://localhost:5000/api/products/${currentEditProductId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, price: newPrice }) });
+                if (response.ok) {
+                    closeModal('editProductModal');
+                    const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+                    fetchMyProducts(loggedInUser.id);
+                }
+            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
+        }
+
+        async function deleteProduct(id) {
+            if(confirm("እዚ ንብረት ካብ ዳታቤዝ ክድምሰስ ድዩ?")) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+                        fetchMyProducts(loggedInUser.id);
+                    }
+                } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
             }
         }
 
-        // Generic Modal Closer
-        function closeModal(id) { 
-            document.getElementById(id).style.display = 'none'; 
-        }
-
-        // Tab Switching Logic
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
         function switchTab(tabId, element) {
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             element.classList.add('active');
-
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
         }
-    </script>
+    </script> 
 </body>
 </html>
