@@ -7,162 +7,114 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root { 
-            --water-blue: #0096c7; 
-            --water-blue-hover: #0077a3;
-            --white: #ffffff; 
-            --bg-color: #f0f2f5; /* ልክዕ ከም ናይ ሶሻል ሚድያ ድሕረ-ባይታ */
-            --text-color: #333; 
-            --gray-text: #65676b;
-            --border-color: #e4e6eb;
-            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+            --water-blue: #0096c7; --water-blue-hover: #0077a3;
+            --white: #ffffff; --bg-color: #f0f2f5; 
+            --text-color: #333; --gray-text: #65676b;
+            --border-color: #e4e6eb; --shadow: 0 1px 3px rgba(0, 0, 0, 0.1); 
+            --input-bg: #f0f2f5;
         }
         body.dark-mode { 
-            --white: #242526; 
-            --bg-color: #18191a; 
-            --text-color: #e4e6eb; 
-            --gray-text: #b0b3b8;
-            --border-color: #3e4042;
-            --shadow: 0 1px 3px rgba(0, 0, 0, 0.5); 
+            --white: #242526; --bg-color: #18191a; 
+            --text-color: #e4e6eb; --gray-text: #b0b3b8;
+            --border-color: #3e4042; --shadow: 0 1px 3px rgba(0, 0, 0, 0.5); 
+            --input-bg: #3a3b3c;
         }
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg-color); 
-            color: var(--text-color); 
-            margin: 0; 
-            padding-bottom: 80px; 
-            transition: 0.3s;
+            background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 80px; transition: 0.3s;
         }
 
         /* Top Header & Tabs */
-        .header {
-            background: var(--white);
-            padding: 15px 20px 0 20px;
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .header-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
+        .header { background: var(--white); padding: 15px 20px 0 20px; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
         .header h2 { margin: 0; color: var(--water-blue); font-size: 22px; }
+        .header-actions { display: flex; gap: 10px; align-items: center;}
         
-        .theme-toggle {
-            background: rgba(0, 150, 199, 0.1); border: none; color: var(--water-blue);
-            padding: 8px 10px; border-radius: 50%; cursor: pointer; transition: 0.3s;
+        /* Create Post Btn (Admin Only) */
+        .create-post-btn { 
+            display: none; /* Default hidden */
+            background: var(--water-blue); color: white; border: none; 
+            padding: 8px 15px; border-radius: 20px; font-weight: bold; cursor: pointer; 
+            font-size: 13px; box-shadow: 0 2px 5px rgba(0,150,199,0.3); transition: 0.2s;
         }
+        .create-post-btn:hover { background: var(--water-blue-hover); }
+
+        .theme-toggle { background: rgba(0, 150, 199, 0.1); border: none; color: var(--water-blue); padding: 8px 10px; border-radius: 50%; cursor: pointer; transition: 0.3s; }
         body.dark-mode .theme-toggle { background: rgba(255,255,255,0.1); color: #fff; }
 
-        .tabs {
-            display: flex;
-            gap: 15px;
-            overflow-x: auto;
-            scrollbar-width: none;
-        }
+        .tabs { display: flex; gap: 15px; overflow-x: auto; scrollbar-width: none; }
         .tabs::-webkit-scrollbar { display: none; }
-        
-        .tab-btn {
-            background: none; border: none; padding: 10px 5px;
-            font-size: 15px; font-weight: 600; color: var(--gray-text);
-            cursor: pointer; position: relative; white-space: nowrap;
-        }
+        .tab-btn { background: none; border: none; padding: 10px 5px; font-size: 15px; font-weight: 600; color: var(--gray-text); cursor: pointer; position: relative; white-space: nowrap; }
         .tab-btn.active { color: var(--water-blue); }
-        .tab-btn.active::after {
-            content: ''; position: absolute; bottom: 0; left: 0;
-            width: 100%; height: 3px; background: var(--water-blue);
-            border-radius: 3px 3px 0 0;
-        }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: var(--water-blue); border-radius: 3px 3px 0 0; }
 
         /* News Feed Container */
         .news-container { padding: 15px; max-width: 600px; margin: 0 auto; }
         
-        .news-card {
-            background: var(--white);
-            border-radius: 12px;
-            margin-bottom: 15px;
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
+        .news-card { background: var(--white); border-radius: 12px; margin-bottom: 15px; box-shadow: var(--shadow); display: flex; flex-direction: column; position: relative; }
         
-        /* Pinned Badge */
-        .pin-badge {
-            position: absolute; top: -10px; right: 15px;
-            background: #ff4757; color: white; padding: 4px 12px;
-            border-radius: 12px; font-size: 12px; font-weight: bold;
-            box-shadow: 0 2px 5px rgba(255, 71, 87, 0.4); z-index: 10;
-        }
+        .pin-badge { position: absolute; top: -10px; right: 15px; background: #ff4757; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; box-shadow: 0 2px 5px rgba(255, 71, 87, 0.4); z-index: 10; }
 
-        .news-header {
-            padding: 15px; display: flex; align-items: center; gap: 10px;
-        }
-        .author-pic { width: 40px; height: 40px; border-radius: 50%; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 18px; }
+        .news-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
+        .author-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 18px; }
         .author-info { flex-grow: 1; }
         .author-name { font-weight: bold; font-size: 15px; }
         .post-time { font-size: 12px; color: var(--gray-text); }
+        .post-options { color: var(--gray-text); cursor: pointer; padding: 5px; position: relative;}
         
-        /* Options (Three dots) */
-        .post-options { color: var(--gray-text); cursor: pointer; padding: 5px; }
+        .options-menu { display: none; position: absolute; right: 0; top: 25px; background: var(--white); box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 8px; overflow: hidden; z-index: 20; min-width: 120px;}
+        .option-item { padding: 10px 15px; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; color: var(--text-color);}
+        .option-item:hover { background: var(--input-bg); }
+        .option-item.delete { color: #ff4757; }
 
         .news-content { padding: 0 15px 10px 15px; }
-        .news-tag {
-            background: rgba(0, 150, 199, 0.1); color: var(--water-blue);
-            font-size: 11px; padding: 4px 8px; border-radius: 5px;
-            text-transform: uppercase; font-weight: 600; display: inline-block; margin-bottom: 8px;
-        }
+        .news-tag { background: rgba(0, 150, 199, 0.1); color: var(--water-blue); font-size: 11px; padding: 4px 8px; border-radius: 5px; text-transform: uppercase; font-weight: 600; display: inline-block; margin-bottom: 8px; }
         .news-title { font-size: 16px; font-weight: bold; margin: 0 0 8px 0; line-height: 1.4; }
-        .news-desc { font-size: 14px; color: var(--text-color); line-height: 1.5; }
+        .news-desc { font-size: 14px; color: var(--text-color); line-height: 1.5; white-space: pre-wrap;}
         
-        /* Media (Image/Video) */
         .news-media { width: 100%; position: relative; background: #000; }
-        .news-media img { width: 100%; max-height: 300px; object-fit: cover; display: block; }
+        .news-media img, .news-media video { width: 100%; max-height: 400px; object-fit: contain; display: block; }
         
-        .play-btn {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 60px; height: 60px; background: rgba(0,0,0,0.6); color: white;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center;
-            font-size: 24px; cursor: pointer; border: 3px solid white; transition: 0.3s;
-        }
-        .play-btn:hover { background: var(--water-blue); transform: translate(-50%, -50%) scale(1.1); }
-
-        /* Stats & Actions */
-        .news-stats {
-            padding: 10px 15px; display: flex; justify-content: space-between;
-            font-size: 13px; color: var(--gray-text); border-bottom: 1px solid var(--border-color);
-        }
-        .action-buttons {
-            display: flex; justify-content: space-between; padding: 5px 10px;
-        }
-        .action-btn {
-            flex: 1; background: none; border: none; padding: 10px;
-            color: var(--gray-text); font-size: 14px; font-weight: 600;
-            cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px;
-        }
-        .action-btn:hover { background: var(--bg-color); }
+        .news-stats { padding: 10px 15px; display: flex; justify-content: space-between; font-size: 13px; color: var(--gray-text); border-bottom: 1px solid var(--border-color); }
+        .action-buttons { display: flex; justify-content: space-between; padding: 5px 10px; }
+        .action-btn { flex: 1; background: none; border: none; padding: 10px; color: var(--gray-text); font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 6px; }
+        .action-btn:hover { background: var(--input-bg); }
         .action-btn.liked { color: var(--water-blue); }
 
-        /* Bottom Navigation (From home.html for consistency) */
-        .bottom-nav {
-            position: fixed; bottom: 0; width: 100%; background: var(--white);
-            display: flex; justify-content: space-around; padding: 12px 0 15px 0;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 100;
-        }
+        /* Comments Section */
+        .comments-section { display: none; padding: 15px; background: var(--white); border-top: 1px solid var(--border-color); border-radius: 0 0 12px 12px;}
+        .comment-input-area { display: flex; gap: 10px; margin-bottom: 15px; }
+        .comment-input { flex-grow: 1; background: var(--input-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 10px 15px; outline: none; color: var(--text-color); font-family: inherit;}
+        .comment-send-btn { background: none; border: none; color: var(--water-blue); font-size: 20px; cursor: pointer; }
+        
+        .comment-list { display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;}
+        .comment-item { display: flex; gap: 10px; align-items: flex-start;}
+        .comment-bubble { background: var(--input-bg); padding: 10px 12px; border-radius: 15px; flex-grow: 1; position: relative;}
+        .comment-author { font-weight: bold; font-size: 13px; margin-bottom: 4px; display: block;}
+        .comment-text { font-size: 13px; color: var(--text-color); line-height: 1.4;}
+        .comment-delete { position: absolute; right: 10px; top: 10px; color: #ff4757; font-size: 12px; cursor: pointer; display: none;}
+        .comment-bubble:hover .comment-delete { display: block; }
+
+        /* Modals */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px);}
+        .modal-content { background: var(--white); width: 90%; max-width: 500px; border-radius: 15px; padding: 20px; max-height: 85vh; overflow-y: auto; color: var(--text-color);}
+        
+        .form-group { text-align: left; margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--gray-text); margin-bottom: 5px; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-color); font-size: 14px; outline: none;}
+        .checkbox-group { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--text-color); margin-bottom: 15px;}
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-save { flex: 1; background: var(--water-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s;}
+        .btn-cancel { flex: 1; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 8px; cursor: pointer; }
+
+        /* Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; background: var(--white); display: flex; justify-content: space-around; padding: 12px 0 15px 0; box-shadow: 0 -4px 15px rgba(0,0,0,0.05); z-index: 100; }
         .nav-item { color: var(--gray-text); font-size: 22px; text-decoration: none; position: relative; transition: 0.3s; }
         .nav-item.active { color: var(--water-blue); }
-        .nav-item.active::after {
-            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-            width: 5px; height: 5px; background: var(--water-blue); border-radius: 50%;
-        }
-        .add-btn {
-            background: var(--water-blue); color: white; width: 50px; height: 50px;
-            border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-top: -25px;
-            box-shadow: 0 4px 10px rgba(0, 150, 199, 0.4); border: 4px solid var(--white);
-        }
-        body.dark-mode .add-btn { border-color: var(--white); }
+        .nav-item.active::after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; background: var(--water-blue); border-radius: 50%; }
+        .nav-item.add-btn { background: var(--water-blue); color: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-top: -25px; box-shadow: 0 4px 10px rgba(0, 150, 199, 0.4); border: 4px solid var(--white); }
+        body.dark-mode .nav-item.add-btn { border-color: var(--white); }
     </style>
 </head>
 <body>
@@ -170,119 +122,112 @@
     <div class="header">
         <div class="header-top">
             <h2><i class="fas fa-globe"></i> ዜናን ሓበሬታን</h2>
-            <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+            <div class="header-actions">
+                <button class="create-post-btn" id="adminCreateBtn" onclick="openCreateModal()"><i class="fas fa-pen"></i> ሓዱሽ ፖስት</button>
+                <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+            </div>
         </div>
         <div class="tabs">
-            <button class="tab-btn active">ኩሉ (All)</button>
-            <button class="tab-btn">ኢኮኖሚ (Economy)</button>
-            <button class="tab-btn">ቴክኖሎጂ (Tech)</button>
-            <button class="tab-btn">ወግዓዊ (Announcements)</button>
+            <button class="tab-btn active" onclick="filterNews('all', this)">ኩሉ (All)</button>
+            <button class="tab-btn" onclick="filterNews('Economy', this)">ኢኮኖሚ</button>
+            <button class="tab-btn" onclick="filterNews('Tech', this)">ቴክኖሎጂ</button>
+            <button class="tab-btn" onclick="filterNews('Announcement', this)">ወግዓዊ</button>
         </div>
     </div>
 
-    <div class="news-container">
-        
-        <div class="news-card">
-            <div class="pin-badge"><i class="fas fa-thumbtack"></i> Pinned</div>
-            <div class="news-header">
-                <div class="author-pic"><i class="fas fa-store"></i></div>
-                <div class="author-info">
-                    <div class="author-name">Meyda Official</div>
-                    <div class="post-time">1 hour ago • <i class="fas fa-globe-africa"></i></div>
-                </div>
-                <div class="post-options"><i class="fas fa-ellipsis-h"></i></div>
+    <div class="news-container" id="newsFeed">
+        <div style="text-align: center; color: var(--gray-text); padding: 30px;">
+            <i class="fas fa-spinner fa-spin" style="font-size: 30px; margin-bottom: 10px;"></i><br>ዜና ይጽዕን ኣሎ...
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="createPostModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; color: var(--water-blue);"><i class="fas fa-pen"></i> ሓዱሽ ዜና / ሓበሬታ</h3>
+            
+            <div class="form-group">
+                <label>ምድብ (Category)</label>
+                <select id="postCategory">
+                    <option value="Announcement">ወግዓዊ (Announcement)</option>
+                    <option value="Economy">ኢኮኖሚ (Economy)</option>
+                    <option value="Tech">ቴክኖሎጂ (Tech)</option>
+                    <option value="Market">ዕዳጋ (Market)</option>
+                </select>
             </div>
-            <div class="news-content">
-                <span class="news-tag" style="background: rgba(46, 204, 113, 0.1); color: #2ecc71;">ኢኮኖሚ (Economy)</span>
-                <div class="news-title">ዕዳጋ ኢትዮጵያ ኣብ 2026፡ እንታይ ሓደስቲ ዕድላት ኣለዉ?</div>
-                <div class="news-desc">ኣብዚ ሒዝናዮ ዘለና ዓመት ዕዳጋ ኦንላይን ብፍላይ ከመይ ይዓቢ ከምዘሎን ነጋዶ እንታይ ክገብሩ ከምዘለዎምን ዝምልከት መግለጺ።</div>
+
+            <div class="form-group">
+                <label>ኣርእስቲ (Title - Optional)</label>
+                <input type="text" id="postTitle" placeholder="ኣርእስቲ ዜና...">
             </div>
-            <div class="news-media">
-                <img src="https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?auto=format&fit=crop&q=80&w=800" alt="Economy Video Thumbnail">
-                <div class="play-btn"><i class="fas fa-play"></i></div>
+
+            <div class="form-group">
+                <label>መግለጺ / ካፕሽን (Caption - Required)</label>
+                <textarea id="postDesc" rows="4" placeholder="እንታይ ሓበሬታ ክተመሓላልፉ ደሊኹም?..." required></textarea>
             </div>
-            <div class="news-stats">
-                <span id="like-count-1">1.2k Likes</span>
-                <span>45 Comments • 120 Shares</span>
+
+            <div class="form-group">
+                <label>ስእሊ ወይ ቪድዮ (Media - Optional)</label>
+                <input type="file" id="postMedia" accept="image/*,video/*">
             </div>
-            <div class="action-buttons">
-                <button class="action-btn" onclick="toggleLike(this, 'like-count-1', 1200)"><i class="far fa-thumbs-up"></i> <span>ላይክ</span></button>
-                <button class="action-btn"><i class="far fa-comment"></i> <span>ርእይቶ</span></button>
-                <button class="action-btn"><i class="fas fa-share"></i> <span>ሼር</span></button>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="postPin">
+                <label for="postPin" style="margin: 0; cursor: pointer;">ኣብ ላዕሊ ጠርኒፍካ ሓዞ (Pin to Top)</label>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal('createPostModal')">Cancel</button>
+                <button class="btn-save" onclick="submitPost()">ለጥፍ (Post)</button>
             </div>
         </div>
-
-        <div class="news-card">
-            <div class="news-header">
-                <div class="author-pic"><i class="fas fa-laptop-code"></i></div>
-                <div class="author-info">
-                    <div class="author-name">Tech Radar</div>
-                    <div class="post-time">3 hours ago • <i class="fas fa-globe-africa"></i></div>
-                </div>
-                <div class="post-options"><i class="fas fa-ellipsis-h"></i></div>
-            </div>
-            <div class="news-content">
-                <span class="news-tag">ቴክኖሎጂ (Tech)</span>
-                <div class="news-title">ሓዱሽ ሞዴል AI ካብ ኩባንያ OpenAI ንዓለም የገረመሉ ዘሎ ምኽንያት</div>
-                <div class="news-desc">እዚ ሓዱሽ ቴክኖሎጂ ንመሃዝነት ሰባት ብዝለዓለ ደረጃ ክሕግዝ ከምዝኽእል ተገሊጹ። ኣብ ዝቕጽሉ ዓመታት ከመይ ዓይነት ጽልዋ ከምዘምጽእ ክንርኢ ኢና።</div>
-            </div>
-            <div class="news-media">
-                <img src="https://images.unsplash.com/photo-1620712943543-bcc4688e7485?auto=format&fit=crop&q=80&w=800" alt="AI Tech">
-            </div>
-            <div class="news-stats">
-                <span id="like-count-2">850 Likes</span>
-                <span>24 Comments • 50 Shares</span>
-            </div>
-            <div class="action-buttons">
-                <button class="action-btn" onclick="toggleLike(this, 'like-count-2', 850)"><i class="far fa-thumbs-up"></i> <span>ላይክ</span></button>
-                <button class="action-btn"><i class="far fa-comment"></i> <span>ርእይቶ</span></button>
-                <button class="action-btn"><i class="fas fa-share"></i> <span>ሼር</span></button>
-            </div>
-        </div>
-
-        <div class="news-card">
-            <div class="news-header">
-                <div class="author-pic" style="background:#f39c12;"><i class="fas fa-chart-line"></i></div>
-                <div class="author-info">
-                    <div class="author-name">Market Updates</div>
-                    <div class="post-time">5 hours ago • <i class="fas fa-globe-africa"></i></div>
-                </div>
-                <div class="post-options"><i class="fas fa-ellipsis-h"></i></div>
-            </div>
-            <div class="news-content">
-                <span class="news-tag" style="background: rgba(243, 156, 18, 0.1); color: #f39c12;">ዕዳጋ (Market)</span>
-                <div class="news-desc" style="font-size: 16px;">
-                    <strong>ሓበሬታ ንነጋዶ:</strong> ካብ ሎሚ ጀሚሩ ናይ መጓዓዝያ (Delivery) ክፍሊት ኣብ መላእ ሃገር ብ 10% ነክዩ ኣሎ። እዚ ድማ ንተጠቀምቲ ዝያዳ ኣቕሑት ንክገዝኡ ከተባብዖም እዩ።
-                </div>
-            </div>
-            <div class="news-stats">
-                <span id="like-count-3">432 Likes</span>
-                <span>89 Comments • 12 Shares</span>
-            </div>
-            <div class="action-buttons">
-                <button class="action-btn" onclick="toggleLike(this, 'like-count-3', 432)"><i class="far fa-thumbs-up"></i> <span>ላይክ</span></button>
-                <button class="action-btn"><i class="far fa-comment"></i> <span>ርእይቶ</span></button>
-                <button class="action-btn"><i class="fas fa-share"></i> <span>ሼር</span></button>
-            </div>
-        </div>
-
     </div>
 
     <div class="bottom-nav">
         <a href="home.html" class="nav-item"><i class="fas fa-home"></i></a>
         <a href="news.html" class="nav-item active"><i class="fas fa-newspaper"></i></a>
         <a href="sell.html" class="nav-item add-btn"><i class="fas fa-plus"></i></a>
-        <a href="notification.html" class="nav-item"><i class="fas fa-bell"></i></a>
+        <a href="notification.html" class="nav-item">
+            <i class="fas fa-bell"></i>
+            <span id="navBadge" style="display:none; position:absolute; top:-2px; right:-8px; background:#ff4757; color:white; font-size:10px; font-weight:bold; padding:2px 5px; border-radius:10px; border:2px solid var(--white);">0</span>
+        </a>
         <a href="profile.html" class="nav-item"><i class="fas fa-user"></i></a>
     </div>
 
     <script>
-        // Dark Mode Logic
+        let allNews = [];
+        let currentFilter = 'all';
+        let loggedInUser = null;
+
+        // 1. መጀመርያ ፔጅ ምስ ተኸፍተ
         window.onload = () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
+            
+            loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            if (loggedInUser) {
+                document.getElementById('adminCreateBtn').style.display = 'block';
+                checkUnreadBadge(); // ሓዱሽ: ባጅ ቼክ ይገብር!
+            }
+
+            fetchNews();
+        }
+
+        // ሓዱሽ ማጂክ ን news.html: ቀይሕ ባጅ ቼክ ይገብር
+        async function checkUnreadBadge() {
+            try {
+                const res = await fetch(`http://localhost:5000/api/messages/${loggedInUser.id}`);
+                if (res.ok) {
+                    const msgs = await res.json();
+                    const unread = msgs.filter(m => !m.isRead).length;
+                    const badge = document.getElementById('navBadge');
+                    if (unread > 0) {
+                        badge.innerText = unread;
+                        badge.style.display = 'block';
+                    }
+                }
+            } catch (e) { console.log(e); }
         }
 
         function toggleTheme() {
@@ -292,35 +237,263 @@
             document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
 
-        // Like Button Logic
-        function toggleLike(btn, countId, baseCount) {
-            const icon = btn.querySelector('i');
-            const countSpan = document.getElementById(countId);
-            
-            btn.classList.toggle('liked');
-            
-            if (btn.classList.contains('liked')) {
-                icon.classList.remove('far');
-                icon.classList.add('fas');
-                // Number logic format (e.g. 1.2k or direct number)
-                let newCount = baseCount + 1;
-                countSpan.innerText = newCount >= 1000 ? (newCount/1000).toFixed(1) + 'k Likes' : newCount + ' Likes';
-            } else {
-                icon.classList.remove('fas');
-                icon.classList.add('far');
-                countSpan.innerText = baseCount >= 1000 ? (baseCount/1000).toFixed(1) + 'k Likes' : baseCount + ' Likes';
+        // 2. ዜና ካብ ዳታቤዝ ምምጻእ
+        async function fetchNews() {
+            try {
+                const response = await fetch('http://localhost:5000/api/news');
+                if (response.ok) {
+                    allNews = await response.json();
+                    renderNews();
+                }
+            } catch (error) {
+                document.getElementById('newsFeed').innerHTML = '<div style="color:red; text-align:center;">ምስ ሰርቨር ክራኸብ ኣይከኣለን።</div>';
             }
         }
 
-        // Tabs Toggle Logic (Visual only for now)
-        const tabs = document.querySelectorAll('.tab-btn');
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                tabs.forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                // ጽባሕ ንግሆ Back-end ምስ ሰራሕና: ኣብዚ Filter ዝገብር ኮድ ክንጽሕፍ ኢና
+        // 3. ዜና ኣብ ስክሪን ምስኣል (Render)
+        function renderNews() {
+            const feed = document.getElementById('newsFeed');
+            feed.innerHTML = '';
+
+            let filteredNews = currentFilter === 'all' ? allNews : allNews.filter(n => n.category === currentFilter);
+
+            if (filteredNews.length === 0) {
+                feed.innerHTML = '<div style="text-align: center; color: var(--gray-text); padding: 30px;">ዛጊት ዝተለጥፈ ዜና የለን።</div>';
+                return;
+            }
+
+            filteredNews.forEach(news => {
+                const isLikedByMe = loggedInUser && news.likes.includes(loggedInUser.id);
+                const likeBtnClass = isLikedByMe ? 'fas liked' : 'far';
+                
+                // ግዜ ቅርጺ
+                const dateObj = new Date(news.createdAt);
+                const timeString = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                // Pinned HTML
+                const pinHTML = news.isPinned ? `<div class="pin-badge"><i class="fas fa-thumbtack"></i> Pinned</div>` : '';
+
+                // Media HTML (Image or Video)
+                let mediaHTML = '';
+                if (news.mediaUrl) {
+                    if (news.mediaType === 'video') {
+                        mediaHTML = `<div class="news-media"><video src="http://localhost:5000${news.mediaUrl}" controls></video></div>`;
+                    } else {
+                        mediaHTML = `<div class="news-media"><img src="http://localhost:5000${news.mediaUrl}" alt="News Media"></div>`;
+                    }
+                }
+
+                // Options (Delete Post - Only Admin/Owner)
+                let optionsHTML = '';
+                if (loggedInUser && (loggedInUser.id === news.authorId || loggedInUser.isAdmin)) {
+                    optionsHTML = `
+                        <div class="post-options" onclick="toggleMenu('menu-${news._id}')">
+                            <i class="fas fa-ellipsis-h"></i>
+                            <div class="options-menu" id="menu-${news._id}">
+                                <div class="option-item delete" onclick="deletePost('${news._id}')"><i class="fas fa-trash"></i> ኣጥፍእ</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Comments HTML
+                let commentsHTML = '';
+                news.comments.forEach(c => {
+                    const canDeleteComment = loggedInUser && (loggedInUser.id === c.userId || loggedInUser.id === news.authorId);
+                    const deleteBtn = canDeleteComment ? `<i class="fas fa-times comment-delete" onclick="deleteComment('${news._id}', '${c._id}')"></i>` : '';
+                    
+                    commentsHTML += `
+                        <div class="comment-item">
+                            <img src="${c.userPic || 'https://via.placeholder.com/40'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                            <div class="comment-bubble">
+                                <span class="comment-author">${c.userName}</span>
+                                <div class="comment-text">${c.text}</div>
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                feed.innerHTML += `
+                    <div class="news-card">
+                        ${pinHTML}
+                        <div class="news-header">
+                            <img src="${news.authorPic || 'https://via.placeholder.com/40'}" class="author-pic">
+                            <div class="author-info">
+                                <div class="author-name">${news.authorName}</div>
+                                <div class="post-time">${timeString} • <i class="fas fa-globe-africa"></i></div>
+                            </div>
+                            ${optionsHTML}
+                        </div>
+                        
+                        <div class="news-content">
+                            <span class="news-tag">${news.category}</span>
+                            ${news.title ? `<div class="news-title">${news.title}</div>` : ''}
+                            <div class="news-desc">${news.description}</div>
+                        </div>
+                        
+                        ${mediaHTML}
+                        
+                        <div class="news-stats">
+                            <span id="like-count-${news._id}">${news.likes.length} Likes</span>
+                            <span><span id="comment-count-${news._id}">${news.comments.length}</span> Comments</span>
+                        </div>
+                        
+                        <div class="action-buttons">
+                            <button class="action-btn" onclick="toggleLike('${news._id}', this)"><i class="${likeBtnClass} fa-thumbs-up"></i> <span style="color: inherit;">ላይክ</span></button>
+                            <button class="action-btn" onclick="toggleComments('${news._id}')"><i class="far fa-comment"></i> <span>ርእይቶ</span></button>
+                            <button class="action-btn" onclick="sharePost('${news._id}')"><i class="fas fa-share"></i> <span>ሼር</span></button>
+                        </div>
+
+                        <div class="comments-section" id="comments-${news._id}">
+                            <div class="comment-input-area">
+                                <input type="text" id="comment-input-${news._id}" class="comment-input" placeholder="ርእይቶኹም ጽሓፉ... (እዱብ ቃላት ተጠቐሙ)">
+                                <button class="comment-send-btn" onclick="postComment('${news._id}')"><i class="fas fa-paper-plane"></i></button>
+                            </div>
+                            <div class="comment-list" id="comment-list-${news._id}">
+                                ${commentsHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
             });
-        });
+        }
+
+        // 4. ሓዱሽ ፖስት ምልጣፍ (Admin Create Post)
+        function openCreateModal() { document.getElementById('createPostModal').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        async function submitPost() {
+            if(!loggedInUser) return;
+
+            const category = document.getElementById('postCategory').value;
+            const title = document.getElementById('postTitle').value;
+            const desc = document.getElementById('postDesc').value;
+            const isPinned = document.getElementById('postPin').checked;
+            const mediaFile = document.getElementById('postMedia').files[0];
+
+            if(!desc) { alert("በጃኹም መግለጺ (Caption) ጽሓፉ!"); return; }
+
+            const formData = new FormData();
+            formData.append('authorId', loggedInUser.id);
+            formData.append('authorName', loggedInUser.name);
+            formData.append('authorPic', loggedInUser.profilePic || "");
+            formData.append('category', category);
+            formData.append('title', title);
+            formData.append('description', desc);
+            formData.append('isPinned', isPinned);
+            if(mediaFile) formData.append('media', mediaFile);
+
+            try {
+                const res = await fetch('http://localhost:5000/api/news', { method: 'POST', body: formData });
+                if(res.ok) {
+                    alert("ብዓወት ተለጢፉ!");
+                    closeModal('createPostModal');
+                    // Form Reset
+                    document.getElementById('postTitle').value = ''; document.getElementById('postDesc').value = '';
+                    document.getElementById('postMedia').value = ''; document.getElementById('postPin').checked = false;
+                    fetchNews(); // Reload
+                }
+            } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
+        }
+
+        // 5. ፖስት ምድምሳስ
+        async function deletePost(postId) {
+            if(confirm("እዚ ፖስት ብርግጽ ክጠፍእ ድዩ?")) {
+                try {
+                    await fetch(`http://localhost:5000/api/news/${postId}`, { method: 'DELETE' });
+                    fetchNews();
+                } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
+            }
+        }
+
+        // 6. ላይክ ማጂክ (Like Toggle)
+        async function toggleLike(postId, btnEl) {
+            if(!loggedInUser) { alert("ሎግ-ኢን ግበሩ!"); return; }
+
+            const icon = btnEl.querySelector('i');
+            const countSpan = document.getElementById(`like-count-${postId}`);
+            
+            // Visual Update first
+            let isCurrentlyLiked = icon.classList.contains('fas');
+            if(isCurrentlyLiked) {
+                icon.classList.replace('fas', 'far'); btnEl.classList.remove('liked');
+            } else {
+                icon.classList.replace('far', 'fas'); btnEl.classList.add('liked');
+            }
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/news/${postId}/like`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    // ሓዱሽ: userName ኣብዚ ተወሲኻ ኣላ ኖቲፊኬሽን መን ከም ዝገበሮ ንምፍላጥ
+                    body: JSON.stringify({ userId: loggedInUser.id, userName: loggedInUser.name }) 
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    countSpan.innerText = `${data.likesCount} Likes`;
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        // 7. ኮሜንት ማጂክ (Show/Hide & Post Comment)
+        function toggleComments(postId) {
+            const sec = document.getElementById(`comments-${postId}`);
+            sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
+        }
+
+        async function postComment(postId) {
+            if(!loggedInUser) { alert("ሎግ-ኢን ግበሩ!"); return; }
+            
+            const inputEl = document.getElementById(`comment-input-${postId}`);
+            const text = inputEl.value.trim();
+            if(!text) return;
+
+            try {
+                const res = await fetch(`http://localhost:5000/api/news/${postId}/comment`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId: loggedInUser.id, userName: loggedInUser.name, userPic: loggedInUser.profilePic, text: text })
+                });
+                
+                if(res.ok) {
+                    inputEl.value = '';
+                    fetchNews(); // Reload to show new comment (and filtered bad words)
+                }
+            } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
+        }
+
+        async function deleteComment(postId, commentId) {
+            if(confirm("እዚ ኮሜንት ክጠፍእ ድዩ?")) {
+                try {
+                    await fetch(`http://localhost:5000/api/news/${postId}/comment/${commentId}`, { method: 'DELETE' });
+                    fetchNews();
+                } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
+            }
+        }
+
+        // 8. ሼር ምግባር (Share Link)
+        function sharePost(postId) {
+            const url = `${window.location.origin}/news.html?post=${postId}`;
+            navigator.clipboard.writeText(url).then(() => {
+                alert("ሊንክ ናይዚ ፖስት ኮፒ (Copied) ኮይኑ ኣሎ! ኣብ ዝደለኹምዎ ሼር ግበሩዎ።");
+            });
+        }
+
+        // 9. ፊልተር ብ ታብ
+        function filterNews(cat, el) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            el.classList.add('active');
+            currentFilter = cat;
+            renderNews();
+        }
+
+        // Option Menu Toggle helper
+        function toggleMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            setTimeout(() => {
+                window.onclick = () => { menu.style.display = 'none'; window.onclick = null; }
+            }, 100);
+        }
     </script>
 </body>
 </html>
