@@ -87,6 +87,7 @@ const messageSchema = new mongoose.Schema({
     productId: { type: String }, 
     productTitle: { type: String },
     text: { type: String, required: true },
+    productImage: { type: String, default: "" },
     isRead: { type: Boolean, default: false },
     type: { type: String, default: 'message' }, 
     createdAt: { type: Date, default: Date.now }
@@ -294,19 +295,28 @@ app.post('/api/users/:userId/save', async (req, res) => {
     }
 });
 
-// =====================================================================
-// 15. API: መልእኽቲ ንምልኣኽ (Send Message)
-// =====================================================================
+// 15. API: መልእኽቲ ንምስዳድ (Send Message)
 app.post('/api/messages', async (req, res) => {
     try {
-        const { senderId, senderName, receiverId, productId, productTitle, text, type } = req.body;
-        const newMessage = new Message({ senderId, senderName, receiverId, productId, productTitle, text, type });
-        await newMessage.save();
+        // ሓዱሽ ማጂክ: productImage ካብ ፍሮንት-ኤንድ ክንቕበል ኣለና!
+        const { senderId, senderName, receiverId, productId, productTitle, productImage, text, type } = req.body; 
         
-        res.status(201).json({ message: "መልእኽቲ ብዓወት ተላኢኹ ኣሎ!" });
+        const newMessage = new Message({
+            senderId, 
+            senderName, 
+            receiverId, 
+            productId, 
+            productTitle, 
+            productImage, // <--- እዚኣ እያ ትድርበ ነይራ!
+            text, 
+            type
+        });
+        
+        await newMessage.save();
+        res.status(201).json(newMessage);
     } catch (error) { 
-        console.error(error); 
-        res.status(500).json({ message: "መልእኽቲ ኣይተላእከን።" }); 
+        console.error("Error saving message:", error);
+        res.status(500).json({ message: "መልእኽቲ ምልኣኽ ኣይተኻእለን" }); 
     }
 });
 

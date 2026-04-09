@@ -439,7 +439,9 @@
             const msgData = {
                 senderId: loggedInUser.id, senderName: loggedInUser.name,
                 receiverId: currentViewedProduct.sellerId, productId: currentViewedProduct._id,
-                productTitle: currentViewedProduct.title, text: text, type: 'message'
+                productTitle: currentViewedProduct.title, 
+                productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "", // <--- ሓዱሽ ማጂክ!
+                text: text, type: 'message'
             };
 
             try {

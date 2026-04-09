@@ -46,7 +46,6 @@
         .edit-btn { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 8px 20px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: 0.2s; }
         .edit-btn:hover { background: var(--border-color); }
 
-        /* ሓዱሽ: Follow & Message Buttons */
         .public-actions { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
         .btn-follow { background: var(--water-blue); color: white; border: none; padding: 8px 25px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;}
         .btn-follow.following { background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); }
@@ -62,7 +61,8 @@
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
         .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .product-card { background: var(--white); border-radius: 12px; padding: 10px; box-shadow: var(--shadow); position: relative; }
+        .product-card { background: var(--white); border-radius: 12px; padding: 10px; box-shadow: var(--shadow); position: relative; cursor: pointer; transition: 0.2s; }
+        .product-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .product-img { width: 100%; height: 140px; background: var(--input-bg); border-radius: 8px; object-fit: contain; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--border-color);}
         .product-price { font-weight: bold; color: var(--water-blue); font-size: 15px; }
         .product-title { font-size: 13px; margin: 4px 0; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -106,6 +106,7 @@
 
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(2px);}
         .modal-content { background: var(--white); width: 90%; max-width: 400px; border-radius: 15px; padding: 20px; max-height: 85vh; overflow-y: auto; color: var(--text-color);}
+        .detail-modal-content { max-width: 500px; }
         
         .image-preview-area { width: 100%; height: 180px; background: var(--input-bg); border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .image-preview-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -203,12 +204,42 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="productViewModal">
+        <div class="modal-content detail-modal-content">
+            <div style="display:flex; justify-content:flex-end;">
+                <button onclick="closeProductViewModal()" style="border:none; background:none; font-size:26px; cursor:pointer; color:var(--gray-text);">&times;</button>
+            </div>
+            <div id="modalImageArea" style="height:200px; margin-top:5px; position:relative; border-radius: 10px; overflow:hidden;"></div>
+            
+            <h2 id="detTitle" style="color:var(--water-blue); margin:15px 0 10px 0;"></h2>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 14px;"><span>ዋጋ:</span> <b id="detPrice" style="color:var(--water-blue); font-size:18px;"></b></div>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 14px;"><span>ኩነታት:</span> <b id="detCond"></b></div>
+            <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-color); font-size: 14px;"><span>ቦታ:</span> <b id="detLoc"></b></div>
+            
+            <div style="margin-top:20px;">
+                <strong>ዝርዝር ሓበሬታ (Description):</strong>
+                <p id="detDesc" style="font-size:14px; color:var(--gray-text); line-height:1.6; margin-top:8px;"></p>
+            </div>
+
+            <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <textarea id="productMessageText" rows="2" placeholder="ንሸያጢ መልእኽቲ ጽሓፉሉ..." style="width: 100%; padding: 12px; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; background: var(--input-bg); color: var(--text-color); font-family: inherit; margin-bottom: 10px; resize: none; outline: none;"></textarea>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="callSellerFromModal()" style="flex: 1; background: #2ecc71; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;">
+                        <i class="fas fa-phone-alt"></i> ደውል
+                    </button>
+                    <button onclick="sendProductMessage()" style="flex: 2; background: var(--water-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;">
+                        <i class="fas fa-paper-plane"></i> መልእኽቲ ስደድ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="imageModal">
         <div class="modal-content" style="text-align: center;">
             <h3 id="imageModalTitle" style="margin-top: 0;">Preview Image</h3>
-            <div class="image-preview-area">
-                <img id="previewImgElement" src="">
-            </div>
+            <div class="image-preview-area"><img id="previewImgElement" src=""></div>
             <div class="btn-group">
                 <button class="btn-cancel" onclick="closeModal('imageModal')">Cancel</button>
                 <button class="btn-save" onclick="applyImage()">Save</button>
@@ -219,14 +250,8 @@
     <div class="modal-overlay" id="editProfileModal">
         <div class="modal-content">
             <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Profile</h3>
-            <div class="form-group">
-                <label>ስም (Name)</label>
-                <input type="text" id="inputName">
-            </div>
-            <div class="form-group">
-                <label>ባዮ (Bio)</label>
-                <textarea id="inputBio" rows="3"></textarea>
-            </div>
+            <div class="form-group"><label>ስም (Name)</label><input type="text" id="inputName"></div>
+            <div class="form-group"><label>ባዮ (Bio)</label><textarea id="inputBio" rows="3"></textarea></div>
             <div class="btn-group">
                 <button class="btn-cancel" onclick="closeModal('editProfileModal')">Cancel</button>
                 <button class="btn-save" onclick="saveProfileInfo()">Save Changes</button>
@@ -237,14 +262,8 @@
     <div class="modal-overlay" id="editProductModal">
         <div class="modal-content">
             <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Edit Ad (ንብረት ኣተዓራሪ)</h3>
-            <div class="form-group">
-                <label>ስም ንብረት (Title)</label>
-                <input type="text" id="editProdTitle">
-            </div>
-            <div class="form-group">
-                <label>ዋጋ (Price)</label>
-                <input type="text" id="editProdPrice">
-            </div>
+            <div class="form-group"><label>ስም ንብረት (Title)</label><input type="text" id="editProdTitle"></div>
+            <div class="form-group"><label>ዋጋ (Price)</label><input type="text" id="editProdPrice"></div>
             <div class="btn-group">
                 <button class="btn-cancel" onclick="closeModal('editProductModal')">Cancel</button>
                 <button class="btn-save" onclick="saveProductEdit()">Update Ad</button>
@@ -282,6 +301,7 @@
    <script>
         let isMyProfile = true;
         let profileUserId = null;
+        let loadedProductsMap = {}; // ሓዱሽ: ንኹሎም ዝተጻዕኑ ኣቕሑት ብቐሊሉ ንምርካቦም
 
         window.onload = async () => { 
             if(localStorage.getItem('theme') === 'dark') {
@@ -327,7 +347,6 @@
                         
                         if (tabs.length > 0) tabs[0].innerHTML = '<i class="fas fa-box"></i> ናይዚ ሸያጢ ኣቕሑት';
 
-                        // ሓዱሽ: Follow ን Message ን መጥወቒ አርኢ
                         document.getElementById('publicActionBtns').style.display = 'flex';
                         const followBtn = document.getElementById('followBtn');
                         if (userData.followers && userData.followers.includes(loggedInUser.id)) {
@@ -342,7 +361,6 @@
                         fetchSavedProducts(loggedInUser.id);
                         fetchMessages(loggedInUser.id);
                     } else {
-                        // ንሕና ነቲ ካልእ ሰብ ክንሓቶ እንተደሊና ታሪኽ ምእንቲ ክንረክብ
                         fetchMessages(loggedInUser.id);
                     }
                 }
@@ -351,7 +369,91 @@
             }
         };
 
-        // ሓዱሽ: Follow / Unfollow Logic
+        // =====================================================================
+        // Product Viewing Logic (ሓዱሽ ማጂክ)
+        // =====================================================================
+        let currentViewedProduct = null;
+
+        function openProductView(productId) {
+            const product = loadedProductsMap[productId];
+            if(!product) return;
+
+            currentViewedProduct = product;
+            document.getElementById('detTitle').innerText = product.title;
+            document.getElementById('detPrice').innerText = product.price;
+            document.getElementById('detCond').innerText = product.condition || "N/A";
+            document.getElementById('detLoc').innerText = product.location || "N/A";
+            document.getElementById('detDesc').innerText = product.description || "No Description";
+            document.getElementById('productMessageText').value = ''; 
+
+            const modalImgArea = document.getElementById('modalImageArea');
+            if (product.images && product.images.length > 0) {
+                modalImgArea.innerHTML = `<img src="http://localhost:5000${product.images[0]}" style="width:100%; height:100%; object-fit:contain; background:var(--input-bg);">`;
+            } else {
+                modalImgArea.innerHTML = `<div class="product-img-placeholder" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:50px;"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
+            }
+            document.getElementById('productViewModal').style.display = 'flex';
+        }
+
+        function closeProductViewModal() { document.getElementById('productViewModal').style.display = 'none'; }
+
+        async function callSellerFromModal() {
+            if (!currentViewedProduct) return;
+            if (currentViewedProduct.phone && currentViewedProduct.phone.trim() !== "") {
+                window.location.href = `tel:${currentViewedProduct.phone}`;
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:5000/api/users/${currentViewedProduct.sellerId}`);
+                if (response.ok) {
+                    const seller = await response.json();
+                    if (seller.phone) window.location.href = `tel:${seller.phone}`;
+                    else alert("እዚ ሸያጢ ቁጽሪ ስልኪ ኣየእተወን።");
+                }
+            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
+        }
+
+        async function sendProductMessage() {
+            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            if (!loggedInUser) return;
+
+            const text = document.getElementById('productMessageText').value.trim();
+            if (!text) { alert("መልእኽትኹም ጽሓፉ!"); return; }
+            if (!currentViewedProduct) return;
+            if (currentViewedProduct.sellerId === loggedInUser.id) { alert("ናብ ርእስኹም ክትሰድዱ ኣይትኽእሉን!"); return; }
+
+            const msgData = {
+                senderId: loggedInUser.id, senderName: loggedInUser.name,
+                receiverId: currentViewedProduct.sellerId, productId: currentViewedProduct._id,
+                productTitle: currentViewedProduct.title, 
+                productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "", // ሓዱሽ ማጂክ 스እሊ ምስዳድ
+                text: text, type: 'message'
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
+                if (response.ok) { alert("መልእኽትኹም ብዓወት ተላኢኹ ኣሎ! ✅"); closeProductViewModal(); } 
+                else { alert("መልእኽቲ ኣይተላእከን።"); }
+            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
+        }
+
+        // ሓዱሽ: ካብ ቻት ዝመጽአ ስእሊ ምስ ዝጥወቕ ብቐጥታ ንብረት ንምምጻእ
+        async function fetchAndOpenProduct(id) {
+            if(!id) return;
+            try {
+                const res = await fetch(`http://localhost:5000/api/products/${id}`);
+                if(res.ok) {
+                    const p = await res.json();
+                    loadedProductsMap[p._id] = p; // Cache it
+                    openProductView(p._id);
+                } else {
+                    alert("እዚ ንብረት ሕጂ ኣብ ዕዳጋ የለን (ተሸይጡ ወይ ተደምሲሱ)።");
+                }
+            } catch(e) { console.log(e); }
+        }
+
+        // =====================================================================
+
         async function toggleFollow() {
             const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             if (!loggedInUser) return;
@@ -376,7 +478,6 @@
             } catch(e) { console.log(e); }
         }
 
-        // ሓዱሽ: Direct Message from Profile
         function startDirectChat() {
             currentChatPartnerId = profileUserId;
             const targetName = document.getElementById('displayTitle').innerText;
@@ -409,6 +510,8 @@
                     }
 
                     products.forEach(prod => {
+                        loadedProductsMap[prod._id] = prod; // ሓዱሽ ማጂክ
+
                         let imgContent = prod.images && prod.images.length > 0 
                             ? `<img src="http://localhost:5000${prod.images[0]}" class="product-img">` 
                             : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
@@ -417,14 +520,15 @@
                         if (isMyProfile) {
                             actionsHTML = `
                                 <div class="card-actions">
-                                    <div class="action-icon" onclick="openEditProductModal('${prod._id}', '${prod.title}', '${prod.price}')" title="Edit"><i class="fas fa-edit"></i></div>
-                                    <div class="action-icon delete" onclick="deleteProduct('${prod._id}')" title="Delete"><i class="fas fa-trash"></i></div>
+                                    <div class="action-icon" onclick="event.stopPropagation(); openEditProductModal('${prod._id}', '${prod.title}', '${prod.price}')" title="Edit"><i class="fas fa-edit"></i></div>
+                                    <div class="action-icon delete" onclick="event.stopPropagation(); deleteProduct('${prod._id}')" title="Delete"><i class="fas fa-trash"></i></div>
                                 </div>
                             `;
                         }
 
+                        // ሓዱሽ ማጂክ: Card ክጥወቕ ከሎ Detail ይኸፍት
                         grid.innerHTML += `
-                            <div class="product-card" id="${prod._id}">
+                            <div class="product-card" id="${prod._id}" onclick="openProductView('${prod._id}')">
                                 ${actionsHTML}
                                 ${imgContent}
                                 <div class="product-price">${prod.price}</div>
@@ -459,14 +563,16 @@
                     }
 
                     savedProducts.forEach(prod => {
+                        loadedProductsMap[prod._id] = prod; // ሓዱሽ ማጂክ
+
                         let imgContent = prod.images && prod.images.length > 0 
                             ? `<img src="http://localhost:5000${prod.images[0]}" class="product-img">` 
                             : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
 
                         savedGrid.innerHTML += `
-                            <div class="product-card" id="saved-${prod._id}">
+                            <div class="product-card" id="saved-${prod._id}" onclick="openProductView('${prod._id}')">
                                 <div class="card-actions">
-                                    <div class="action-icon saved-icon" onclick="deleteSavedProduct('${prod._id}')" title="Remove"><i class="fas fa-bookmark"></i></div>
+                                    <div class="action-icon saved-icon" onclick="event.stopPropagation(); deleteSavedProduct('${prod._id}')" title="Remove"><i class="fas fa-bookmark"></i></div>
                                 </div>
                                 ${imgContent}
                                 <div class="product-price">${prod.price}</div>
@@ -507,10 +613,9 @@
                 const inboxArea = document.getElementById('inboxArea');
 
                 if (response.ok) {
-                    // ሓዱሽ: message ወይ personal እንተኾይኑ ንኢንቦክስ (Inbox)
                     allChatMessages = messages.filter(msg => msg.type === 'message' || msg.type === 'personal');
 
-                    if (!isMyProfile) return; // ናተይ እንተዘይኮይኑ Inbox ኣየድልየንን
+                    if (!isMyProfile) return; 
 
                     let conversations = {};
                     allChatMessages.forEach(msg => {
@@ -608,10 +713,14 @@
             conversation.forEach(msg => {
                 const dateObj = new Date(msg.createdAt);
                 const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                
+                // ሓዱሽ ማጂክ: 스እሊ ኣብ ውሽጢ ዕላል
+                const imgHtml = msg.productImage ? `<img src="http://localhost:5000${msg.productImage}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="fetchAndOpenProduct('${msg.productId}')"><br>` : '';
 
                 if (msg.senderId === loggedInUser.id) {
                     chatBody.innerHTML += `
                         <div class="chat-bubble chat-sent">
+                            ${imgHtml}
                             ${msg.text}
                             <span class="chat-time">${timeStr} <i class="fas fa-check-double" style="font-size:10px;"></i></span>
                         </div>
@@ -619,6 +728,7 @@
                 } else {
                     chatBody.innerHTML += `
                         <div class="chat-bubble chat-received">
+                            ${imgHtml}
                             ${msg.text}
                             <span class="chat-time">${timeStr}</span>
                         </div>
@@ -640,8 +750,8 @@
             const msgData = {
                 senderId: loggedInUser.id, senderName: loggedInUser.name,
                 receiverId: currentChatPartnerId, productId: "", 
-                productTitle: "", text: text, 
-                type: 'personal', // ሓዱሽ: ንኖቲፊኬሽን ምእንቲ ከይረብሾ personal ጌርናዮ ኣለና
+                productTitle: "", productImage: "", text: text, 
+                type: 'personal', 
                 createdAt: new Date().toISOString()
             };
 
