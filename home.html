@@ -137,6 +137,13 @@
             border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); z-index: 20; cursor: pointer; transition: 0.2s; user-select: none;
         }
         .wishlist-icon:hover { transform: scale(1.1); background: #fff; }
+
+        /* Admin Delete Ad Button */
+        .delete-ad-btn {
+            position: absolute; top: 60px; right: 20px; background: rgba(255,255,255,0.9); color: #ff4757; width: 32px; height: 32px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: var(--shadow); z-index: 20; cursor: pointer; transition: 0.2s; user-select: none;
+        }
+        .delete-ad-btn:hover { background: #ff4757; color: white; transform: scale(1.1); }
         
         .user-icon {
             position: absolute; top: 130px; left: 20px; background: var(--water-blue); color: white; width: 36px; height: 36px;
@@ -161,6 +168,7 @@
             .product-title { font-size: 13px; }
             .user-icon { width: 28px; height: 28px; top: 115px; left: 15px; font-size: 12px; border-width: 2px;}
             .wishlist-icon { width: 28px; height: 28px; top: 15px; right: 15px; font-size: 12px; }
+            .delete-ad-btn { width: 28px; height: 28px; top: 50px; right: 15px; font-size: 12px; }
             .top-header { padding: 10px 15px; gap: 10px;}
             .region-btn { padding: 8px 12px; font-size: 12px;}
         }
@@ -211,35 +219,17 @@
             <i class="fas fa-search"></i>
             <input type="text" id="searchInput" class="search-bar" placeholder="ድለይ (Search)..." oninput="applyFilters()">
         </div>
+        
+        <button id="adminDashBtn" class="theme-toggle" style="display: none; color: #e74c3c;" onclick="window.location.href='dashboard.html'" title="Admin Dashboard">
+            <i class="fas fa-shield-alt"></i>
+        </button>
+        
         <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
     </div>
 
     <div class="hero-carousel-container">
-        <div class="hero-carousel" id="heroCarousel" onscroll="updateCarouselDots()">
-            <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&q=80&w=800');">
-                <div class="carousel-content">
-                    <div class="carousel-tag">ፍሉይ ቅናሽ (Flash Sale)</div>
-                    <div class="carousel-title">ክሳብ 50% ቅናሽ ኣብ ኤሌክትሮኒክስ</div>
-                </div>
-            </div>
-            <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800');">
-                <div class="carousel-content">
-                    <div class="carousel-tag" style="background: var(--water-blue);">ሓደስቲ ኣቕሑት</div>
-                    <div class="carousel-title">ዘመናዊ ክዳውንቲ ንደቂ ተባዕትዮን ደቂ ኣንስትዮን</div>
-                </div>
-            </div>
-            <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1550009158-9ebf6d1736eb?auto=format&fit=crop&q=80&w=800');">
-                <div class="carousel-content">
-                    <div class="carousel-tag" style="background: #f1c40f; color: #333;">Premium Shop</div>
-                    <div class="carousel-title">Meyda Market: ንብረትኩም ቀልጢፍኩም ሽጡ!</div>
-                </div>
-            </div>
-        </div>
-        <div class="carousel-indicators" id="carouselIndicators">
-            <div class="indicator active" onclick="scrollToSlide(0)"></div>
-            <div class="indicator" onclick="scrollToSlide(1)"></div>
-            <div class="indicator" onclick="scrollToSlide(2)"></div>
-        </div>
+        <div class="hero-carousel" id="heroCarousel" onscroll="updateCarouselDots()"></div>
+        <div class="carousel-indicators" id="carouselIndicators"></div>
     </div>
 
     <div class="categories-container">
@@ -325,6 +315,19 @@
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
+            
+            // ==============================================================
+            // ሓዱሽ ማጂክ: Admin/Owner እንተኾይኑ ነታ Shield (ዋልታ) የርእዮ!
+            // ==============================================================
+            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            if (loggedInUser) {
+                const userRole = loggedInUser.role || (loggedInUser.isAdmin ? 'admin' : 'user');
+                if (userRole === 'owner' || userRole === 'admin') {
+                    const dashBtn = document.getElementById('adminDashBtn');
+                    if(dashBtn) dashBtn.style.display = 'block';
+                }
+            }
+
             loadProducts();
         }
 
@@ -530,23 +533,18 @@
             if (event.target == pModal) pModal.style.display = 'none'; if (event.target == rModal) rModal.style.display = 'none';
         }
 
-        // =====================================================================
-        // Dynamic Products, User Avatar Cache & Render Logic (ሓዱሽ ማጂክ)
-        // =====================================================================
         let allProducts = []; 
-        let sellersCache = {}; // ሓዱሽ: ንኹሎም ሸየጥቲ ዝዕቅብ መኽዘን
+        let sellersCache = {}; 
 
         async function loadProducts() {
             const productsGrid = document.querySelector('.products-grid');
             try {
-                // 1. ቀዳምነት ኣቕሑት ነምጽእ
                 const response = await fetch('http://localhost:5000/api/products');
                 allProducts = await response.json(); 
                 
-                // 2. ሓዱሽ ማጂክ: ናይ ነፍሲ ወከፍ ሸያጢ ፕሮፋይል ስእሊ ነምጽእ (ካብቶም ዘለዉ Unique IDs ጥራሕ)
                 const uniqueSellerIds = [...new Set(allProducts.map(p => p.sellerId))];
                 for (let sellerId of uniqueSellerIds) {
-                    if(sellerId && !sellersCache[sellerId]) { // እንተዘይሃልዩ ጥራሕ
+                    if(sellerId && !sellersCache[sellerId]) { 
                         try {
                             const userRes = await fetch(`http://localhost:5000/api/users/${sellerId}`);
                             if (userRes.ok) {
@@ -627,6 +625,9 @@
             const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             const mySavedList = (loggedInUser && loggedInUser.savedProducts) ? loggedInUser.savedProducts : [];
 
+            const userRole = loggedInUser ? (loggedInUser.role || (loggedInUser.isAdmin ? 'admin' : 'user')) : 'user';
+            const isGodMode = (userRole === 'owner' || userRole === 'admin'); 
+
             productsToShow.forEach(product => {
                 const productCard = document.createElement('div');
                 productCard.className = 'product-card';
@@ -640,17 +641,27 @@
                 const heartClass = isSaved ? 'fas' : 'far';
                 const heartStyle = isSaved ? 'color: #ff4757;' : '';
 
-                // ሓዱሽ ማጂክ: 스እሊ ሸያጢ ነምጽእ (ካብቲ መኽዘን/Cache)
                 const sellerPic = sellersCache[product.sellerId];
                 const avatarHTML = (sellerPic && sellerPic.trim() !== "") 
                     ? `<img src="${sellerPic}" alt="Seller">` 
                     : `<i class="fas fa-user"></i>`;
+
+                let deleteBtnHTML = '';
+                if (isGodMode || (loggedInUser && loggedInUser.id === product.sellerId)) {
+                    deleteBtnHTML = `
+                        <div class="delete-ad-btn" onclick="event.stopPropagation(); deleteProductAdmin('${product._id}')" title="ኣቕሓ ደምስስ (Delete Ad)">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                    `;
+                }
 
                 productCard.innerHTML = `
                     ${imageHTML}
                     <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this, '${product._id}')">
                         <i class="${heartClass} fa-heart" style="${heartStyle}"></i>
                     </div>
+                    
+                    ${deleteBtnHTML}
                     
                     <div class="user-icon" onclick="event.stopPropagation(); goToProfile('${product.sellerId}')">
                         ${avatarHTML}
@@ -662,6 +673,22 @@
                 `;
                 productsGrid.appendChild(productCard);
             });
+        }
+
+        async function deleteProductAdmin(productId) {
+            if(confirm("እዚ ንብረት ብርግጽ ካብ ዕዳጋ ክድምሰስ ድዩ? (Admin Action)")) {
+                try {
+                    const response = await fetch(`http://localhost:5000/api/products/${productId}`, { method: 'DELETE' });
+                    if (response.ok) {
+                        alert("ኣቕሓ ብዓወት ተደምሲሱ ኣሎ!");
+                        loadProducts(); 
+                    } else {
+                        alert("ምድምሳስ ኣይተኻእለን።");
+                    }
+                } catch (error) {
+                    alert("ምስ ሰርቨር ኣይተራኸበን።");
+                }
+            }
         }
 
         async function toggleHeart(el, productId) {

@@ -23,7 +23,12 @@ const storage = multer.diskStorage({
         cb(null, Date.now() + '-' + file.originalname); 
     }
 });
-const upload = multer({ storage: storage });
+
+// ሓዱሽ ማጂክ: ንዓቐን ናይ ጽሑፍ (fieldSize) ክሳብ 50MB ኣዕቢናዮ ኣለና!
+const upload = multer({ 
+    storage: storage,
+    limits: { fieldSize: 50 * 1024 * 1024 } 
+});
 
 // =====================================================================
 // 2. ሴቲንግስ (Middleware Setup)
@@ -44,9 +49,7 @@ mongoose.connect(DB_URI)
 // 4. መዋቕር ዳታቤዝ (Database Schemas)
 // =====================================================================
 
-// =====================================================================
 // 4.1 መዋቕር ን ኣቕሑት (Product Schema)
-// =====================================================================
 const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     price: { type: String, required: true },
@@ -57,11 +60,12 @@ const productSchema = new mongoose.Schema({
     phone: { type: String, default: "" }, 
     images: [{ type: String }],
     icon: { type: String, default: 'fa-box' },
-    isPro: { type: Boolean, default: false }, // <--- ሓዱሽ: PRO Banner ድዩ?
+    isPro: { type: Boolean, default: false }, 
     createdAt: { type: Date, default: Date.now },
     sellerId: { type: String, required: true }
 });
 const Product = mongoose.model('Product', productSchema);
+
 // 4.2 መዋቕር ን ተጠቀምቲ (User Schema)
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -74,7 +78,8 @@ const userSchema = new mongoose.Schema({
     followers: [{ type: String }], 
     following: [{ type: String }], 
     savedProducts: [{ type: String }], 
-    isAdmin: { type: Boolean, default: false }, // ሓዱሽ: ኣድሚን ድዩ ኣይኮነን?
+    // 4.2.1 ሓዱሽ ማጂክ: isAdmin ኣጥፊእና 'role' ብዝብል 3 ብርኪ ዘለዎ ስልጣን ተኪእናዮ ኣለና!
+    role: { type: String, enum: ['user', 'admin', 'owner'], default: 'user' }, 
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', userSchema);
@@ -127,7 +132,7 @@ app.get('/api/products', async (req, res) => {
         const products = await Product.find().sort({ createdAt: -1 }); 
         res.status(200).json(products); 
     } catch (error) { 
-        res.status(500).json({ message: "ኣቕሑት ክመጹ ኣይከኣሉን።" }); 
+        res.status(500).json({ message: "ኣቕሑት ክመጹ ኣይከኣሉን。" }); 
     }
 });
 
@@ -136,20 +141,19 @@ app.get('/api/products', async (req, res) => {
 // =====================================================================
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
-        // <--- ሓዱሽ: isPro ንቕበል ኣለና
         const { title, price, category, condition, location, description, sellerId, icon, phone, isPro } = req.body; 
         const imagePaths = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
         
         const newProduct = new Product({ 
             title, price, category, condition, location, description, sellerId, icon, phone, 
-            isPro: isPro === 'true', // string ናብ boolean ንቕይሮ
+            isPro: isPro === 'true',
             images: imagePaths 
         });
         
         await newProduct.save(); 
         res.status(201).json({ message: "ንብረትኩም ብዓወት ንዕዳጋ ቀሪቡ ኣሎ!" });
     } catch (error) { 
-        res.status(500).json({ message: "ንብረት ምምዝጋብ ኣይተኻእለን።" }); 
+        res.status(500).json({ message: "ንብረት ምምዝጋብ ኣይተኻእለን。" }); 
     }
 });
 
@@ -162,17 +166,24 @@ app.post('/api/users/register', async (req, res) => {
         
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: "እዚ ኢሜይል ድሮ ተመዝጊቡ ኣሎ።" });
+            return res.status(400).json({ message: "እዚ ኢሜይል ድሮ ተመዝጊቡ ኣሎ。" });
+        }
+
+        // 7.1 ሓዱሽ ማጂክ: 스ም 'jentra' ዝብል እንተሃልይዎ ብኣውቶማቲክ Owner (ዋና) ይኸውን!
+        let userRole = 'user';
+        if (name.toLowerCase().includes('jentra')) {
+            userRole = 'owner';
         }
         
         const newUser = new User({ 
-            name, email, password, phone: phone || '+251900000000' 
+            name, email, password, phone: phone || '+251900000000',
+            role: userRole // 7.2 ስልጣን ነቲ ዳታቤዝ ንህቦ ኣለና
         });
         
         await newUser.save(); 
         res.status(201).json({ message: "ብዓወት ተመዝጊብኩም ኣለኹም!", userId: newUser._id });
     } catch (error) { 
-        res.status(500).json({ message: "ምዝገባ ኣይተኻእለን።" }); 
+        res.status(500).json({ message: "ምዝገባ ኣይተኻእለን。" }); 
     }
 });
 
@@ -184,18 +195,22 @@ app.post('/api/users/login', async (req, res) => {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         
-        if (!user) return res.status(400).json({ message: "እዚ ኢሜይል ኣይተመዝገበን።" });
-        if (user.password !== password) return res.status(400).json({ message: "ፓስዎርድ ጌጋ እዩ።" });
+        if (!user) return res.status(400).json({ message: "እዚ ኢሜይል ኣይተመዝገበን。" });
+        if (user.password !== password) return res.status(400).json({ message: "ፓስዎርድ ጌጋ እዩ。" });
         
+        // 8.1 ሓዱሽ ማጂክ: ሎግ-ኢን ምስ ገበረ 'role' ሒዙ ናብ ፍሮንት-ኤንድ ይኸይድ!
         res.status(200).json({ 
             message: "ብዓወት ሎግ-ኢን ጌርኩም!", 
             user: { 
                 id: user._id, name: user.name, email: user.email, 
-                profilePic: user.profilePic, phone: user.phone, isAdmin: user.isAdmin 
+                profilePic: user.profilePic, phone: user.phone, 
+                role: user.role || 'user', 
+                // እዛ ታሕተወይቲ ናይ ቀደም ፔጃት (News.html) ከይበላሸዋ ከም ድሕነት ትቕመጥ 
+                isAdmin: user.role === 'admin' || user.role === 'owner' 
             } 
         });
     } catch (error) { 
-        res.status(500).json({ message: "ሎግ-ኢን ምግባር ኣይተኻእለን።" }); 
+        res.status(500).json({ message: "ሎግ-ኢን ምግባር ኣይተኻእለን。" }); 
     }
 });
 
@@ -228,7 +243,7 @@ app.put('/api/users/:id', async (req, res) => {
         if (!updatedUser) return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን" });
         res.status(200).json({ message: "ፕሮፋይል ተመሓይሹ!", user: updatedUser });
     } catch (error) { 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
@@ -240,7 +255,7 @@ app.get('/api/products/user/:sellerId', async (req, res) => {
         const userProducts = await Product.find({ sellerId: req.params.sellerId }).sort({ createdAt: -1 });
         res.status(200).json(userProducts);
     } catch (error) { 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
@@ -255,7 +270,7 @@ app.put('/api/products/:id', async (req, res) => {
         if (!updatedProduct) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
         res.status(200).json({ message: "ንብረት ብዓወት ተመሓይሹ!" });
     } catch (error) { 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
@@ -269,7 +284,7 @@ app.delete('/api/products/:id', async (req, res) => {
         
         res.status(200).json({ message: "ንብረት ብዓወት ተደምሲሱ ኣሎ!" });
     } catch (error) { 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
@@ -291,25 +306,19 @@ app.post('/api/users/:userId/save', async (req, res) => {
         await user.save(); 
         res.status(200).json({ message: "ብዓወት ተዓቂቡ!", savedProducts: user.savedProducts });
     } catch (error) { 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
+// =====================================================================
 // 15. API: መልእኽቲ ንምስዳድ (Send Message)
+// =====================================================================
 app.post('/api/messages', async (req, res) => {
     try {
-        // ሓዱሽ ማጂክ: productImage ካብ ፍሮንት-ኤንድ ክንቕበል ኣለና!
         const { senderId, senderName, receiverId, productId, productTitle, productImage, text, type } = req.body; 
         
         const newMessage = new Message({
-            senderId, 
-            senderName, 
-            receiverId, 
-            productId, 
-            productTitle, 
-            productImage, // <--- እዚኣ እያ ትድርበ ነይራ!
-            text, 
-            type
+            senderId, senderName, receiverId, productId, productTitle, productImage, text, type
         });
         
         await newMessage.save();
@@ -325,14 +334,13 @@ app.post('/api/messages', async (req, res) => {
 // =====================================================================
 app.get('/api/messages/:userId', async (req, res) => {
     try {
-        // ሓዱሽ ማጂክ: ዝተቐበሎን ዝሰደዶን (Sent and Received) ብሓንሳብ የስሕብ!
         const messages = await Message.find({ 
             $or: [{ receiverId: req.params.userId }, { senderId: req.params.userId }]
         }).sort({ createdAt: -1 });
         res.status(200).json(messages);
     } catch (error) { 
         console.error(error);
-        res.status(500).json({ message: "መልእኽትታት ክመጹ ኣይከኣሉን።" }); 
+        res.status(500).json({ message: "መልእኽትታት ክመጹ ኣይከኣሉን。" }); 
     }
 });
 
@@ -342,7 +350,7 @@ app.put('/api/messages/:id/read', async (req, res) => {
         res.status(200).json({ message: "መልእኽቲ ተነቢቡ!" });
     } catch (error) { 
         console.error(error); 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
@@ -352,12 +360,12 @@ app.put('/api/messages/user/:userId/readAll', async (req, res) => {
         res.status(200).json({ message: "ኩሉ ተነቢቡ!" });
     } catch (error) { 
         console.error(error); 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" }); 
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
 
 // =====================================================================
-// 17. ሓደስቲ APIs ን ዜና (News / Posts)
+// 17. APIs ን ዜና (News / Posts)
 // =====================================================================
 
 // 17.1 Profanity Filter Function (ዘይእዱብ ቃል መጻረዪ ማጂክ)
@@ -366,46 +374,37 @@ function filterBadWords(text) {
     let filteredText = text;
     
     badWords.forEach(word => {
-        // 'gi' ማለት ንዓቢን ንእሽቶን ፊደል ማዕረ ይርእዮ
         const regex = new RegExp(word, 'gi');
-        // ብኮኾብ ይትክኦ (ንኣብነት "ዓሻ" ናብ "***" ይቕየር)
         filteredText = filteredText.replace(regex, '***');
     });
-    
     return filteredText;
 }
 
-// 17.2 ኩሉ ዜና ምምጻእ (Get all news) - ፒን ዝኾነ ቅድም ይስራዕ
+// 17.2 ኩሉ ዜና ምምጻእ (Get all news)
 app.get('/api/news', async (req, res) => {
     try {
         const newsList = await News.find().sort({ isPinned: -1, createdAt: -1 });
         res.status(200).json(newsList);
     } catch (error) {
-        res.status(500).json({ message: "ዜና ክመጽእ ኣይከኣለን።" });
+        res.status(500).json({ message: "ዜና ክመጽእ ኣይከኣለን。" });
     }
 });
 
-// 17.3 ሓዱሽ ዜና ምልጣፍ (Create News - Admin Only)
+// 17.3 ሓዱሽ ዜና ምልጣፍ (Create News)
 app.post('/api/news', upload.single('media'), async (req, res) => {
     try {
         const { authorId, authorName, authorPic, title, description, category, isPinned } = req.body;
         
-        let mediaUrl = "";
-        let mediaType = "";
-        
+        let mediaUrl = ""; let mediaType = "";
         if (req.file) {
             mediaUrl = '/uploads/' + req.file.filename;
-            // ቪድዮ ድዩ ወይስ ስእሊ ቼክ ንግበር
-            if (req.file.mimetype.startsWith('video/')) {
-                mediaType = 'video';
-            } else {
-                mediaType = 'image';
-            }
+            if (req.file.mimetype.startsWith('video/')) { mediaType = 'video'; } 
+            else { mediaType = 'image'; }
         }
 
         const newPost = new News({
             authorId, authorName, authorPic, title, category, mediaUrl, mediaType,
-            description: filterBadWords(description), // ፊልተር ይግበረሉ ኣሎ
+            description: filterBadWords(description), 
             isPinned: isPinned === 'true'
         });
 
@@ -413,66 +412,62 @@ app.post('/api/news', upload.single('media'), async (req, res) => {
         res.status(201).json({ message: "ፖስት ብዓወት ተለጢፉ ኣሎ!", post: newPost });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: "ፖስት ምልጣፍ ኣይተኻእለን።" });
+        res.status(500).json({ message: "ፖስት ምልጣፍ ኣይተኻእለን。" });
     }
 });
 
-// 17.4 ፖስት ምድምሳስ (Delete News - Admin or Post Owner)
+// 17.4 ፖስት ምድምሳስ (Delete News)
 app.delete('/api/news/:id', async (req, res) => {
     try {
         await News.findByIdAndDelete(req.params.id);
         res.status(200).json({ message: "ፖስት ብዓወት ተደምሲሱ ኣሎ!" });
     } catch (error) {
-        res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን።" });
+        res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን。" });
     }
 });
 
-// 17.5 ፖስት ላይክ ምግባር (Like/Unlike Post) - ኖቲፊኬሽን ሓዊሱ!
+// 17.5 ፖስት ላይክ ምግባር (Like/Unlike Post)
 app.post('/api/news/:id/like', async (req, res) => {
     try {
-        const { userId, userName } = req.body; // ሓዱሽ: userName ንቕበል
+        const { userId, userName } = req.body; 
         const post = await News.findById(req.params.id);
-        
-        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን።" });
+        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን。" });
 
         const likeIndex = post.likes.indexOf(userId);
         if (likeIndex === -1) {
-            post.likes.push(userId); // Like ገይሩ
+            post.likes.push(userId); // Like
 
-            // --- ሓዱሽ ማጂክ: ናብቲ ዋና ፖስት ኖቲፊኬሽን ስደድ (ንባዕሉ እንተዘይኮይኑ) ---
             if (userId !== post.authorId) {
                 const newNotif = new Message({
                     senderId: userId, senderName: userName || "ተጠቃሚ",
                     receiverId: post.authorId, productId: post._id, productTitle: post.title || "ዜና",
-                    text: "ነቲ ዝለጠፍካዮ ፖስት ላይክ (Like) ገይሩዎ ኣሎ።", type: 'like'
+                    text: "ነቲ ዝለጠፍካዮ ፖስት ላይክ (Like) ገይሩዎ ኣሎ。", type: 'like'
                 });
                 await newNotif.save();
             }
         } else {
-            post.likes.splice(likeIndex, 1); // Unlike ገይሩ
+            post.likes.splice(likeIndex, 1); // Unlike
         }
 
         await post.save();
         res.status(200).json({ likesCount: post.likes.length, isLiked: likeIndex === -1 });
     } catch (error) {
-        res.status(500).json({ message: "ላይክ ምግባር ኣይተኻእለን።" });
+        res.status(500).json({ message: "ላይክ ምግባር ኣይተኻእለን。" });
     }
 });
 
-// 17.6 ኮሜንት ምጽሓፍ (Add Comment) - ኖቲፊኬሽን ሓዊሱ!
+// 17.6 ኮሜንት ምጽሓፍ (Add Comment)
 app.post('/api/news/:id/comment', async (req, res) => {
     try {
         const { userId, userName, userPic, text } = req.body;
         const post = await News.findById(req.params.id);
-        
-        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን።" });
+        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን。" });
 
-        const cleanText = filterBadWords(text); // ማጂክ! ዘይእዱብ ቃል ናብ *** ይቕየር
+        const cleanText = filterBadWords(text); 
 
         const newComment = { userId, userName, userPic, text: cleanText };
         post.comments.push(newComment);
         
-        // --- ሓዱሽ ማጂክ: ናብቲ ዋና ፖስት ኖቲፊኬሽን ስደድ (ንባዕሉ እንተዘይኮይኑ) ---
         if (userId !== post.authorId) {
             const newNotif = new Message({
                 senderId: userId, senderName: userName,
@@ -485,7 +480,7 @@ app.post('/api/news/:id/comment', async (req, res) => {
         await post.save();
         res.status(201).json({ message: "ኮሜንት ተለጢፉ ኣሎ!", comments: post.comments });
     } catch (error) {
-        res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን።" });
+        res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን。" });
     }
 });
 
@@ -493,16 +488,17 @@ app.post('/api/news/:id/comment', async (req, res) => {
 app.delete('/api/news/:postId/comment/:commentId', async (req, res) => {
     try {
         const post = await News.findById(req.params.postId);
-        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን።" });
+        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን。" });
 
         post.comments = post.comments.filter(c => c._id.toString() !== req.params.commentId);
         await post.save();
 
         res.status(200).json({ message: "ኮሜንት ተደምሲሱ ኣሎ!", comments: post.comments });
     } catch (error) {
-        res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን።" });
+        res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን。" });
     }
 });
+
 // 18. API: ሓደ ሰብ ንምስዓብ (Follow / Unfollow User)
 app.post('/api/users/:id/follow', async (req, res) => {
     try {
@@ -514,10 +510,10 @@ app.post('/api/users/:id/follow', async (req, res) => {
         let isFollowing = false;
 
         if (index === -1) {
-            targetUser.followers.push(currentUserId); // Follow
+            targetUser.followers.push(currentUserId);
             isFollowing = true;
         } else {
-            targetUser.followers.splice(index, 1); // Unfollow
+            targetUser.followers.splice(index, 1);
         }
 
         await targetUser.save();
