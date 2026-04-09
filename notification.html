@@ -192,7 +192,8 @@
             try {
                 const response = await fetch(`http://localhost:5000/api/messages/${loggedInUser.id}`);
                 if (response.ok) {
-                    const realMessages = await response.json();
+                   // ሓዱሽ ማጂክ: ናይ ግሊ መልእኽቲ (personal) ኣብዚ ኖቲፊኬሽን ኣይረአን!
+                    const realMessages = (await response.json()).filter(m => m.type !== 'personal');
                     
                     // --- ሓዱሽ: ቀይሕ ባጅ (Unread Count) ምሕሳብ ---
                     const unreadCount = realMessages.filter(m => !m.isRead).length;

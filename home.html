@@ -208,7 +208,7 @@
         </button>
         <div class="search-wrapper">
             <i class="fas fa-search"></i>
-            <input type="text" class="search-bar" placeholder="ድለይ (Search)...">
+            <input type="text" id="searchInput" class="search-bar" placeholder="ድለይ (Search)..." oninput="applyFilters()">
         </div>
         <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
     </div>
@@ -503,8 +503,30 @@
         }
         function applyFilters() {
             let filtered = allProducts;
-            if (currentLocationFilter !== 'all') filtered = filtered.filter(p => p.location && p.location.includes(currentLocationFilter));
-            if (currentCategoryFilter !== 'all') filtered = filtered.filter(p => p.category === currentCategoryFilter);
+            
+            // 1. ብ ሎኬሽን (Location) ምጽራይ
+            if (currentLocationFilter !== 'all') {
+                filtered = filtered.filter(p => p.location && p.location.includes(currentLocationFilter));
+            }
+            
+            // 2. ብ ካታጎሪ (Category) ምጽራይ
+            if (currentCategoryFilter !== 'all') {
+                filtered = filtered.filter(p => p.category === currentCategoryFilter);
+            }
+
+            // 3. ሓዱሽ ማጂክ: ብ ጽሑፍ ምድላይ (Search Bar)
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                const query = searchInput.value.toLowerCase().trim();
+                if (query !== '') {
+                    filtered = filtered.filter(p => 
+                        p.title.toLowerCase().includes(query) || 
+                        p.description.toLowerCase().includes(query)
+                    );
+                }
+            }
+
+            // 4. ነቲ ዝተጻረየ ውጽኢት ኣብ ስክሪን ኣርእዮ
             displayProducts(filtered);
         }
 

@@ -315,10 +315,13 @@ app.post('/api/messages', async (req, res) => {
 // =====================================================================
 app.get('/api/messages/:userId', async (req, res) => {
     try {
-        const messages = await Message.find({ receiverId: req.params.userId }).sort({ createdAt: -1 });
+        // ሓዱሽ ማጂክ: ዝተቐበሎን ዝሰደዶን (Sent and Received) ብሓንሳብ የስሕብ!
+        const messages = await Message.find({ 
+            $or: [{ receiverId: req.params.userId }, { senderId: req.params.userId }]
+        }).sort({ createdAt: -1 });
         res.status(200).json(messages);
     } catch (error) { 
-        console.error(error); 
+        console.error(error);
         res.status(500).json({ message: "መልእኽትታት ክመጹ ኣይከኣሉን።" }); 
     }
 });
@@ -490,9 +493,32 @@ app.delete('/api/news/:postId/comment/:commentId', async (req, res) => {
         res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን።" });
     }
 });
+// 18. API: ሓደ ሰብ ንምስዓብ (Follow / Unfollow User)
+app.post('/api/users/:id/follow', async (req, res) => {
+    try {
+        const targetUser = await User.findById(req.params.id);
+        const { currentUserId } = req.body;
+        if (!targetUser) return res.status(404).json({ message: "User not found" });
+
+        const index = targetUser.followers.indexOf(currentUserId);
+        let isFollowing = false;
+
+        if (index === -1) {
+            targetUser.followers.push(currentUserId); // Follow
+            isFollowing = true;
+        } else {
+            targetUser.followers.splice(index, 1); // Unfollow
+        }
+
+        await targetUser.save();
+        res.status(200).json({ followersCount: targetUser.followers.length, isFollowing });
+    } catch (error) { 
+        res.status(500).json({ message: "Follow error" }); 
+    }
+});
 
 // =====================================================================
-// 18. ሰርቨር ምጅማር (Start Server)
+// 19. ሰርቨር ምጅማር (Start Server)
 // =====================================================================
 const PORT = 5000;
 app.listen(PORT, () => {
