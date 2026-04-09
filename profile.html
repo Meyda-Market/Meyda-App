@@ -698,6 +698,21 @@
                     }
                 }
             } catch (error) { if (isMyProfile) document.getElementById('inboxArea').innerHTML = '<div style="color: red;">መልእኽትታት ኣብ ምምጻእ ጌጋ ኣጋጢሙ።</div>'; }
+            // ==========================================================
+        // 1. ሓዱሽ ማጂክ: ካብ ኖቲፊኬሽን ዝመጸ ሰብ ብቐጥታ ቻት ንምኽፋት
+        // ==========================================================
+        setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const chatWith = urlParams.get('chatWith');
+            if (chatWith) {
+                // ሀ. መጀመርያ ናብ "Inbox" ታብ ይቕይር
+                const inboxTabBtn = document.querySelectorAll('.profile-tabs .tab')[2];
+                if (inboxTabBtn) switchTab('messagesTab', inboxTabBtn);
+                
+                // ለ. ነታ ምስቲ ሰብ ዘላ ቻት ብኣውቶማቲክ ይኸፍታ
+                openChat(chatWith);
+            }
+        }, 500); // ዳታ ክሳብ ዝጸዓን ፍርቂ ሰከንድ ንጽበ
         }
 
         function openChat(partnerId) {
