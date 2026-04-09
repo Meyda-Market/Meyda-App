@@ -44,7 +44,9 @@ mongoose.connect(DB_URI)
 // 4. መዋቕር ዳታቤዝ (Database Schemas)
 // =====================================================================
 
+// =====================================================================
 // 4.1 መዋቕር ን ኣቕሑት (Product Schema)
+// =====================================================================
 const productSchema = new mongoose.Schema({
     title: { type: String, required: true },
     price: { type: String, required: true },
@@ -55,11 +57,11 @@ const productSchema = new mongoose.Schema({
     phone: { type: String, default: "" }, 
     images: [{ type: String }],
     icon: { type: String, default: 'fa-box' },
+    isPro: { type: Boolean, default: false }, // <--- ሓዱሽ: PRO Banner ድዩ?
     createdAt: { type: Date, default: Date.now },
     sellerId: { type: String, required: true }
 });
 const Product = mongoose.model('Product', productSchema);
-
 // 4.2 መዋቕር ን ተጠቀምቲ (User Schema)
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -133,11 +135,14 @@ app.get('/api/products', async (req, res) => {
 // =====================================================================
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
-        const { title, price, category, condition, location, description, sellerId, icon, phone } = req.body; 
+        // <--- ሓዱሽ: isPro ንቕበል ኣለና
+        const { title, price, category, condition, location, description, sellerId, icon, phone, isPro } = req.body; 
         const imagePaths = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
         
         const newProduct = new Product({ 
-            title, price, category, condition, location, description, sellerId, icon, phone, images: imagePaths 
+            title, price, category, condition, location, description, sellerId, icon, phone, 
+            isPro: isPro === 'true', // string ናብ boolean ንቕይሮ
+            images: imagePaths 
         });
         
         await newProduct.save(); 

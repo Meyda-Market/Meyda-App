@@ -568,7 +568,7 @@
             if(categoryValue === 'furniture') iconValue = 'fa-couch';
             if(categoryValue === 'laptop') iconValue = 'fa-laptop';
 
-            const formData = new FormData();
+           const formData = new FormData();
             formData.append('title', titleValue);
             formData.append('price', priceValue + " Br");
             formData.append('category', categoryValue);
@@ -579,8 +579,14 @@
             formData.append('sellerId', loggedInUser.id); 
             formData.append('phone', finalPhone);
 
+            // ሓዱሽ: እዚ ሰብ PRO ማስታወቂያ (Hero Banner) ከፊሉ ድዩ?
+            const isProAd = currentPaymentType === 'pro_ad' && selectedPrice > 0;
+            formData.append('isPro', isProAd); 
+
             for(let i = 0; i < selectedFiles.length; i++) {
-                if(selectedFiles[i] !== null) formData.append('images', selectedFiles[i]);
+                if(selectedFiles[i] !== null) {
+                    formData.append('images', selectedFiles[i]);
+                }
             }
 
             try {
