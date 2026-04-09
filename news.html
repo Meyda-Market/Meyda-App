@@ -56,9 +56,14 @@
         .pin-badge { position: absolute; top: -10px; right: 15px; background: #ff4757; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: bold; box-shadow: 0 2px 5px rgba(255, 71, 87, 0.4); z-index: 10; }
 
         .news-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
-        .author-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 18px; }
+        
+        /* ሓዱሽ ማጂክ: 스እልን ስምን Clickable ጌርናዮም ኣለና (Hover Effect) */
+        .author-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: var(--water-blue); color: white; display: flex; justify-content: center; align-items: center; font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .author-pic:hover { filter: brightness(0.9); transform: scale(1.05); }
         .author-info { flex-grow: 1; }
-        .author-name { font-weight: bold; font-size: 15px; }
+        .author-name { font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; display: inline-block; }
+        .author-name:hover { color: var(--water-blue); text-decoration: underline; }
+        
         .post-time { font-size: 12px; color: var(--gray-text); }
         .post-options { color: var(--gray-text); cursor: pointer; padding: 5px; position: relative;}
         
@@ -90,7 +95,13 @@
         .comment-list { display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto;}
         .comment-item { display: flex; gap: 10px; align-items: flex-start;}
         .comment-bubble { background: var(--input-bg); padding: 10px 12px; border-radius: 15px; flex-grow: 1; position: relative;}
-        .comment-author { font-weight: bold; font-size: 13px; margin-bottom: 4px; display: block;}
+        
+        /* ሓዱሽ ማጂክ: ኮሜንት ወሃቢ 스እልን ስምን Clickable ጌርናዮም ኣለና */
+        .comment-item img { cursor: pointer; transition: 0.2s; }
+        .comment-item img:hover { filter: brightness(0.9); }
+        .comment-author { font-weight: bold; font-size: 13px; margin-bottom: 4px; display: inline-block; cursor: pointer; transition: 0.2s;}
+        .comment-author:hover { color: var(--water-blue); text-decoration: underline; }
+        
         .comment-text { font-size: 13px; color: var(--text-color); line-height: 1.4;}
         .comment-delete { position: absolute; right: 10px; top: 10px; color: #ff4757; font-size: 12px; cursor: pointer; display: none;}
         .comment-bubble:hover .comment-delete { display: block; }
@@ -198,7 +209,6 @@
         let currentFilter = 'all';
         let loggedInUser = null;
 
-        // 1. መጀመርያ ፔጅ ምስ ተኸፍተ
         window.onload = () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
@@ -208,13 +218,12 @@
             loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             if (loggedInUser) {
                 document.getElementById('adminCreateBtn').style.display = 'block';
-                checkUnreadBadge(); // ሓዱሽ: ባጅ ቼክ ይገብር!
+                checkUnreadBadge(); 
             }
 
             fetchNews();
         }
 
-        // ሓዱሽ ማጂክ ን news.html: ቀይሕ ባጅ ቼክ ይገብር
         async function checkUnreadBadge() {
             try {
                 const res = await fetch(`http://localhost:5000/api/messages/${loggedInUser.id}`);
@@ -237,7 +246,6 @@
             document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
 
-        // 2. ዜና ካብ ዳታቤዝ ምምጻእ
         async function fetchNews() {
             try {
                 const response = await fetch('http://localhost:5000/api/news');
@@ -250,7 +258,6 @@
             }
         }
 
-        // 3. ዜና ኣብ ስክሪን ምስኣል (Render)
         function renderNews() {
             const feed = document.getElementById('newsFeed');
             feed.innerHTML = '';
@@ -266,14 +273,11 @@
                 const isLikedByMe = loggedInUser && news.likes.includes(loggedInUser.id);
                 const likeBtnClass = isLikedByMe ? 'fas liked' : 'far';
                 
-                // ግዜ ቅርጺ
                 const dateObj = new Date(news.createdAt);
                 const timeString = dateObj.toLocaleDateString() + " " + dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-                // Pinned HTML
                 const pinHTML = news.isPinned ? `<div class="pin-badge"><i class="fas fa-thumbtack"></i> Pinned</div>` : '';
 
-                // Media HTML (Image or Video)
                 let mediaHTML = '';
                 if (news.mediaUrl) {
                     if (news.mediaType === 'video') {
@@ -283,7 +287,6 @@
                     }
                 }
 
-                // Options (Delete Post - Only Admin/Owner)
                 let optionsHTML = '';
                 if (loggedInUser && (loggedInUser.id === news.authorId || loggedInUser.isAdmin)) {
                     optionsHTML = `
@@ -296,17 +299,17 @@
                     `;
                 }
 
-                // Comments HTML
                 let commentsHTML = '';
                 news.comments.forEach(c => {
                     const canDeleteComment = loggedInUser && (loggedInUser.id === c.userId || loggedInUser.id === news.authorId);
                     const deleteBtn = canDeleteComment ? `<i class="fas fa-times comment-delete" onclick="deleteComment('${news._id}', '${c._id}')"></i>` : '';
                     
+                    // ሓዱሽ ማጂክ: ኮሜንት ፕሮፋይልን ስምን ናብ ፕሮፋይል ክወስድ (onclick='goToProfile')
                     commentsHTML += `
                         <div class="comment-item">
-                            <img src="${c.userPic || 'https://via.placeholder.com/40'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">
+                            <img src="${c.userPic || 'https://via.placeholder.com/40'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" onclick="goToProfile('${c.userId}')">
                             <div class="comment-bubble">
-                                <span class="comment-author">${c.userName}</span>
+                                <span class="comment-author" onclick="goToProfile('${c.userId}')">${c.userName}</span>
                                 <div class="comment-text">${c.text}</div>
                                 ${deleteBtn}
                             </div>
@@ -314,13 +317,14 @@
                     `;
                 });
 
+                // ሓዱሽ ማጂክ: ፖስት ፕሮፋይልን ስምን ናብ ፕሮፋይል ክወስድ (onclick='goToProfile')
                 feed.innerHTML += `
                     <div class="news-card">
                         ${pinHTML}
                         <div class="news-header">
-                            <img src="${news.authorPic || 'https://via.placeholder.com/40'}" class="author-pic">
+                            <img src="${news.authorPic || 'https://via.placeholder.com/40'}" class="author-pic" onclick="goToProfile('${news.authorId}')">
                             <div class="author-info">
-                                <div class="author-name">${news.authorName}</div>
+                                <div class="author-name" onclick="goToProfile('${news.authorId}')">${news.authorName}</div>
                                 <div class="post-time">${timeString} • <i class="fas fa-globe-africa"></i></div>
                             </div>
                             ${optionsHTML}
@@ -359,7 +363,13 @@
             });
         }
 
-        // 4. ሓዱሽ ፖስት ምልጣፍ (Admin Create Post)
+        // ሓዱሽ ማጂክ: ናብ ናይ ሰብ ፕሮፋይል ዝወስድ ፈንክሽን
+        function goToProfile(userId) {
+            if (userId) {
+                window.location.href = `profile.html?seller=${userId}`;
+            }
+        }
+
         function openCreateModal() { document.getElementById('createPostModal').style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
@@ -389,15 +399,13 @@
                 if(res.ok) {
                     alert("ብዓወት ተለጢፉ!");
                     closeModal('createPostModal');
-                    // Form Reset
                     document.getElementById('postTitle').value = ''; document.getElementById('postDesc').value = '';
                     document.getElementById('postMedia').value = ''; document.getElementById('postPin').checked = false;
-                    fetchNews(); // Reload
+                    fetchNews(); 
                 }
             } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
         }
 
-        // 5. ፖስት ምድምሳስ
         async function deletePost(postId) {
             if(confirm("እዚ ፖስት ብርግጽ ክጠፍእ ድዩ?")) {
                 try {
@@ -407,14 +415,12 @@
             }
         }
 
-        // 6. ላይክ ማጂክ (Like Toggle)
         async function toggleLike(postId, btnEl) {
             if(!loggedInUser) { alert("ሎግ-ኢን ግበሩ!"); return; }
 
             const icon = btnEl.querySelector('i');
             const countSpan = document.getElementById(`like-count-${postId}`);
             
-            // Visual Update first
             let isCurrentlyLiked = icon.classList.contains('fas');
             if(isCurrentlyLiked) {
                 icon.classList.replace('fas', 'far'); btnEl.classList.remove('liked');
@@ -425,7 +431,6 @@
             try {
                 const res = await fetch(`http://localhost:5000/api/news/${postId}/like`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    // ሓዱሽ: userName ኣብዚ ተወሲኻ ኣላ ኖቲፊኬሽን መን ከም ዝገበሮ ንምፍላጥ
                     body: JSON.stringify({ userId: loggedInUser.id, userName: loggedInUser.name }) 
                 });
                 const data = await res.json();
@@ -435,7 +440,6 @@
             } catch(e) { console.log(e); }
         }
 
-        // 7. ኮሜንት ማጂክ (Show/Hide & Post Comment)
         function toggleComments(postId) {
             const sec = document.getElementById(`comments-${postId}`);
             sec.style.display = sec.style.display === 'block' ? 'none' : 'block';
@@ -456,7 +460,7 @@
                 
                 if(res.ok) {
                     inputEl.value = '';
-                    fetchNews(); // Reload to show new comment (and filtered bad words)
+                    fetchNews(); 
                 }
             } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
         }
@@ -470,7 +474,6 @@
             }
         }
 
-        // 8. ሼር ምግባር (Share Link)
         function sharePost(postId) {
             const url = `${window.location.origin}/news.html?post=${postId}`;
             navigator.clipboard.writeText(url).then(() => {
@@ -478,7 +481,6 @@
             });
         }
 
-        // 9. ፊልተር ብ ታብ
         function filterNews(cat, el) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
@@ -486,7 +488,6 @@
             renderNews();
         }
 
-        // Option Menu Toggle helper
         function toggleMenu(menuId) {
             const menu = document.getElementById(menuId);
             menu.style.display = menu.style.display === 'block' ? 'none' : 'block';

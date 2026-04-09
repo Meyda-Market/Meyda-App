@@ -140,9 +140,10 @@
         
         .user-icon {
             position: absolute; top: 130px; left: 20px; background: var(--water-blue); color: white; width: 36px; height: 36px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--white); z-index: 20; cursor: pointer; transition: 0.2s; user-select: none;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--white); z-index: 20; cursor: pointer; transition: 0.2s; user-select: none; overflow: hidden; box-shadow: var(--shadow);
         }
         .user-icon:hover { transform: scale(1.1); }
+        .user-icon img { width: 100%; height: 100%; object-fit: cover; }
         
         .product-price { font-weight: bold; color: var(--water-blue); font-size: 18px; margin-top: 25px; }
         .product-title { font-size: 14px; margin: 6px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
@@ -376,7 +377,7 @@
         }
 
         // =====================================================================
-        // Product Modal & Messaging Logic (ከምዘለዎ ይቕጽል)
+        // Product Modal & Messaging Logic
         // =====================================================================
         let currentViewedProduct = null; 
 
@@ -440,7 +441,7 @@
                 senderId: loggedInUser.id, senderName: loggedInUser.name,
                 receiverId: currentViewedProduct.sellerId, productId: currentViewedProduct._id,
                 productTitle: currentViewedProduct.title, 
-                productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "", // <--- ሓዱሽ ማጂክ!
+                productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "",
                 text: text, type: 'message'
             };
 
@@ -452,7 +453,7 @@
         }
 
         // =====================================================================
-        // Region & Filter Logic (ከምዘለዎ ይቕጽል)
+        // Region & Filter Logic
         // =====================================================================
         const locationsData = {
             "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
@@ -505,18 +506,12 @@
         }
         function applyFilters() {
             let filtered = allProducts;
-            
-            // 1. ብ ሎኬሽን (Location) ምጽራይ
             if (currentLocationFilter !== 'all') {
                 filtered = filtered.filter(p => p.location && p.location.includes(currentLocationFilter));
             }
-            
-            // 2. ብ ካታጎሪ (Category) ምጽራይ
             if (currentCategoryFilter !== 'all') {
                 filtered = filtered.filter(p => p.category === currentCategoryFilter);
             }
-
-            // 3. ሓዱሽ ማጂክ: ብ ጽሑፍ ምድላይ (Search Bar)
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
                 const query = searchInput.value.toLowerCase().trim();
@@ -527,8 +522,6 @@
                     );
                 }
             }
-
-            // 4. ነቲ ዝተጻረየ ውጽኢት ኣብ ስክሪን ኣርእዮ
             displayProducts(filtered);
         }
 
@@ -538,24 +531,40 @@
         }
 
         // =====================================================================
-        // Dynamic Products, Save Logic & ሓዱሽ PRO Banner Logic
+        // Dynamic Products, User Avatar Cache & Render Logic (ሓዱሽ ማጂክ)
         // =====================================================================
         let allProducts = []; 
+        let sellersCache = {}; // ሓዱሽ: ንኹሎም ሸየጥቲ ዝዕቅብ መኽዘን
 
         async function loadProducts() {
             const productsGrid = document.querySelector('.products-grid');
             try {
+                // 1. ቀዳምነት ኣቕሑት ነምጽእ
                 const response = await fetch('http://localhost:5000/api/products');
                 allProducts = await response.json(); 
                 
+                // 2. ሓዱሽ ማጂክ: ናይ ነፍሲ ወከፍ ሸያጢ ፕሮፋይል ስእሊ ነምጽእ (ካብቶም ዘለዉ Unique IDs ጥራሕ)
+                const uniqueSellerIds = [...new Set(allProducts.map(p => p.sellerId))];
+                for (let sellerId of uniqueSellerIds) {
+                    if(sellerId && !sellersCache[sellerId]) { // እንተዘይሃልዩ ጥራሕ
+                        try {
+                            const userRes = await fetch(`http://localhost:5000/api/users/${sellerId}`);
+                            if (userRes.ok) {
+                                const userData = await userRes.json();
+                                sellersCache[sellerId] = userData.profilePic || "";
+                            }
+                        } catch(e) { console.log("Error fetching user", e); }
+                    }
+                }
+
                 applyFilters(); 
-                updateHeroBanner(); // ሓዱሽ: ንባነር የዘምኖ
+                updateHeroBanner(); 
 
             } catch (error) {
                 productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:red;">ምስ ዳታቤዝ ክራኸብ ኣይከኣለን። ሰርቨር ሪስታርት ግበሩ።</p>';
             }
         }
-// ሓዱሽ ማጂክ: Hero Banner ብኣውቶማቲክ ምቕያር (ማራኺ UI/UX ዲዛይን ሓዊሱ)
+
         function updateHeroBanner() {
             const carousel = document.getElementById('heroCarousel');
             const indicatorsContainer = document.getElementById('carouselIndicators');
@@ -570,12 +579,10 @@
                 proProducts.forEach((product, index) => {
                     const slide = document.createElement('div');
                     slide.className = 'carousel-slide';
-                    // ጸሊም 백ግራውንድ ኣብቲ ድሕሪት
                     slide.style.backgroundColor = '#000000'; 
                     slide.style.cursor = 'pointer';
                     slide.onclick = () => openProduct(product);
 
-                    // እቲ ሓዱሽ ማራኺ ዲዛይን! 
                     slide.innerHTML = `
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('http://localhost:5000${product.images[0]}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
                         
@@ -609,7 +616,6 @@
             startCarouselAutoScroll();
         }
       
-
         function displayProducts(productsToShow) {
             const productsGrid = document.querySelector('.products-grid');
             productsGrid.innerHTML = ''; 
@@ -634,12 +640,22 @@
                 const heartClass = isSaved ? 'fas' : 'far';
                 const heartStyle = isSaved ? 'color: #ff4757;' : '';
 
+                // ሓዱሽ ማጂክ: 스እሊ ሸያጢ ነምጽእ (ካብቲ መኽዘን/Cache)
+                const sellerPic = sellersCache[product.sellerId];
+                const avatarHTML = (sellerPic && sellerPic.trim() !== "") 
+                    ? `<img src="${sellerPic}" alt="Seller">` 
+                    : `<i class="fas fa-user"></i>`;
+
                 productCard.innerHTML = `
                     ${imageHTML}
                     <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this, '${product._id}')">
                         <i class="${heartClass} fa-heart" style="${heartStyle}"></i>
                     </div>
-                    <div class="user-icon" onclick="event.stopPropagation(); goToProfile('${product.sellerId}')"><i class="fas fa-user"></i></div>
+                    
+                    <div class="user-icon" onclick="event.stopPropagation(); goToProfile('${product.sellerId}')">
+                        ${avatarHTML}
+                    </div>
+
                     <div class="product-price">${product.price}</div>
                     <div class="product-title">${product.title}</div>
                     <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ${product.location}</div>
