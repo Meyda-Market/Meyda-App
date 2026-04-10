@@ -182,7 +182,7 @@
         let currentFilter = 'all';
         let loggedInUser = null;
 
-        // 1. ፔጅ ክኽፈት ከሎ (On Load)
+       // 1. ፔጅ ክኽፈት ከሎ (On Load)
         window.onload = () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
@@ -191,8 +191,30 @@
             
             loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             if (loggedInUser) {
-                document.getElementById('adminCreateBtn').style.display = 'block';
                 checkUnreadBadge(); 
+                
+                // ==============================================================
+                // ሓዱሽ ማጂክ: ማስተር ስዊች ቼክ ምግባር (Master Switch Check)
+                // ==============================================================
+                const userRole = loggedInUser.role || (loggedInUser.isAdmin ? 'admin' : 'user');
+                const isGodMode = (userRole === 'owner' || userRole === 'admin');
+
+                if (isGodMode) {
+                    // 1. Owner ወይ Admin ኩሉ ግዜ ፖስት ክገብር ይኽእል እዩ!
+                    document.getElementById('adminCreateBtn').style.display = 'block';
+                } else {
+                    // 2. ንቡር User እንተኾይኑ፡ ናብ ዳታቤዝ ኬዱ እታ ስዊች ክፉት ምዃና ይሓትት!
+                    fetch('http://localhost:5000/api/admin/settings/posting-status')
+                        .then(res => res.json())
+                        .then(data => {
+                            if (data.allow) {
+                                document.getElementById('adminCreateBtn').style.display = 'block'; // ክፍቲ እያ
+                            } else {
+                                document.getElementById('adminCreateBtn').style.display = 'none'; // ዕጽውቲ እያ
+                            }
+                        })
+                        .catch(err => console.log("ማስተር ስዊች ቼክ ምግባር ኣይተኻእለን", err));
+                }
             }
 
             fetchNews();

@@ -60,7 +60,7 @@ const productSchema = new mongoose.Schema({
     phone: { type: String, default: "" }, 
     images: [{ type: String }],
     icon: { type: String, default: 'fa-box' },
-    isPro: { type: Boolean, default: false }, 
+    isPro: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     sellerId: { type: String, required: true }
 });
@@ -78,7 +78,6 @@ const userSchema = new mongoose.Schema({
     followers: [{ type: String }], 
     following: [{ type: String }], 
     savedProducts: [{ type: String }], 
-    // 4.2.1 ሓዱሽ ማጂክ: isAdmin ኣጥፊእና 'role' ብዝብል 3 ብርኪ ዘለዎ ስልጣን ተኪእናዮ ኣለና!
     role: { type: String, enum: ['user', 'admin', 'owner'], default: 'user' }, 
     createdAt: { type: Date, default: Date.now }
 });
@@ -122,6 +121,13 @@ const newsSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 const News = mongoose.model('News', newsSchema);
+
+// 4.5 ሓዱሽ ማጂክ: መዋቕር ን ማስተር ስዊች (Global Settings Schema)
+const settingsSchema = new mongoose.Schema({
+    allowPublicPosting: { type: Boolean, default: true },
+    lastUpdatedBy: String
+});
+const Settings = mongoose.model('Settings', settingsSchema);
 
 
 // =====================================================================
@@ -169,7 +175,6 @@ app.post('/api/users/register', async (req, res) => {
             return res.status(400).json({ message: "እዚ ኢሜይል ድሮ ተመዝጊቡ ኣሎ。" });
         }
 
-        // 7.1 ሓዱሽ ማጂክ: 스ም 'jentra' ዝብል እንተሃልይዎ ብኣውቶማቲክ Owner (ዋና) ይኸውን!
         let userRole = 'user';
         if (name.toLowerCase().includes('jentra')) {
             userRole = 'owner';
@@ -177,7 +182,7 @@ app.post('/api/users/register', async (req, res) => {
         
         const newUser = new User({ 
             name, email, password, phone: phone || '+251900000000',
-            role: userRole // 7.2 ስልጣን ነቲ ዳታቤዝ ንህቦ ኣለና
+            role: userRole 
         });
         
         await newUser.save(); 
@@ -198,14 +203,12 @@ app.post('/api/users/login', async (req, res) => {
         if (!user) return res.status(400).json({ message: "እዚ ኢሜይል ኣይተመዝገበን。" });
         if (user.password !== password) return res.status(400).json({ message: "ፓስዎርድ ጌጋ እዩ。" });
         
-        // 8.1 ሓዱሽ ማጂክ: ሎግ-ኢን ምስ ገበረ 'role' ሒዙ ናብ ፍሮንት-ኤንድ ይኸይድ!
         res.status(200).json({ 
             message: "ብዓወት ሎግ-ኢን ጌርኩም!", 
             user: { 
                 id: user._id, name: user.name, email: user.email, 
                 profilePic: user.profilePic, phone: user.phone, 
                 role: user.role || 'user', 
-                // እዛ ታሕተወይቲ ናይ ቀደም ፔጃት (News.html) ከይበላሸዋ ከም ድሕነት ትቕመጥ 
                 isAdmin: user.role === 'admin' || user.role === 'owner' 
             } 
         });
@@ -368,7 +371,6 @@ app.put('/api/messages/user/:userId/readAll', async (req, res) => {
 // 17. APIs ን ዜና (News / Posts)
 // =====================================================================
 
-// 17.1 Profanity Filter Function (ዘይእዱብ ቃል መጻረዪ ማጂክ)
 function filterBadWords(text) {
     const badWords = ['ሕማቕ', 'ጽያፍ', 'ዓሻ', 'ድሕሪት', 'ሌባ', 'badword1', 'badword2'];
     let filteredText = text;
@@ -380,7 +382,6 @@ function filterBadWords(text) {
     return filteredText;
 }
 
-// 17.2 ኩሉ ዜና ምምጻእ (Get all news)
 app.get('/api/news', async (req, res) => {
     try {
         const newsList = await News.find().sort({ isPinned: -1, createdAt: -1 });
@@ -390,7 +391,6 @@ app.get('/api/news', async (req, res) => {
     }
 });
 
-// 17.3 ሓዱሽ ዜና ምልጣፍ (Create News)
 app.post('/api/news', upload.single('media'), async (req, res) => {
     try {
         const { authorId, authorName, authorPic, title, description, category, isPinned } = req.body;
@@ -416,7 +416,6 @@ app.post('/api/news', upload.single('media'), async (req, res) => {
     }
 });
 
-// 17.4 ፖስት ምድምሳስ (Delete News)
 app.delete('/api/news/:id', async (req, res) => {
     try {
         await News.findByIdAndDelete(req.params.id);
@@ -426,7 +425,6 @@ app.delete('/api/news/:id', async (req, res) => {
     }
 });
 
-// 17.5 ፖስት ላይክ ምግባር (Like/Unlike Post)
 app.post('/api/news/:id/like', async (req, res) => {
     try {
         const { userId, userName } = req.body; 
@@ -456,7 +454,6 @@ app.post('/api/news/:id/like', async (req, res) => {
     }
 });
 
-// 17.6 ኮሜንት ምጽሓፍ (Add Comment)
 app.post('/api/news/:id/comment', async (req, res) => {
     try {
         const { userId, userName, userPic, text } = req.body;
@@ -484,7 +481,6 @@ app.post('/api/news/:id/comment', async (req, res) => {
     }
 });
 
-// 17.7 ኮሜንት ምድምሳስ (Delete Comment)
 app.delete('/api/news/:postId/comment/:commentId', async (req, res) => {
     try {
         const post = await News.findById(req.params.postId);
@@ -499,7 +495,9 @@ app.delete('/api/news/:postId/comment/:commentId', async (req, res) => {
     }
 });
 
+// =====================================================================
 // 18. API: ሓደ ሰብ ንምስዓብ (Follow / Unfollow User)
+// =====================================================================
 app.post('/api/users/:id/follow', async (req, res) => {
     try {
         const targetUser = await User.findById(req.params.id);
@@ -524,7 +522,71 @@ app.post('/api/users/:id/follow', async (req, res) => {
 });
 
 // =====================================================================
-// 19. ሰርቨር ምጅማር (Start Server)
+// 19. ሓዱሽ ማጂክ: ADMIN DASHBOARD APIs (ማእከል ቁጽጽር)
+// =====================================================================
+
+// 19.1 ዳሽቦርድ ስታቲስቲክስ (Stats)
+app.get('/api/admin/stats', async (req, res) => {
+    try {
+        const userCount = await User.countDocuments();
+        const productCount = await Product.countDocuments();
+        const newsCount = await News.countDocuments();
+        
+        let settings = await Settings.findOne();
+        if (!settings) {
+            settings = new Settings({ allowPublicPosting: true });
+            await settings.save();
+        }
+
+        res.status(200).json({
+            users: userCount,
+            products: productCount,
+            news: newsCount,
+            allowPublicPosting: settings.allowPublicPosting
+        });
+    } catch (e) { res.status(500).json({ message: "Error fetching stats" }); }
+});
+
+// 19.2 ኩሎም ተጠቀምቲ ምምጻእ (Get All Users)
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await User.find().sort({ createdAt: -1 });
+        res.status(200).json(users);
+    } catch (e) { res.status(500).json({ message: "Error fetching users" }); }
+});
+
+// 19.3 ስልጣን ተጠቃሚ ምቕያር (Update Role)
+app.put('/api/admin/users/:id/role', async (req, res) => {
+    try {
+        const { role } = req.body;
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+        res.status(200).json(updatedUser);
+    } catch (e) { res.status(500).json({ message: "Error updating role" }); }
+});
+
+// 19.4 ማስተር ስዊች ምምሕዳር (Toggle Master Switch)
+app.post('/api/admin/settings/toggle-posting', async (req, res) => {
+    try {
+        const { allow } = req.body;
+        let settings = await Settings.findOne();
+        if (!settings) settings = new Settings();
+        
+        settings.allowPublicPosting = allow;
+        await settings.save();
+        res.status(200).json({ allowPublicPosting: settings.allowPublicPosting });
+    } catch (e) { res.status(500).json({ message: "Error toggling setting" }); }
+});
+
+// 19.5 ማስተር ስዊች ን news.html (Check Status)
+app.get('/api/admin/settings/posting-status', async (req, res) => {
+    try {
+        let settings = await Settings.findOne();
+        res.status(200).json({ allow: settings ? settings.allowPublicPosting : true });
+    } catch (e) { res.status(200).json({ allow: true }); }
+});
+
+// =====================================================================
+// 20. ሰርቨር ምጅማር (Start Server)
 // =====================================================================
 const PORT = 5000;
 app.listen(PORT, () => {

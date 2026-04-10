@@ -6,9 +6,6 @@
     <title>Admin Dashboard - Meyda Market</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* =========================================
-           1. መሰረታዊ ሕብርታትን ዲዛይንን (Admin Theme)
-           ========================================= */
         :root { 
             --water-blue: #0096c7; --water-blue-hover: #0077a3;
             --admin-primary: #2c3e50; --admin-secondary: #34495e;
@@ -27,65 +24,39 @@
             --card-shadow: 0 10px 20px rgba(0,0,0,0.4);
             --input-bg: #2c3e50;
         }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg-color); color: var(--text-color); 
-            margin: 0; padding: 0; transition: 0.3s; 
-        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 0; transition: 0.3s; }
 
-        /* =========================================
-           2. ላዕለዋይ ክፋል (Admin Header)
-           ========================================= */
-        .admin-header { 
-            background: var(--admin-primary); color: white; 
-            padding: 15px 20px; display: flex; justify-content: space-between; 
-            align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100;
-        }
+        /* Admin Header */
+        .admin-header { background: var(--admin-primary); color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow); position: sticky; top: 0; z-index: 100; }
         .admin-header h2 { margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px; }
         .header-actions { display: flex; gap: 15px; align-items: center; }
-        .back-btn { 
-            background: rgba(255,255,255,0.1); color: white; border: none; 
-            padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold;
-        }
+        .back-btn { background: rgba(255,255,255,0.1); color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; font-weight: bold; }
         .back-btn:hover { background: rgba(255,255,255,0.2); }
         .theme-toggle { background: transparent; border: none; color: white; font-size: 18px; cursor: pointer; }
 
-        /* =========================================
-           3. ቀንዲ ትሕዝቶ (Main Dashboard Container)
-           ========================================= */
+        /* Dashboard Container */
         .dashboard-container { padding: 20px; max-width: 1000px; margin: 0 auto; }
-        
         .welcome-section { margin-bottom: 25px; }
         .welcome-section h3 { margin: 0 0 5px 0; color: var(--text-color); font-size: 24px; }
         .welcome-section p { margin: 0; color: var(--gray-text); font-size: 14px; }
 
-        /* Statistics Cards (ቁጽሪታት) */
+        /* Stats Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
-        .stat-card { 
-            background: var(--white); padding: 20px; border-radius: 15px; 
-            box-shadow: var(--shadow); display: flex; align-items: center; gap: 15px; 
-            border-left: 5px solid var(--water-blue); transition: transform 0.2s;
-        }
+        .stat-card { background: var(--white); padding: 20px; border-radius: 15px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 15px; border-left: 5px solid var(--water-blue); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-5px); box-shadow: var(--card-shadow); }
         .stat-icon { width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
         .stat-info h4 { margin: 0; font-size: 24px; color: var(--text-color); }
         .stat-info p { margin: 0; font-size: 13px; color: var(--gray-text); text-transform: uppercase; font-weight: bold; }
 
-        /* =========================================
-           4. ማስተር ስዊች (Global Settings - Master Switch)
-           ========================================= */
-        .settings-card { 
-            background: var(--white); border-radius: 15px; padding: 25px; 
-            box-shadow: var(--shadow); margin-bottom: 30px; 
-        }
+        /* Settings Card */
+        .settings-card { background: var(--white); border-radius: 15px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 30px; }
         .settings-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
         .settings-header h3 { margin: 0; color: var(--text-color); }
-        
         .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
         .setting-info h4 { margin: 0 0 5px 0; font-size: 16px; color: var(--text-color); }
         .setting-info p { margin: 0; font-size: 13px; color: var(--gray-text); }
 
-        /* Sleek Toggle Switch (ማራኺ ስዊች) */
+        /* Toggle Switch */
         .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
@@ -93,32 +64,27 @@
         input:checked + .slider { background-color: var(--water-blue); }
         input:checked + .slider:before { transform: translateX(22px); }
 
-        /* =========================================
-           5. ምሕደራ ተጠቀምቲ (User Management Table)
-           ========================================= */
+        /* Table */
         .search-user { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-color); margin-bottom: 20px; outline: none; font-size: 15px; box-sizing: border-box; }
         .search-user:focus { border-color: var(--water-blue); }
-
         .table-container { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
         th { color: var(--gray-text); text-transform: uppercase; font-size: 12px; background: var(--bg-color); }
         tr:hover { background-color: rgba(0, 150, 199, 0.05); }
-        
         .user-cell { display: flex; align-items: center; gap: 10px; }
         .user-cell img { width: 35px; height: 35px; border-radius: 50%; object-fit: cover; }
         .user-cell div { display: flex; flex-direction: column; }
         .user-cell strong { color: var(--text-color); }
         .user-cell small { color: var(--gray-text); font-size: 12px; }
-
         .role-badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; text-transform: uppercase; display: inline-block; }
         .role-owner { background: rgba(241, 196, 15, 0.2); color: #d35400; }
         .role-admin { background: rgba(46, 204, 113, 0.2); color: #27ae60; }
         .role-user { background: rgba(149, 165, 166, 0.2); color: #7f8c8d; }
-
         .role-select { padding: 8px; border: 1px solid var(--border-color); border-radius: 5px; background: var(--input-bg); color: var(--text-color); cursor: pointer; outline: none; }
         .save-role-btn { background: var(--water-blue); color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; transition: 0.2s; font-size: 13px; }
         .save-role-btn:hover { background: var(--water-blue-hover); }
+        .save-role-btn:disabled { background: var(--gray-text); cursor: not-allowed; }
 
         @media (max-width: 600px) {
             .stat-card { flex-direction: column; text-align: center; justify-content: center; }
@@ -139,7 +105,7 @@
     <div class="dashboard-container">
         
         <div class="welcome-section">
-            <h3 id="adminName">እንቋዕ ብደሓን መጻእካ, ጀንትራ!</h3>
+            <h3 id="adminName">እንቋዕ ብደሓን መጻእካ!</h3>
             <p>እዚ ማእከል ቁጽጽር ናይ Meyda Market እዩ። ንኹሉ ብጥንቃቐ ምሓድሮ።</p>
         </div>
 
@@ -213,13 +179,11 @@
         let allUsersList = [];
 
         window.onload = () => { 
-            // Theme setup
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
             
-            // 6.1 ሓለዋ ድሕነት (Security Check) - Admin ወይ Owner ጥራሕ ክኣቱ ይኽእል!
             loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             if (!loggedInUser || (loggedInUser.role !== 'admin' && loggedInUser.role !== 'owner')) {
                 alert("ናብዚ ፔጅ ንምእታው ፍቓድ የብኩምን! (Access Denied)");
@@ -229,7 +193,7 @@
 
             document.getElementById('adminName').innerText = `እንቋዕ ብደሓን መጻእካ, ${loggedInUser.name}!`;
 
-            // ዳታ ምጽዓን ንጀምር... (ንሕጂ Fake Data ነርኢ፣ ደሓር ምስ ሰርቨር ክንኣስሮ ኢና)
+            // 1. ናይ ሓቂ ዳታ ካብ ሰርቨር ነምጽእ (Real Fetch)
             fetchDashboardData();
         }
 
@@ -241,35 +205,55 @@
         }
 
         // ======================================================================
-        // 7. ምስ ሰርቨር ክሳብ ንራኸብ ዝኸውን ግዝያዊ ማጂክ (Will connect to API next)
+        // 2. ምስ ሰርቨር ምትእስሳር (Real Backend Magic)
         // ======================================================================
         async function fetchDashboardData() {
-            // Placeholder Stats
-            document.getElementById('totalUsers').innerText = "124";
-            document.getElementById('totalProducts').innerText = "85";
-            document.getElementById('totalNews').innerText = "32";
+            try {
+                // ሀ. ቁጽሪታትን (Stats) ማስተር ስዊችን ነምጽእ
+                const statsRes = await fetch('http://localhost:5000/api/admin/stats');
+                if(statsRes.ok) {
+                    const stats = await statsRes.json();
+                    document.getElementById('totalUsers').innerText = stats.users;
+                    document.getElementById('totalProducts').innerText = stats.products;
+                    document.getElementById('totalNews').innerText = stats.news;
+                    document.getElementById('allowPublicPostToggle').checked = stats.allowPublicPosting;
+                }
 
-            // Placeholder Master Switch State
-            document.getElementById('allowPublicPostToggle').checked = true;
-
-            // Placeholder Users List
-            allUsersList = [
-                { _id: '1', name: 'Jentra', email: 'jentra@example.com', profilePic: '', role: 'owner' },
-                { _id: '2', name: 'Biniyam', email: 'bini@example.com', profilePic: '', role: 'admin' },
-                { _id: '3', name: 'Hados Desta', email: 'hados@example.com', profilePic: '', role: 'user' },
-                { _id: '4', name: 'Kibrom', email: 'kib@example.com', profilePic: '', role: 'user' }
-            ];
-            renderUsersTable(allUsersList);
+                // ለ. ዝርዝር ተጠቀምቲ (Users) ነምጽእ
+                const usersRes = await fetch('http://localhost:5000/api/admin/users');
+                if(usersRes.ok) {
+                    allUsersList = await usersRes.json();
+                    renderUsersTable(allUsersList);
+                }
+            } catch (error) {
+                console.log(error);
+                alert("ዳታ ንምምጻእ ጸገም ኣጋጢሙ ኣሎ። ሰርቨር ሪስታርት ግበሩ።");
+            }
         }
 
-        // 8. ፖስት ናይ ምግባር ስዊች 
-        function togglePublicPosting(checkbox) {
+        // 3. ማስተር ስዊች ናብ ሰርቨር ምልኣኽ (Toggle API)
+        async function togglePublicPosting(checkbox) {
             const isAllowed = checkbox.checked;
-            // ኣብዚ ድሓር API Request ክንጽሕፍ ኢና
-            alert(`ፖስት ምግባር ንኹሉ ሕጂ: ${isAllowed ? 'ክፉት (ON)' : 'ዕጹው (OFF)'} ኮይኑ ኣሎ!`);
+            try {
+                const res = await fetch('http://localhost:5000/api/admin/settings/toggle-posting', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ allow: isAllowed })
+                });
+                
+                if(res.ok) {
+                    alert(`ፖስት ምግባር ንኹሉ ሕጂ: ${isAllowed ? 'ክፉት (ON)' : 'ዕጹው (OFF)'} ኮይኑ ኣሎ!`);
+                } else {
+                    checkbox.checked = !isAllowed; // እንተኣብዩ ናብ ዝነበሮ ይመለስ
+                    alert("ምቕያር ኣይተኻእለን!");
+                }
+            } catch (error) {
+                checkbox.checked = !isAllowed;
+                alert("ምስ ሰርቨር ክራኸብ ኣይከኣለን።");
+            }
         }
 
-        // 9. ሰሌዳ ተጠቀምቲ ምድላው (Render Users)
+        // 4. ሰሌዳ ተጠቀምቲ ምድላው (Render Users)
         function renderUsersTable(users) {
             const tbody = document.getElementById('userTableBody');
             tbody.innerHTML = '';
@@ -280,12 +264,14 @@
             }
 
             users.forEach(user => {
-                const pic = user.profilePic || 'https://via.placeholder.com/40';
+                const pic = user.profilePic && user.profilePic !== '' ? user.profilePic : 'https://via.placeholder.com/40';
                 const roleClass = `role-${user.role}`;
                 
-                // Owner ንካልእ Owner ክቕይር ኣይክእልን (ብዘይካ ገዛእ ርእሱ)
+                // Owner ንካልእ Owner ክቕይር ኣይክእልን (ብዘይካ ገዛእ ርእሱ) 
+                // Admin ከኣ ን Owner ክቕይር ኣይክእልን
                 const isOwner = user.role === 'owner';
-                const disabledHTML = isOwner ? 'disabled' : '';
+                const canEdit = loggedInUser.role === 'owner' || (loggedInUser.role === 'admin' && !isOwner);
+                const disabledHTML = !canEdit ? 'disabled' : '';
 
                 tbody.innerHTML += `
                     <tr>
@@ -316,23 +302,37 @@
             });
         }
 
-        // 10. ስልጣን ምቕያር (Update Role)
-        function saveUserRole(userId, userName) {
+        // 5. ስልጣን ናብ ሰርቨር ምልኣኽ (Update Role API)
+        async function saveUserRole(userId, userName) {
             const selectEl = document.getElementById(`selectRole-${userId}`);
             const newRole = selectEl.value;
 
             if(confirm(`ናይ ብርግጽ ን "${userName}" ናብ "${newRole}" ስልጣን ክትቅይሮ ትደሊ ዲኻ?`)) {
-                // ኣብዚ ድሓር API Request ክንጽሕፍ ኢና
-                alert(`${userName} ሕጂ ብዓወት ${newRole.toUpperCase()} ኮይኑ ኣሎ!`);
-                
-                // ግዝያዊ UI Update
+                try {
+                    const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role: newRole })
+                    });
+
+                    if(res.ok) {
+                        alert(`${userName} ሕጂ ብዓወት ${newRole.toUpperCase()} ኮይኑ ኣሎ!`);
+                        const userObj = allUsersList.find(u => u._id === userId);
+                        if(userObj) userObj.role = newRole;
+                        filterUsers(); // UI Update ይገብር
+                    } else {
+                        alert("ስልጣን ምቕያር ኣይተኻእለን!");
+                    }
+                } catch(error) {
+                    alert("ምስ ሰርቨር ክራኸብ ኣይከኣለን።");
+                }
+            } else {
+                // እንተተረፊዎ ነታ Select Box ናብ ዝነበረታ ይመልሳ
                 const userObj = allUsersList.find(u => u._id === userId);
-                if(userObj) userObj.role = newRole;
-                filterUsers();
+                if(userObj) selectEl.value = userObj.role;
             }
         }
 
-        // 11. ድለይ (Search Function)
         function filterUsers() {
             const query = document.getElementById('userSearch').value.toLowerCase();
             const filtered = allUsersList.filter(u => 
