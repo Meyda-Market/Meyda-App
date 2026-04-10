@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
@@ -37,13 +38,12 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// =====================================================================
-// 3. ምስ ዳታቤዝ ምትእስሳር (Database Connection)
-// =====================================================================
-const DB_URI = 'mongodb://127.0.0.1:27017/meyda_database';
+// 3. ምስ ኦንላይን ዳታቤዝ ምትእስሳር (Online Database Connection)
+const DB_URI = process.env.MONGODB_URI; 
+
 mongoose.connect(DB_URI)
-  .then(() => console.log('✅ ብዓወት ምስ Local MongoDB ተራኺቡ ኣሎ!'))
-  .catch((err) => console.log('❌ ምስ ዳታቤዝ ክራኸብ ኣይከኣለን: ', err));
+  .then(() => console.log('🚀 Meyda ኦንላይን ዳታቤዝ (MongoDB Atlas) ብዓወት ተኣሳሲሩ ኣሎ!'))
+  .catch((err) => console.log('❌ ምስ ኦንላይን ዳታቤዝ ክራኸብ ኣይከኣለን: ', err));
 
 // =====================================================================
 // 4. መዋቕር ዳታቤዝ (Database Schemas)
