@@ -54,6 +54,7 @@
         <div class="header-left"><i class="fas fa-bell"></i> ኖቲፊኬሽን</div>
         <div class="header-actions">
             <div class="mark-read-btn" onclick="markAllAsRead()"><i class="fas fa-check-double"></i> ኩሉ ኣንብብ</div>
+            <button class="theme-toggle" onclick="toggleSound()"><i class="fas fa-bell" id="soundIcon"></i></button>
             <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
         </div>
     </div>
@@ -82,11 +83,45 @@
     </div>
 
     <script>
+        // 100% እትሰርሕ ናይ Google ወግዓዊት ድምጺ (Pop Sound)
+        const notifPopSound = new Audio('https://actions.google.com/sounds/v1/cartoon/pop.ogg');
+        notifPopSound.volume = 1.0; 
+
+        // ካብቲ ናይ Profile ፔጅ ዝመጸ ሴቲንግ ይጠቀም (ስቕ ምስ ትብሎ ኣብ ክልቲኡ ይዓዪ)
+        let isSoundEnabled = localStorage.getItem('meydaSound') !== 'false'; 
+
+        function initSoundIcon() {
+            const soundIcon = document.getElementById('soundIcon');
+            if(soundIcon) {
+                soundIcon.className = isSoundEnabled ? 'fas fa-bell' : 'fas fa-bell-slash';
+                soundIcon.style.color = isSoundEnabled ? 'var(--water-blue)' : 'var(--gray-text)';
+            }
+        }
+
+        function toggleSound() {
+            isSoundEnabled = !isSoundEnabled;
+            localStorage.setItem('meydaSound', isSoundEnabled);
+            initSoundIcon();
+            if(isSoundEnabled) {
+                playNotificationSound();
+            }
+        }
+
+        function playNotificationSound() {
+            if(isSoundEnabled) {
+                notifPopSound.currentTime = 0; 
+                notifPopSound.play().catch(e => console.log("ብራውዘር ድምጺ ከልኪሉ"));
+            }
+        }
+
+        // ============================================================================
+
         window.onload = () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
+            initSoundIcon();
             loadNotifications();
         }
 
@@ -100,9 +135,6 @@
         let allNotifications = []; 
         let currentFilter = 'all';
 
-        // ============================================================================
-        // 1. ዳታ ካብ ሰርቨር ናይ ምምጻእ ማጂክ (Fetch Notifications)
-        // ============================================================================
         async function loadNotifications() {
             const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             
@@ -115,8 +147,6 @@
                 const response = await fetch(`http://localhost:5000/api/messages/${loggedInUser.id}`);
                 if (response.ok) {
                     
-                    // 1.1 ሓዱሽ ማጂክ: ንዓና ዝተላእከ (receiverId) ጥራሕ! 
-                    // ከምኡ'ውን ባዕልና ንባዕልና ዝገበርናዮ (senderId !== loggedInUser.id) የነጽጎ!
                     const realMessages = (await response.json()).filter(m => 
                         m.type !== 'personal' && 
                         m.receiverId === loggedInUser.id && 
@@ -158,13 +188,26 @@
         function updateBadgeCount(messages) {
             const unreadCount = messages.filter(m => !m.isRead).length;
             const badge = document.getElementById('navBadge');
-            if (unreadCount > 0) { badge.innerText = unreadCount; badge.style.display = 'block'; } 
-            else { badge.style.display = 'none'; }
+            
+            // ንምፍላጥ: ቅድም ክንደይ unread ነይሮም? ሓዱሽ እንተመጺኡ ጥራሕ ክድውል
+            const prevUnreadStr = sessionStorage.getItem('meydaNotifUnreadCount');
+            const prevUnread = prevUnreadStr ? parseInt(prevUnreadStr) : 0;
+
+            if (unreadCount > 0) { 
+                badge.innerText = unreadCount; 
+                badge.style.display = 'block'; 
+                
+                // ሓዱሽ ኖቲፊኬሽን እንተመጺኡ (ካብቲ ቅድም ዝነበረ እንተበዚሑ) ፖፕ! ድምጺ የስምዕ
+                if (unreadCount > prevUnread) {
+                    playNotificationSound();
+                }
+            } else { 
+                badge.style.display = 'none'; 
+            }
+            
+            sessionStorage.setItem('meydaNotifUnreadCount', unreadCount);
         }
 
-        // ============================================================================
-        // 2. ኣብ ስክሪን ዝስእልን (Render) ሊንክ ዘተሓሕዝን
-        // ============================================================================
         function renderNotifications() {
             const container = document.getElementById('notificationList');
             container.innerHTML = '';
@@ -178,7 +221,8 @@
                 return;
             }
 
-            filteredList.forEach(notif => {
+            // ኖቲፊኬሽን ብግዜ (ካብቲ ሓዱሽ ናብ ኣረጊት) ንምስራዕ
+            filteredList.reverse().forEach(notif => {
                 const unreadClass = notif.isRead ? '' : 'unread';
                 container.innerHTML += `
                     <div class="notif-item ${unreadClass}" id="${notif.id}" onclick="readAndRedirect('${notif.id}')">
@@ -208,13 +252,11 @@
                 await fetch(`http://localhost:5000/api/messages/user/${loggedInUser.id}/readAll`, { method: 'PUT' });
                 allNotifications.forEach(n => { n.isRead = true; n.timeClass = 'old'; });
                 document.getElementById('navBadge').style.display = 'none'; 
+                sessionStorage.setItem('meydaNotifUnreadCount', 0); // ቆጻሪ ናብ ዜሮ ንመልሶ
                 renderNotifications();
             } catch (error) { console.error(error); }
         }
 
-        // ============================================================================
-        // 3. ኣንቢቡ ናብቲ ልክዕ ቦታ ዝወስድ!
-        // ============================================================================
         async function readAndRedirect(notifId) {
             const notif = allNotifications.find(n => n.id === notifId);
             if (!notif) return;
@@ -227,6 +269,7 @@
                     const unreadCount = allNotifications.filter(n => !n.isRead).length;
                     const badge = document.getElementById('navBadge');
                     if (unreadCount > 0) { badge.innerText = unreadCount; } else { badge.style.display = 'none'; }
+                    sessionStorage.setItem('meydaNotifUnreadCount', unreadCount);
                 } catch (error) { console.error("Error marking as read:", error); }
             }
 
