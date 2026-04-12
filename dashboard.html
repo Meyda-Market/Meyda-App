@@ -260,7 +260,7 @@
         async function fetchDashboardData() {
             try {
                 // ሀ. ቁጽሪታትን (Stats) ማስተር ስዊችን ነምጽእ
-                const statsRes = await fetch('http://localhost:5000/api/admin/stats');
+                const statsRes = await fetch('https://meyda-app.onrender.com/api/admin/stats');
                 if(statsRes.ok) {
                     const stats = await statsRes.json();
                     document.getElementById('totalUsers').innerText = stats.users;
@@ -276,7 +276,7 @@
                 }
 
                 // ለ. ዝርዝር ተጠቀምቲ (Users) ነምጽእ
-                const usersRes = await fetch('http://localhost:5000/api/admin/users');
+                const usersRes = await fetch('https://meyda-app.onrender.com/api/admin/users');
                 if(usersRes.ok) {
                     allUsersList = await usersRes.json();
                     renderUsersTable(allUsersList);
@@ -291,7 +291,7 @@
         async function togglePublicPosting(checkbox) {
             const isAllowed = checkbox.checked;
             try {
-                const res = await fetch('http://localhost:5000/api/admin/settings/toggle-posting', {
+                const res = await fetch('https://meyda-app.onrender.com/api/admin/settings/toggle-posting', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ allow: isAllowed })
@@ -314,7 +314,7 @@
             const isRequired = checkbox.checked;
             try {
                 // ጽባሕ ኣብ server.js እንሰርሓ API እያ
-                const res = await fetch('http://localhost:5000/api/admin/settings/toggle-subscription', {
+                const res = await fetch('https://meyda-app.onrender.com/api/admin/settings/toggle-subscription', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ require: isRequired })
@@ -386,7 +386,7 @@
 
             if(confirm(`ናይ ብርግጽ ን "${userName}" ናብ "${newRole}" ስልጣን ክትቅይሮ ትደሊ ዲኻ?`)) {
                 try {
-                    const res = await fetch(`http://localhost:5000/api/admin/users/${userId}/role`, {
+                    const res = await fetch(`https://meyda-app.onrender.com/api/admin/users/${userId}/role`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ role: newRole })

@@ -227,7 +227,7 @@
                     document.getElementById('adminCreateBtn').style.display = 'block';
                 } else {
                     // 2. ንቡር User እንተኾይኑ፡ ናብ ዳታቤዝ ኬዱ እታ ስዊች ክፉት ምዃና ይሓትት!
-                    fetch('http://localhost:5000/api/admin/settings/posting-status')
+                    fetch('https://meyda-app.onrender.com/api/admin/settings/posting-status')
                         .then(res => res.json())
                         .then(data => {
                             if (data.allow) {
@@ -245,7 +245,7 @@
 
         async function checkUnreadBadge() {
             try {
-                const res = await fetch(`http://localhost:5000/api/messages/${loggedInUser.id}`);
+                const res = await fetch(`https://meyda-app.onrender.com/api/messages/${loggedInUser.id}`);
                 if (res.ok) {
                     const msgs = await res.json();
                     const unread = msgs.filter(m => !m.isRead && m.receiverId === loggedInUser.id && m.senderId !== loggedInUser.id).length;
@@ -267,7 +267,7 @@
 
         async function fetchNews() {
             try {
-                const response = await fetch('http://localhost:5000/api/news');
+                const response = await fetch('https://meyda-app.onrender.com/api/news');
                 if (response.ok) {
                     allNews = await response.json();
                     renderNews();
@@ -306,9 +306,9 @@
                 let mediaHTML = '';
                 if (news.mediaUrl) {
                     if (news.mediaType === 'video') {
-                        mediaHTML = `<div class="news-media"><video src="http://localhost:5000${news.mediaUrl}" controls></video></div>`;
+                        mediaHTML = `<div class="news-media"><video src="https://meyda-app.onrender.com${news.mediaUrl}" controls></video></div>`;
                     } else {
-                        mediaHTML = `<div class="news-media"><img src="http://localhost:5000${news.mediaUrl}" alt="News Media"></div>`;
+                        mediaHTML = `<div class="news-media"><img src="https://meyda-app.onrender.com${news.mediaUrl}" alt="News Media"></div>`;
                     }
                 }
 
@@ -487,7 +487,7 @@
                 btn.innerText = "ይጽዕን ኣሎ...";
                 btn.disabled = true;
 
-                const res = await fetch('http://localhost:5000/api/news', { method: 'POST', body: formData });
+                const res = await fetch('https://meyda-app.onrender.com/api/news', { method: 'POST', body: formData });
                 
                 if(res.ok) {
                     alert("ብዓወት ተለጢፉ!");
@@ -513,7 +513,7 @@
         async function deletePost(postId) {
             if(confirm("እዚ ፖስት ብርግጽ ክጠፍእ ድዩ?")) {
                 try {
-                    await fetch(`http://localhost:5000/api/news/${postId}`, { method: 'DELETE' });
+                    await fetch(`https://meyda-app.onrender.com/api/news/${postId}`, { method: 'DELETE' });
                     fetchNews();
                 } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
             }
@@ -533,7 +533,7 @@
             }
 
             try {
-                const res = await fetch(`http://localhost:5000/api/news/${postId}/like`, {
+                const res = await fetch(`https://meyda-app.onrender.com/api/news/${postId}/like`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: loggedInUser.id || loggedInUser._id, userName: loggedInUser.name }) 
                 });
@@ -556,7 +556,7 @@
 
             try {
                 const userId = loggedInUser.id || loggedInUser._id || loggedInUser.userId;
-                const res = await fetch(`http://localhost:5000/api/news/${postId}/comment`, {
+                const res = await fetch(`https://meyda-app.onrender.com/api/news/${postId}/comment`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ userId: userId, userName: loggedInUser.name, userPic: loggedInUser.profilePic, text: text })
                 });
@@ -568,7 +568,7 @@
         async function deleteComment(postId, commentId) {
             if(confirm("እዚ ኮሜንት ክጠፍእ ድዩ?")) {
                 try {
-                    await fetch(`http://localhost:5000/api/news/${postId}/comment/${commentId}`, { method: 'DELETE' });
+                    await fetch(`https://meyda-app.onrender.com/api/news/${postId}/comment/${commentId}`, { method: 'DELETE' });
                     fetchNews();
                 } catch(e) { alert("ጌጋ ኣጋጢሙ።"); }
             }

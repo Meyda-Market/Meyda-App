@@ -393,7 +393,7 @@
 
             // 🚀 ሓዱሽ ማጂክ: ሰርቨር ቼክ (Check Master Switch)
             try {
-                const statsRes = await fetch('http://localhost:5000/api/admin/stats');
+                const statsRes = await fetch('https://meyda-app.onrender.com/api/admin/stats');
                 if(statsRes.ok) {
                     const stats = await statsRes.json();
                     // requireSubscription 'false' እንተኾይኑ፡ ነጻ እዩ (Free)
@@ -666,7 +666,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5000/api/products', { method: 'POST', body: formData });
+                const response = await fetch('https://meyda-app.onrender.com/api/products', { method: 'POST', body: formData });
                 const data = await response.json();
                 if (response.ok) document.getElementById('successScreen').style.display = 'flex';
                 else alert('❌ ጌጋ: ' + data.message);

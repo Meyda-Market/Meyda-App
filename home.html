@@ -423,7 +423,7 @@
         if (product.images && product.images.length > 0) {
             let imgHTML = '<div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; border-radius: 10px; scrollbar-width: none;">';
             product.images.forEach(img => {
-                imgHTML += `<img src="http://localhost:5000${img}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
+                imgHTML += `<img src="https://meyda-app.onrender.com${img}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
             });
             imgHTML += '</div>';
             if(product.images.length > 1) {
@@ -445,7 +445,7 @@
         }
         if (!currentViewedProduct.sellerId) { alert("ናይዚ ሸያጢ ሓበሬታ ኣይተረኽበን።"); return; }
         try {
-            const response = await fetch(`http://localhost:5000/api/users/${currentViewedProduct.sellerId}`);
+            const response = await fetch(`https://meyda-app.onrender.com/api/users/${currentViewedProduct.sellerId}`);
             if (response.ok) {
                 const seller = await response.json();
                 if (seller.phone) window.location.href = `tel:${seller.phone}`;
@@ -471,7 +471,7 @@
         };
 
         try {
-            const response = await fetch('http://localhost:5000/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
+            const response = await fetch('https://meyda-app.onrender.com/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
             if (response.ok) { alert("መልእኽትኹም ብዓወት ተላኢኹ ኣሎ! ✅"); document.getElementById('messageText').value = ''; closeProduct(); } 
             else { alert("መልእኽቲ ኣይተላእከን።"); }
         } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
@@ -551,7 +551,7 @@
         const productsGrid = document.querySelector('.products-grid');
         try {
             // 1. መጀመርታ ኣቕሑት ነምጽእ
-            const response = await fetch('http://localhost:5000/api/products');
+            const response = await fetch('https://meyda-app.onrender.com/api/products');
             allProducts = await response.json(); 
             
             // 2. ንኹሎም እቶም ኣብቲ ኣቕሑት ዘለዉ ሸየጥቲ ጥራሕ ነጽርዮም
@@ -559,7 +559,7 @@
             
             // 3. ንኹሎም እቶም ሸየጥቲ ብሓንሳብ ንሰርቨር ንሓትት (Faster!)
             try {
-                const usersRes = await fetch('http://localhost:5000/api/admin/users'); // Use admin route to get all users easily
+                const usersRes = await fetch('https://meyda-app.onrender.com/api/admin/users'); // Use admin route to get all users easily
                 if (usersRes.ok) {
                     const allUsers = await usersRes.json();
                     allUsers.forEach(u => {
@@ -591,7 +591,7 @@
                 const slide = document.createElement('div'); slide.className = 'carousel-slide'; slide.style.backgroundColor = '#000'; slide.style.cursor = 'pointer';
                 slide.onclick = () => openProduct(product);
                 slide.innerHTML = `
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('http://localhost:5000${product.images[0]}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://meyda-app.onrender.com${product.images[0]}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
                     <div style="position: absolute; top: 12px; left: 12px; background: #f1c40f; color: #333; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 2;"><i class="fas fa-crown"></i> PRO AD</div>
                     <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 15px 15px 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; box-sizing: border-box; text-align: left; z-index: 2;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -625,7 +625,7 @@
             productCard.onclick = () => openProduct(product);
 
             let imageHTML = product.images && product.images.length > 0 
-                ? `<img src="http://localhost:5000${product.images[0]}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px;">` 
+                ? `<img src="https://meyda-app.onrender.com${product.images[0]}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px;">` 
                 : `<div class="product-img-placeholder"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
 
             const isSaved = mySavedList.includes(product._id);
@@ -658,7 +658,7 @@
     async function deleteProductAdmin(productId) {
         if(confirm("እዚ ንብረት ብርግጽ ካብ ዕዳጋ ክድምሰስ ድዩ? (Admin Action)")) {
             try {
-                const response = await fetch(`http://localhost:5000/api/products/${productId}`, { method: 'DELETE' });
+                const response = await fetch(`https://meyda-app.onrender.com/api/products/${productId}`, { method: 'DELETE' });
                 if (response.ok) { alert("ኣቕሓ ብዓወት ተደምሲሱ ኣሎ!"); loadProducts(); } 
                 else { alert("ምድምሳስ ኣይተኻእለን።"); }
             } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
@@ -674,7 +674,7 @@
         else { icon.classList.remove('far'); icon.classList.add('fas'); icon.style.color = '#ff4757'; }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}/save`, {
+            const response = await fetch(`https://meyda-app.onrender.com/api/users/${loggedInUser.id}/save`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ productId: productId, action: isCurrentlySaved ? 'remove' : 'add' })
             });

@@ -473,7 +473,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:5000/api/users/${profileUserId}`);
+                const response = await fetch(`https://meyda-app.onrender.com/api/users/${profileUserId}`);
                 const userData = await response.json();
 
                 if (response.ok) {
@@ -607,7 +607,7 @@
 
             const modalImgArea = document.getElementById('modalImageArea');
             if (product.images && product.images.length > 0) {
-                modalImgArea.innerHTML = `<img src="http://localhost:5000${product.images[0]}" style="width:100%; height:100%; object-fit:contain; background:var(--input-bg);">`;
+                modalImgArea.innerHTML = `<img src="https://meyda-app.onrender.com${product.images[0]}" style="width:100%; height:100%; object-fit:contain; background:var(--input-bg);">`;
             } else {
                 modalImgArea.innerHTML = `<div class="product-img-placeholder" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:50px;"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
             }
@@ -623,7 +623,7 @@
                 return;
             }
             try {
-                const response = await fetch(`http://localhost:5000/api/users/${currentViewedProduct.sellerId}`);
+                const response = await fetch(`https://meyda-app.onrender.com/api/users/${currentViewedProduct.sellerId}`);
                 if (response.ok) {
                     const seller = await response.json();
                     if (seller.phone) window.location.href = `tel:${seller.phone}`;
@@ -650,7 +650,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:5000/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
+                const response = await fetch('https://meyda-app.onrender.com/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
                 if (response.ok) { alert("መልእኽትኹም ብዓወት ተላኢኹ ኣሎ! ✅"); closeProductViewModal(); } 
                 else { alert("መልእኽቲ ኣይተላእከን።"); }
             } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
@@ -659,7 +659,7 @@
         async function fetchAndOpenProduct(id) {
             if(!id) return;
             try {
-                const res = await fetch(`http://localhost:5000/api/products/${id}`);
+                const res = await fetch(`https://meyda-app.onrender.com/api/products/${id}`);
                 if(res.ok) {
                     const p = await res.json();
                     loadedProductsMap[p._id] = p; 
@@ -675,7 +675,7 @@
             if (!loggedInUser) return;
 
             try {
-                const res = await fetch(`http://localhost:5000/api/users/${profileUserId}/follow`, {
+                const res = await fetch(`https://meyda-app.onrender.com/api/users/${profileUserId}/follow`, {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ currentUserId: loggedInUser.id })
                 });
@@ -712,7 +712,7 @@
 
         async function fetchMyProducts(userId, isMyProfile = true) {
             try {
-                const response = await fetch(`http://localhost:5000/api/products/user/${userId}`);
+                const response = await fetch(`https://meyda-app.onrender.com/api/products/user/${userId}`);
                 const products = await response.json();
 
                 if (response.ok) {
@@ -734,7 +734,7 @@
                         loadedProductsMap[prod._id] = prod; 
 
                         let imgContent = prod.images && prod.images.length > 0 
-                            ? `<img src="http://localhost:5000${prod.images[0]}" class="product-img">` 
+                            ? `<img src="https://meyda-app.onrender.com${prod.images[0]}" class="product-img">` 
                             : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
 
                         let actionsHTML = '';
@@ -764,10 +764,10 @@
 
         async function fetchSavedProducts(userId) {
             try {
-                const resProducts = await fetch('http://localhost:5000/api/products');
+                const resProducts = await fetch('https://meyda-app.onrender.com/api/products');
                 const allProducts = await resProducts.json();
 
-                const resUser = await fetch(`http://localhost:5000/api/users/${userId}`);
+                const resUser = await fetch(`https://meyda-app.onrender.com/api/users/${userId}`);
                 const userData = await resUser.json();
 
                 if (resProducts.ok && resUser.ok) {
@@ -791,7 +791,7 @@
                         loadedProductsMap[prod._id] = prod; 
 
                         let imgContent = prod.images && prod.images.length > 0 
-                            ? `<img src="http://localhost:5000${prod.images[0]}" class="product-img">` 
+                            ? `<img src="https://meyda-app.onrender.com${prod.images[0]}" class="product-img">` 
                             : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
 
                         savedGrid.innerHTML += `
@@ -813,7 +813,7 @@
             if(confirm("እዚ ንብረት ካብ 'Saved' ክጠፍእ ድዩ?")) {
                 const loggedInUser = getLoggedInUser();
                 try {
-                    const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}/save`, {
+                    const response = await fetch(`https://meyda-app.onrender.com/api/users/${loggedInUser.id}/save`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ productId: productId, action: 'remove' })
                     });
@@ -833,7 +833,7 @@
 
         async function fetchMessages(userId) {
             try {
-                const response = await fetch(`http://localhost:5000/api/messages/${userId}`);
+                const response = await fetch(`https://meyda-app.onrender.com/api/messages/${userId}`);
                 const messages = await response.json();
                 const inboxArea = document.getElementById('inboxArea');
 
@@ -910,7 +910,7 @@
                         inboxArea.innerHTML = html;
 
                         convArray.forEach(conv => {
-                            fetch(`http://localhost:5000/api/users/${conv.partnerId}`)
+                            fetch(`https://meyda-app.onrender.com/api/users/${conv.partnerId}`)
                             .then(res => res.json())
                             .then(data => {
                                 if(data) {
@@ -966,7 +966,7 @@
             if(unreadMsgs.length > 0) {
                 unreadMsgs.forEach(m => {
                     m.isRead = true; 
-                    fetch(`http://localhost:5000/api/messages/${m._id}/read`, { method: 'PUT' }).catch(e=>console.log(e));
+                    fetch(`https://meyda-app.onrender.com/api/messages/${m._id}/read`, { method: 'PUT' }).catch(e=>console.log(e));
                 });
                 
                 const remainingUnread = allChatMessages.filter(m => !m.isRead && m.receiverId === loggedInUser.id).length;
@@ -1002,7 +1002,7 @@
                 const dateObj = new Date(msg.createdAt);
                 const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 
-                const imgHtml = msg.productImage ? `<img src="http://localhost:5000${msg.productImage}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="fetchAndOpenProduct('${msg.productId}')"><br>` : '';
+                const imgHtml = msg.productImage ? `<img src="https://meyda-app.onrender.com${msg.productImage}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="fetchAndOpenProduct('${msg.productId}')"><br>` : '';
 
                 if (msg.senderId === loggedInUser.id) {
                     chatBody.innerHTML += `
@@ -1047,7 +1047,7 @@
             inputEl.value = '';
 
             try {
-                await fetch('http://localhost:5000/api/messages', {
+                await fetch('https://meyda-app.onrender.com/api/messages', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(msgData)
                 });
@@ -1100,7 +1100,7 @@
             if (!loggedInUser) return;
             const updatedData = { name: document.getElementById('displayTitle').innerText, bio: document.getElementById('displayBio').innerText, profilePic: document.getElementById('mainProfileImg').src, bannerPic: document.getElementById('mainBannerImg').src };
             try {
-                const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
+                const response = await fetch(`https://meyda-app.onrender.com/api/users/${loggedInUser.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData) });
                 const data = await response.json();
                 if (response.ok) {
                     loggedInUser.name = data.user.name; loggedInUser.profilePic = data.user.profilePic;
@@ -1121,7 +1121,7 @@
             let newPrice = document.getElementById('editProdPrice').value;
             if(!newPrice.includes('Br')) newPrice += ' Br';
             try {
-                const response = await fetch(`http://localhost:5000/api/products/${currentEditProductId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, price: newPrice }) });
+                const response = await fetch(`https://meyda-app.onrender.com/api/products/${currentEditProductId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, price: newPrice }) });
                 if (response.ok) {
                     closeModal('editProductModal');
                     const loggedInUser = getLoggedInUser();
@@ -1133,7 +1133,7 @@
         async function deleteProduct(id) {
             if(confirm("እዚ ንብረት ካብ ዳታቤዝ ክድምሰስ ድዩ?")) {
                 try {
-                    const response = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
+                    const response = await fetch(`https://meyda-app.onrender.com/api/products/${id}`, { method: 'DELETE' });
                     if (response.ok) {
                         const loggedInUser = getLoggedInUser();
                         fetchMyProducts(loggedInUser.id);

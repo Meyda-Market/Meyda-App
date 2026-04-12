@@ -144,7 +144,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:5000/api/messages/${loggedInUser.id}`);
+                const response = await fetch(`https://meyda-app.onrender.com/api/messages/${loggedInUser.id}`);
                 if (response.ok) {
                     
                     const realMessages = (await response.json()).filter(m => 
@@ -249,7 +249,7 @@
             const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
             if (!loggedInUser) return;
             try {
-                await fetch(`http://localhost:5000/api/messages/user/${loggedInUser.id}/readAll`, { method: 'PUT' });
+                await fetch(`https://meyda-app.onrender.com/api/messages/user/${loggedInUser.id}/readAll`, { method: 'PUT' });
                 allNotifications.forEach(n => { n.isRead = true; n.timeClass = 'old'; });
                 document.getElementById('navBadge').style.display = 'none'; 
                 sessionStorage.setItem('meydaNotifUnreadCount', 0); // ቆጻሪ ናብ ዜሮ ንመልሶ
@@ -263,7 +263,7 @@
             
             if (!notif.isRead) {
                 try {
-                    await fetch(`http://localhost:5000/api/messages/${notifId}/read`, { method: 'PUT' });
+                    await fetch(`https://meyda-app.onrender.com/api/messages/${notifId}/read`, { method: 'PUT' });
                     notif.isRead = true; notif.timeClass = 'old';
                     
                     const unreadCount = allNotifications.filter(n => !n.isRead).length;
