@@ -309,406 +309,389 @@
         <a href="profile.html" class="nav-item"><i class="fas fa-user"></i></a>
     </div>
 
-    <script>
-        window.onload = () => { 
-            if(localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-                document.getElementById('themeIcon').className = 'fas fa-sun';
-            } 
+   <script>
+    // 👻 ማጂክ መለለዪ መንነት (Ultimate Universal User Fetcher)
+    function getLoggedInUser() {
+        let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+        
+        // ሓበሬታ እንተዘይሃልዩ ወይ ብጌጋ "undefined" ኢሉ እንተተጽሒፉ ጽራገዮ!
+        if (!userStr || userStr === 'undefined' || userStr === 'null') {
+            localStorage.removeItem('meydaUser');
+            localStorage.removeItem('meyda_user');
+            return null;
+        }
+        
+        try {
+            let userObj = JSON.parse(userStr);
+            if (userObj.user) userObj = userObj.user;
             
-            // ==============================================================
-            // ሓዱሽ ማጂክ: Admin/Owner እንተኾይኑ ነታ Shield (ዋልታ) የርእዮ!
-            // ==============================================================
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
-            if (loggedInUser) {
-                const userRole = loggedInUser.role || (loggedInUser.isAdmin ? 'admin' : 'user');
-                if (userRole === 'owner' || userRole === 'admin') {
-                    const dashBtn = document.getElementById('adminDashBtn');
-                    if(dashBtn) dashBtn.style.display = 'block';
-                }
+            // ID እንተዘይብሉ (Corrupted data) ብቐጥታ ይድርብዮ
+            if (!userObj || (!userObj.id && !userObj._id)) {
+                localStorage.removeItem('meydaUser');
+                localStorage.removeItem('meyda_user');
+                return null;
             }
-
-            loadProducts();
+            
+            userObj.id = userObj.id || userObj._id;
+            userObj.role = userObj.role || 'user'; 
+            
+            // ጀንትራ እንተኾይኑ ብቐጥታ Owner ይገብሮ
+            if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
+                userObj.role = 'owner'; 
+                userObj.isAdmin = true;
+            }
+            return userObj;
+        } catch(e) { 
+            localStorage.removeItem('meydaUser');
+            localStorage.removeItem('meyda_user');
+            return null; 
         }
+    }
 
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    window.onload = () => { 
+        if(localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('themeIcon').className = 'fas fa-sun';
+        } 
+        
+        const loggedInUser = getLoggedInUser();
+        if (loggedInUser) {
+            const userRole = loggedInUser.role;
+            if (userRole === 'owner' || userRole === 'admin') {
+                const dashBtn = document.getElementById('adminDashBtn');
+                if(dashBtn) dashBtn.style.display = 'block';
+            }
         }
+        loadProducts();
+    }
 
-        let carouselInterval;
+    function toggleTheme() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+    }
 
-        function updateCarouselDots() {
+    let carouselInterval;
+    function updateCarouselDots() {
+        const carousel = document.getElementById('heroCarousel');
+        if(!carousel) return;
+        const indicators = document.querySelectorAll('.indicator');
+        const slideWidth = carousel.clientWidth;
+        const index = Math.round(carousel.scrollLeft / slideWidth);
+        indicators.forEach((ind, i) => {
+            if(i === index) ind.classList.add('active');
+            else ind.classList.remove('active');
+        });
+    }
+
+    function scrollToSlide(index) {
+        const carousel = document.getElementById('heroCarousel');
+        const slideWidth = carousel.clientWidth;
+        carousel.scrollTo({ left: slideWidth * index, behavior: 'smooth' });
+    }
+
+    function startCarouselAutoScroll() {
+        clearInterval(carouselInterval);
+        carouselInterval = setInterval(() => {
             const carousel = document.getElementById('heroCarousel');
-            if(!carousel) return;
-            const indicators = document.querySelectorAll('.indicator');
-            const slideWidth = carousel.clientWidth;
-            const index = Math.round(carousel.scrollLeft / slideWidth);
-            indicators.forEach((ind, i) => {
-                if(i === index) ind.classList.add('active');
-                else ind.classList.remove('active');
+            if(carousel) {
+                const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+                if (carousel.scrollLeft >= maxScroll - 10) carousel.scrollTo({ left: 0, behavior: 'smooth' });
+                else carousel.scrollBy({ left: carousel.clientWidth, behavior: 'smooth' });
+            }
+        }, 4000);
+    }
+
+    function scrollCats(dir) { document.getElementById('catWrapper').scrollBy({ left: dir * 200, behavior: 'smooth' }); }
+    function goToProfile(sellerId) { 
+        if (sellerId) window.location.href = `profile.html?seller=${sellerId}`;
+        else window.location.href = 'profile.html'; 
+    }
+
+    let currentViewedProduct = null; 
+    function openProduct(product) {
+        currentViewedProduct = product; 
+        document.getElementById('detTitle').innerText = product.title;
+        document.getElementById('detPrice').innerText = product.price;
+        document.getElementById('detCond').innerText = product.condition;
+        document.getElementById('detLoc').innerText = product.location;
+        document.getElementById('detDesc').innerText = product.description;
+        document.getElementById('messageText').value = ''; 
+
+        const modalImgArea = document.getElementById('modalImageArea');
+        if (product.images && product.images.length > 0) {
+            let imgHTML = '<div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; border-radius: 10px; scrollbar-width: none;">';
+            product.images.forEach(img => {
+                imgHTML += `<img src="http://localhost:5000${img}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
             });
-        }
-
-        function scrollToSlide(index) {
-            const carousel = document.getElementById('heroCarousel');
-            const slideWidth = carousel.clientWidth;
-            carousel.scrollTo({ left: slideWidth * index, behavior: 'smooth' });
-        }
-
-        function startCarouselAutoScroll() {
-            clearInterval(carouselInterval);
-            carouselInterval = setInterval(() => {
-                const carousel = document.getElementById('heroCarousel');
-                if(carousel) {
-                    const maxScroll = carousel.scrollWidth - carousel.clientWidth;
-                    if (carousel.scrollLeft >= maxScroll - 10) carousel.scrollTo({ left: 0, behavior: 'smooth' });
-                    else carousel.scrollBy({ left: carousel.clientWidth, behavior: 'smooth' });
-                }
-            }, 4000);
-        }
-
-        function scrollCats(dir) { 
-            document.getElementById('catWrapper').scrollBy({ left: dir * 200, behavior: 'smooth' }); 
-        }
-
-        function goToProfile(sellerId) { 
-            if (sellerId) window.location.href = `profile.html?seller=${sellerId}`;
-            else window.location.href = 'profile.html'; 
-        }
-
-        // =====================================================================
-        // Product Modal & Messaging Logic
-        // =====================================================================
-        let currentViewedProduct = null; 
-
-        function openProduct(product) {
-            currentViewedProduct = product; 
-            document.getElementById('detTitle').innerText = product.title;
-            document.getElementById('detPrice').innerText = product.price;
-            document.getElementById('detCond').innerText = product.condition;
-            document.getElementById('detLoc').innerText = product.location;
-            document.getElementById('detDesc').innerText = product.description;
-            document.getElementById('messageText').value = ''; 
-
-            const modalImgArea = document.getElementById('modalImageArea');
-
-            if (product.images && product.images.length > 0) {
-                let imgHTML = '<div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; border-radius: 10px; scrollbar-width: none;">';
-                product.images.forEach(img => {
-                   imgHTML += `<img src="http://localhost:5000${img}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
-                });
-                imgHTML += '</div>';
-                
-                if(product.images.length > 1) {
-                    imgHTML += '<div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; pointer-events: none;">↔️ ስሓቦ (Swipe)</div>';
-                }
-                modalImgArea.innerHTML = imgHTML;
-            } else {
-                modalImgArea.innerHTML = `<div class="product-img-placeholder" style="height:100%; width:100%; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:50px;"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
+            imgHTML += '</div>';
+            if(product.images.length > 1) {
+                imgHTML += '<div style="position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 10px; border-radius: 15px; font-size: 12px; pointer-events: none;">↔️ ስሓቦ (Swipe)</div>';
             }
-            document.getElementById('productModal').style.display = 'flex';
+            modalImgArea.innerHTML = imgHTML;
+        } else {
+            modalImgArea.innerHTML = `<div class="product-img-placeholder" style="height:100%; width:100%; display:flex; align-items:center; justify-content:center; border-radius:10px; font-size:50px;"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
         }
+        document.getElementById('productModal').style.display = 'flex';
+    }
 
-        function closeProduct() { document.getElementById('productModal').style.display = 'none'; }
+    function closeProduct() { document.getElementById('productModal').style.display = 'none'; }
 
-        async function callSeller() {
-            if (!currentViewedProduct) return;
-            if (currentViewedProduct.phone && currentViewedProduct.phone.trim() !== "") {
-                window.location.href = `tel:${currentViewedProduct.phone}`;
-                return;
+    async function callSeller() {
+        if (!currentViewedProduct) return;
+        if (currentViewedProduct.phone && currentViewedProduct.phone.trim() !== "") {
+            window.location.href = `tel:${currentViewedProduct.phone}`; return;
+        }
+        if (!currentViewedProduct.sellerId) { alert("ናይዚ ሸያጢ ሓበሬታ ኣይተረኽበን።"); return; }
+        try {
+            const response = await fetch(`http://localhost:5000/api/users/${currentViewedProduct.sellerId}`);
+            if (response.ok) {
+                const seller = await response.json();
+                if (seller.phone) window.location.href = `tel:${seller.phone}`;
+                else alert("እዚ ሸያጢ ቁጽሪ ስልኪ ኣየእተወን።");
             }
-            if (!currentViewedProduct.sellerId) { alert("ናይዚ ሸያጢ ሓበሬታ ኣይተረኽበን።"); return; }
-            try {
-                const response = await fetch(`http://localhost:5000/api/users/${currentViewedProduct.sellerId}`);
-                if (response.ok) {
-                    const seller = await response.json();
-                    if (seller.phone) window.location.href = `tel:${seller.phone}`;
-                    else alert("እዚ ሸያጢ ቁጽሪ ስልኪ ኣየእተወን።");
-                }
-            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
-        }
+        } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
+    }
 
-        async function sendMessage() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
-            if (!loggedInUser) { alert("መልእኽቲ ንምልኣኽ ሎግ-ኢን ግበሩ!"); window.location.href = 'auth.html'; return; }
+    async function sendMessage() {
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser) { alert("መልእኽቲ ንምልኣኽ ሎግ-ኢን ግበሩ!"); window.location.href = 'index.html'; return; }
+        const text = document.getElementById('messageText').value.trim();
+        if (!text) { alert("መልእኽትኹም ጽሓፉ!"); return; }
+        if (!currentViewedProduct) return;
+        if (currentViewedProduct.sellerId === loggedInUser.id) { alert("ናብ ርእስኹም ክትሰድዱ ኣይትኽእሉን!"); return; }
 
-            const text = document.getElementById('messageText').value.trim();
-            if (!text) { alert("መልእኽትኹም ጽሓፉ!"); return; }
-            if (!currentViewedProduct) return;
-            if (currentViewedProduct.sellerId === loggedInUser.id) { alert("ናብ ርእስኹም ክትሰድዱ ኣይትኽእሉን!"); return; }
-
-            const msgData = {
-                senderId: loggedInUser.id, senderName: loggedInUser.name,
-                receiverId: currentViewedProduct.sellerId, productId: currentViewedProduct._id,
-                productTitle: currentViewedProduct.title, 
-                productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "",
-                text: text, type: 'message'
-            };
-
-            try {
-                const response = await fetch('http://localhost:5000/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
-                if (response.ok) { alert("መልእኽትኹም ብዓወት ተላኢኹ ኣሎ! ✅"); document.getElementById('messageText').value = ''; closeProduct(); } 
-                else { alert("መልእኽቲ ኣይተላእከን።"); }
-            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
-        }
-
-        // =====================================================================
-        // Region & Filter Logic
-        // =====================================================================
-        const locationsData = {
-            "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
-            "Afar": ["Semera", "Asayta", "Awash"],
-            "Amhara": ["Bahirdar", "Gonder", "Dessie"],
-            "Oromia": ["Adama", "Gimma", "Bishoftu", "Shashemane"],
-            "Somali": ["Jigjiga", "Degahabur"],
-            "Debub": ["Hawassa", "Gamo"],
-            "Addis Ababa": ["Bole", "Piasa", "Megenagna", "Kality"],
-            "Harar": [], "Gambela": [], "Benshangul": [], "Driedawa": []
+        const msgData = {
+            senderId: loggedInUser.id, senderName: loggedInUser.name,
+            receiverId: currentViewedProduct.sellerId, productId: currentViewedProduct._id,
+            productTitle: currentViewedProduct.title, 
+            productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "",
+            text: text, type: 'message'
         };
+
+        try {
+            const response = await fetch('http://localhost:5000/api/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msgData) });
+            if (response.ok) { alert("መልእኽትኹም ብዓወት ተላኢኹ ኣሎ! ✅"); document.getElementById('messageText').value = ''; closeProduct(); } 
+            else { alert("መልእኽቲ ኣይተላእከን።"); }
+        } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
+    }
+
+    const locationsData = {
+        "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
+        "Afar": ["Semera", "Asayta", "Awash"],
+        "Amhara": ["Bahirdar", "Gonder", "Dessie"],
+        "Oromia": ["Adama", "Gimma", "Bishoftu", "Shashemane"],
+        "Somali": ["Jigjiga", "Degahabur"],
+        "Debub": ["Hawassa", "Gamo"],
+        "Addis Ababa": ["Bole", "Piasa", "Megenagna", "Kality"],
+        "Harar": [], "Gambela": [], "Benshangul": [], "Driedawa": []
+    };
+    let currentRegion = ""; let currentCategoryFilter = 'all'; let currentLocationFilter = 'all';
+    function openRegionModal() { document.getElementById('regionModal').style.display = 'flex'; showRegions(); }
+    function closeRegionModal() { document.getElementById('regionModal').style.display = 'none'; }
+    function showRegions() {
         const locationList = document.getElementById('locationList');
-        const modalTitle = document.getElementById('modalTitle');
-        const backBtn = document.getElementById('backBtn');
-        let currentRegion = ""; let currentCategoryFilter = 'all'; let currentLocationFilter = 'all';
-
-        function openRegionModal() { document.getElementById('regionModal').style.display = 'flex'; showRegions(); }
-        function closeRegionModal() { document.getElementById('regionModal').style.display = 'none'; }
-        function showRegions() {
-            modalTitle.innerText = "ክልል ምረጽ"; backBtn.style.display = 'none'; locationList.innerHTML = "";
-            let allLi = document.createElement('li'); allLi.className = 'list-item';
-            allLi.innerHTML = `<b style="color:var(--water-blue);"><i class="fas fa-globe"></i> ኩለን ቦታታት (All Regions)</b>`;
-            allLi.onclick = () => { setLocationFilter('all', 'Region'); }; locationList.appendChild(allLi);
-            for (const region in locationsData) {
-                let li = document.createElement('li'); li.className = 'list-item';
-                li.innerHTML = `${region} ${locationsData[region].length > 0 ? '<i class="fas fa-chevron-right" style="font-size:12px; color:var(--gray-text);"></i>' : ''}`;
-                li.onclick = () => {
-                    if(locationsData[region].length > 0) { currentRegion = region; showCities(locationsData[region]); }
-                    else { setLocationFilter(region, region); }
-                }; locationList.appendChild(li);
-            }
+        document.getElementById('modalTitle').innerText = "ክልል ምረጽ"; document.getElementById('backBtn').style.display = 'none'; locationList.innerHTML = "";
+        let allLi = document.createElement('li'); allLi.className = 'list-item';
+        allLi.innerHTML = `<b style="color:var(--water-blue);"><i class="fas fa-globe"></i> ኩለን ቦታታት (All Regions)</b>`;
+        allLi.onclick = () => { setLocationFilter('all', 'Region'); }; locationList.appendChild(allLi);
+        for (const region in locationsData) {
+            let li = document.createElement('li'); li.className = 'list-item';
+            li.innerHTML = `${region} ${locationsData[region].length > 0 ? '<i class="fas fa-chevron-right" style="font-size:12px; color:var(--gray-text);"></i>' : ''}`;
+            li.onclick = () => {
+                if(locationsData[region].length > 0) { currentRegion = region; showCities(locationsData[region]); }
+                else { setLocationFilter(region, region); }
+            }; locationList.appendChild(li);
         }
-        function showCities(cities) {
-            modalTitle.innerText = currentRegion; backBtn.style.display = 'inline-block'; locationList.innerHTML = "";
-            let allLi = document.createElement('li'); allLi.className = 'list-item';
-            allLi.innerHTML = `<b style="color:var(--water-blue);">ሙሉእ ${currentRegion}</b>`;
-            allLi.onclick = () => { setLocationFilter(currentRegion, currentRegion); }; locationList.appendChild(allLi);
-            cities.forEach(city => {
-                let li = document.createElement('li'); li.className = 'list-item'; li.innerText = city;
-                li.onclick = () => { setLocationFilter(`${currentRegion}, ${city}`, city); }; locationList.appendChild(li);
-            });
+    }
+    function showCities(cities) {
+        const locationList = document.getElementById('locationList');
+        document.getElementById('modalTitle').innerText = currentRegion; document.getElementById('backBtn').style.display = 'inline-block'; locationList.innerHTML = "";
+        let allLi = document.createElement('li'); allLi.className = 'list-item';
+        allLi.innerHTML = `<b style="color:var(--water-blue);">ሙሉእ ${currentRegion}</b>`;
+        allLi.onclick = () => { setLocationFilter(currentRegion, currentRegion); }; locationList.appendChild(allLi);
+        cities.forEach(city => {
+            let li = document.createElement('li'); li.className = 'list-item'; li.innerText = city;
+            li.onclick = () => { setLocationFilter(`${currentRegion}, ${city}`, city); }; locationList.appendChild(li);
+        });
+    }
+    function setLocationFilter(fullLocationString, displayName) {
+        currentLocationFilter = fullLocationString; document.getElementById('selectedLocation').innerText = displayName;
+        closeRegionModal(); applyFilters(); 
+    }
+    function selectCat(el, categoryName) {
+        document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
+        el.classList.add('active'); currentCategoryFilter = categoryName; applyFilters();
+    }
+    function applyFilters() {
+        let filtered = allProducts;
+        if (currentLocationFilter !== 'all') filtered = filtered.filter(p => p.location && p.location.includes(currentLocationFilter));
+        if (currentCategoryFilter !== 'all') filtered = filtered.filter(p => p.category === currentCategoryFilter);
+        const searchInput = document.getElementById('searchInput');
+        if (searchInput && searchInput.value.trim() !== '') {
+            const query = searchInput.value.toLowerCase().trim();
+            filtered = filtered.filter(p => p.title.toLowerCase().includes(query) || p.description.toLowerCase().includes(query));
         }
-        function setLocationFilter(fullLocationString, displayName) {
-            currentLocationFilter = fullLocationString; document.getElementById('selectedLocation').innerText = displayName;
-            closeRegionModal(); applyFilters(); 
-        }
-        function selectCat(el, categoryName) {
-            document.querySelectorAll('.cat-pill').forEach(c => c.classList.remove('active'));
-            el.classList.add('active'); currentCategoryFilter = categoryName; applyFilters();
-        }
-        function applyFilters() {
-            let filtered = allProducts;
-            if (currentLocationFilter !== 'all') {
-                filtered = filtered.filter(p => p.location && p.location.includes(currentLocationFilter));
-            }
-            if (currentCategoryFilter !== 'all') {
-                filtered = filtered.filter(p => p.category === currentCategoryFilter);
-            }
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) {
-                const query = searchInput.value.toLowerCase().trim();
-                if (query !== '') {
-                    filtered = filtered.filter(p => 
-                        p.title.toLowerCase().includes(query) || 
-                        p.description.toLowerCase().includes(query)
-                    );
-                }
-            }
-            displayProducts(filtered);
-        }
+        displayProducts(filtered);
+    }
 
-        window.onclick = function(event) {
-            const pModal = document.getElementById('productModal'); const rModal = document.getElementById('regionModal');
-            if (event.target == pModal) pModal.style.display = 'none'; if (event.target == rModal) rModal.style.display = 'none';
-        }
+    window.onclick = function(event) {
+        const pModal = document.getElementById('productModal'); const rModal = document.getElementById('regionModal');
+        if (event.target == pModal) pModal.style.display = 'none'; if (event.target == rModal) rModal.style.display = 'none';
+    }
 
-        let allProducts = []; 
-        let sellersCache = {}; 
+    // =====================================================================
+    // ሓዱሽ ማጂክ: ብሓንሳብ ንኹሎም ሸየጥቲ ከተምጽእ (Bulk Fetch Users)
+    // =====================================================================
+    let allProducts = []; 
+    let sellersCache = {}; 
 
-        async function loadProducts() {
-            const productsGrid = document.querySelector('.products-grid');
-            try {
-                const response = await fetch('http://localhost:5000/api/products');
-                allProducts = await response.json(); 
-                
-                const uniqueSellerIds = [...new Set(allProducts.map(p => p.sellerId))];
-                for (let sellerId of uniqueSellerIds) {
-                    if(sellerId && !sellersCache[sellerId]) { 
-                        try {
-                            const userRes = await fetch(`http://localhost:5000/api/users/${sellerId}`);
-                            if (userRes.ok) {
-                                const userData = await userRes.json();
-                                sellersCache[sellerId] = userData.profilePic || "";
-                            }
-                        } catch(e) { console.log("Error fetching user", e); }
-                    }
-                }
-
-                applyFilters(); 
-                updateHeroBanner(); 
-
-            } catch (error) {
-                productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:red;">ምስ ዳታቤዝ ክራኸብ ኣይከኣለን። ሰርቨር ሪስታርት ግበሩ።</p>';
-            }
-        }
-
-        function updateHeroBanner() {
-            const carousel = document.getElementById('heroCarousel');
-            const indicatorsContainer = document.getElementById('carouselIndicators');
+    async function loadProducts() {
+        const productsGrid = document.querySelector('.products-grid');
+        try {
+            // 1. መጀመርታ ኣቕሑት ነምጽእ
+            const response = await fetch('http://localhost:5000/api/products');
+            allProducts = await response.json(); 
             
-            let proProducts = allProducts.filter(p => p.isPro === true && p.images && p.images.length > 0);
-            proProducts = proProducts.sort(() => 0.5 - Math.random()).slice(0, 5);
+            // 2. ንኹሎም እቶም ኣብቲ ኣቕሑት ዘለዉ ሸየጥቲ ጥራሕ ነጽርዮም
+            const uniqueSellerIds = [...new Set(allProducts.map(p => p.sellerId).filter(id => id))];
+            
+            // 3. ንኹሎም እቶም ሸየጥቲ ብሓንሳብ ንሰርቨር ንሓትት (Faster!)
+            try {
+                const usersRes = await fetch('http://localhost:5000/api/admin/users'); // Use admin route to get all users easily
+                if (usersRes.ok) {
+                    const allUsers = await usersRes.json();
+                    allUsers.forEach(u => {
+                        if(uniqueSellerIds.includes(u._id)) {
+                            sellersCache[u._id] = u.profilePic || "";
+                        }
+                    });
+                }
+            } catch(e) { console.log("Failed to bulk load users", e); }
+            
+            // 4. ኹሉ ምስ መጸ ዳሕራይ ንካርድታት (UI) ንስኣሎም
+            applyFilters(); 
+            updateHeroBanner(); 
+            
+        } catch (error) { 
+            productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:red;">ምስ ዳታቤዝ ክራኸብ ኣይከኣለን። ሰርቨር ሪስታርት ግበሩ።</p>'; 
+        }
+    }
 
-            if (proProducts.length > 0) {
-                carousel.innerHTML = '';
-                indicatorsContainer.innerHTML = '';
+    function updateHeroBanner() {
+        const carousel = document.getElementById('heroCarousel');
+        const indicatorsContainer = document.getElementById('carouselIndicators');
+        let proProducts = allProducts.filter(p => p.isPro === true && p.images && p.images.length > 0);
+        proProducts = proProducts.sort(() => 0.5 - Math.random()).slice(0, 5);
 
-                proProducts.forEach((product, index) => {
-                    const slide = document.createElement('div');
-                    slide.className = 'carousel-slide';
-                    slide.style.backgroundColor = '#000000'; 
-                    slide.style.cursor = 'pointer';
-                    slide.onclick = () => openProduct(product);
-
-                    slide.innerHTML = `
-                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('http://localhost:5000${product.images[0]}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
-                        
-                        <div style="position: absolute; top: 12px; left: 12px; background: #f1c40f; color: #333; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 2;">
-                            <i class="fas fa-crown"></i> PRO AD
-                        </div>
-                        
-                        <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 15px 15px 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; box-sizing: border-box; text-align: left; z-index: 2;">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                                <div style="max-width: 70%;">
-                                    <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${product.title}</div>
-                                    <div style="font-size: 11px; color: #ddd; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">
-                                        <span><i class="fas fa-map-marker-alt"></i> ${product.location}</span>
-                                    </div>
-                                </div>
-                                <div style="font-size: 15px; font-weight: bold; color: #4cd137; text-shadow: 0 2px 4px rgba(0,0,0,0.8); background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(76, 209, 55, 0.3);">
-                                    ${product.price}
-                                </div>
+        if (proProducts.length > 0) {
+            carousel.innerHTML = ''; indicatorsContainer.innerHTML = '';
+            proProducts.forEach((product, index) => {
+                const slide = document.createElement('div'); slide.className = 'carousel-slide'; slide.style.backgroundColor = '#000'; slide.style.cursor = 'pointer';
+                slide.onclick = () => openProduct(product);
+                slide.innerHTML = `
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('http://localhost:5000${product.images[0]}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
+                    <div style="position: absolute; top: 12px; left: 12px; background: #f1c40f; color: #333; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 2;"><i class="fas fa-crown"></i> PRO AD</div>
+                    <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 15px 15px 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; box-sizing: border-box; text-align: left; z-index: 2;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                            <div style="max-width: 70%;">
+                                <div style="font-size: 18px; font-weight: bold; margin-bottom: 5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${product.title}</div>
+                                <div style="font-size: 11px; color: #ddd; text-shadow: 0 1px 2px rgba(0,0,0,0.8);"><span><i class="fas fa-map-marker-alt"></i> ${product.location}</span></div>
                             </div>
+                            <div style="font-size: 15px; font-weight: bold; color: #4cd137; text-shadow: 0 2px 4px rgba(0,0,0,0.8); background: rgba(0,0,0,0.6); padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(76, 209, 55, 0.3);">${product.price}</div>
                         </div>
-                    `;
-                    carousel.appendChild(slide);
-
-                    const indicator = document.createElement('div');
-                    indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
-                    indicator.onclick = () => scrollToSlide(index);
-                    indicatorsContainer.appendChild(indicator);
-                });
-            }
-            
-            startCarouselAutoScroll();
-        }
-      
-        function displayProducts(productsToShow) {
-            const productsGrid = document.querySelector('.products-grid');
-            productsGrid.innerHTML = ''; 
-
-            if (productsToShow.length === 0) {
-                productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:var(--gray-text); padding: 30px;">ኣብዚ ቦታን ምድብን ዝተመዝገበ ንብረት የለን።</p>'; return;
-            }
-
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
-            const mySavedList = (loggedInUser && loggedInUser.savedProducts) ? loggedInUser.savedProducts : [];
-
-            const userRole = loggedInUser ? (loggedInUser.role || (loggedInUser.isAdmin ? 'admin' : 'user')) : 'user';
-            const isGodMode = (userRole === 'owner' || userRole === 'admin'); 
-
-            productsToShow.forEach(product => {
-                const productCard = document.createElement('div');
-                productCard.className = 'product-card';
-                productCard.onclick = () => openProduct(product);
-
-                let imageHTML = product.images && product.images.length > 0 
-                    ? `<img src="http://localhost:5000${product.images[0]}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px;">` 
-                    : `<div class="product-img-placeholder"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
-
-                const isSaved = mySavedList.includes(product._id);
-                const heartClass = isSaved ? 'fas' : 'far';
-                const heartStyle = isSaved ? 'color: #ff4757;' : '';
-
-                const sellerPic = sellersCache[product.sellerId];
-                const avatarHTML = (sellerPic && sellerPic.trim() !== "") 
-                    ? `<img src="${sellerPic}" alt="Seller">` 
-                    : `<i class="fas fa-user"></i>`;
-
-                let deleteBtnHTML = '';
-                if (isGodMode || (loggedInUser && loggedInUser.id === product.sellerId)) {
-                    deleteBtnHTML = `
-                        <div class="delete-ad-btn" onclick="event.stopPropagation(); deleteProductAdmin('${product._id}')" title="ኣቕሓ ደምስስ (Delete Ad)">
-                            <i class="fas fa-trash"></i>
-                        </div>
-                    `;
-                }
-
-                productCard.innerHTML = `
-                    ${imageHTML}
-                    <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this, '${product._id}')">
-                        <i class="${heartClass} fa-heart" style="${heartStyle}"></i>
-                    </div>
-                    
-                    ${deleteBtnHTML}
-                    
-                    <div class="user-icon" onclick="event.stopPropagation(); goToProfile('${product.sellerId}')">
-                        ${avatarHTML}
-                    </div>
-
-                    <div class="product-price">${product.price}</div>
-                    <div class="product-title">${product.title}</div>
-                    <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ${product.location}</div>
-                `;
-                productsGrid.appendChild(productCard);
+                    </div>`;
+                carousel.appendChild(slide);
+                const indicator = document.createElement('div'); indicator.className = `indicator ${index === 0 ? 'active' : ''}`;
+                indicator.onclick = () => scrollToSlide(index); indicatorsContainer.appendChild(indicator);
             });
         }
+        startCarouselAutoScroll();
+    }
+  
+    function displayProducts(productsToShow) {
+        const productsGrid = document.querySelector('.products-grid');
+        productsGrid.innerHTML = ''; 
+        if (productsToShow.length === 0) { productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:var(--gray-text); padding: 30px;">ኣብዚ ቦታን ምድብን ዝተመዝገበ ንብረት የለን።</p>'; return; }
 
-        async function deleteProductAdmin(productId) {
-            if(confirm("እዚ ንብረት ብርግጽ ካብ ዕዳጋ ክድምሰስ ድዩ? (Admin Action)")) {
-                try {
-                    const response = await fetch(`http://localhost:5000/api/products/${productId}`, { method: 'DELETE' });
-                    if (response.ok) {
-                        alert("ኣቕሓ ብዓወት ተደምሲሱ ኣሎ!");
-                        loadProducts(); 
-                    } else {
-                        alert("ምድምሳስ ኣይተኻእለን።");
-                    }
-                } catch (error) {
-                    alert("ምስ ሰርቨር ኣይተራኸበን።");
-                }
+        const loggedInUser = getLoggedInUser();
+        const mySavedList = (loggedInUser && loggedInUser.savedProducts) ? loggedInUser.savedProducts : [];
+        const userRole = loggedInUser ? loggedInUser.role : 'user';
+        const isGodMode = (userRole === 'owner' || userRole === 'admin'); 
+
+        productsToShow.forEach(product => {
+            const productCard = document.createElement('div'); productCard.className = 'product-card';
+            productCard.onclick = () => openProduct(product);
+
+            let imageHTML = product.images && product.images.length > 0 
+                ? `<img src="http://localhost:5000${product.images[0]}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px;">` 
+                : `<div class="product-img-placeholder"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
+
+            const isSaved = mySavedList.includes(product._id);
+            const heartClass = isSaved ? 'fas' : 'far'; const heartStyle = isSaved ? 'color: #ff4757;' : '';
+            
+            // ሓዱሽ ማጂክ: ነቲ ስእሊ (Avatar) ብትኽክል ከተንብቦ 
+            const sellerPic = sellersCache[product.sellerId];
+            const avatarHTML = (sellerPic && sellerPic.trim() !== "" && !sellerPic.includes('undefined')) 
+                ? `<img src="${sellerPic}" alt="Seller">` 
+                : `<i class="fas fa-user"></i>`;
+
+            let deleteBtnHTML = '';
+            if (isGodMode || (loggedInUser && loggedInUser.id === product.sellerId)) {
+                deleteBtnHTML = `<div class="delete-ad-btn" onclick="event.stopPropagation(); deleteProductAdmin('${product._id}')" title="ኣቕሓ ደምስስ"><i class="fas fa-trash"></i></div>`;
             }
-        }
 
-        async function toggleHeart(el, productId) {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
-            if (!loggedInUser) { alert("ንብረት ንምዕቃብ ሎግ-ኢን ግበሩ!"); window.location.href = 'auth.html'; return; }
+            productCard.innerHTML = `
+                ${imageHTML}
+                <div class="wishlist-icon" onclick="event.stopPropagation(); toggleHeart(this, '${product._id}')"><i class="${heartClass} fa-heart" style="${heartStyle}"></i></div>
+                ${deleteBtnHTML}
+                <div class="user-icon" onclick="event.stopPropagation(); goToProfile('${product.sellerId}')">${avatarHTML}</div>
+                <div class="product-price">${product.price}</div>
+                <div class="product-title">${product.title}</div>
+                <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ${product.location}</div>
+            `;
+            productsGrid.appendChild(productCard);
+        });
+    }
 
-            const icon = el.querySelector('i'); const isCurrentlySaved = icon.classList.contains('fas');
-            if (isCurrentlySaved) { icon.classList.remove('fas'); icon.classList.add('far'); icon.style.color = ''; } 
-            else { icon.classList.remove('far'); icon.classList.add('fas'); icon.style.color = '#ff4757'; }
-
+    async function deleteProductAdmin(productId) {
+        if(confirm("እዚ ንብረት ብርግጽ ካብ ዕዳጋ ክድምሰስ ድዩ? (Admin Action)")) {
             try {
-                const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}/save`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: productId, action: isCurrentlySaved ? 'remove' : 'add' })
-                });
-                const data = await response.json();
-                if(response.ok) { loggedInUser.savedProducts = data.savedProducts; localStorage.setItem('meydaUser', JSON.stringify(loggedInUser)); } 
-                else { alert("ኣይተኻእለን!"); if (isCurrentlySaved) { icon.classList.add('fas'); icon.classList.remove('far'); icon.style.color = '#ff4757'; } else { icon.classList.remove('fas'); icon.classList.add('far'); icon.style.color = ''; } }
-            } catch(error) { if (isCurrentlySaved) { icon.classList.add('fas'); icon.classList.remove('far'); icon.style.color = '#ff4757'; } else { icon.classList.remove('fas'); icon.classList.add('far'); icon.style.color = ''; } }
+                const response = await fetch(`http://localhost:5000/api/products/${productId}`, { method: 'DELETE' });
+                if (response.ok) { alert("ኣቕሓ ብዓወት ተደምሲሱ ኣሎ!"); loadProducts(); } 
+                else { alert("ምድምሳስ ኣይተኻእለን።"); }
+            } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
         }
-    </script>
+    }
+
+    async function toggleHeart(el, productId) {
+        const loggedInUser = getLoggedInUser();
+        if (!loggedInUser) { alert("ንብረት ንምዕቃብ ሎግ-ኢን ግበሩ!"); window.location.href = 'index.html'; return; }
+
+        const icon = el.querySelector('i'); const isCurrentlySaved = icon.classList.contains('fas');
+        if (isCurrentlySaved) { icon.classList.remove('fas'); icon.classList.add('far'); icon.style.color = ''; } 
+        else { icon.classList.remove('far'); icon.classList.add('fas'); icon.style.color = '#ff4757'; }
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}/save`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ productId: productId, action: isCurrentlySaved ? 'remove' : 'add' })
+            });
+            const data = await response.json();
+            if(response.ok) { 
+                loggedInUser.savedProducts = data.savedProducts; 
+                localStorage.setItem('meydaUser', JSON.stringify(loggedInUser)); 
+            } else { 
+                alert("ኣይተኻእለን!"); 
+                if (isCurrentlySaved) { icon.classList.add('fas'); icon.classList.remove('far'); icon.style.color = '#ff4757'; } 
+                else { icon.classList.remove('fas'); icon.classList.add('far'); icon.style.color = ''; } 
+            }
+        } catch(error) { 
+            if (isCurrentlySaved) { icon.classList.add('fas'); icon.classList.remove('far'); icon.style.color = '#ff4757'; } 
+            else { icon.classList.remove('fas'); icon.classList.add('far'); icon.style.color = ''; } 
+        }
+    }
+</script>
 </body>
 </html>

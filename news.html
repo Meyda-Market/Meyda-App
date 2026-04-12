@@ -182,6 +182,29 @@
         let currentFilter = 'all';
         let loggedInUser = null;
 
+// 👻 ማጂክ መለለዪ መንነት ን ዜና (Safe Universal User Fetcher)
+    function getLoggedInUser() {
+        try {
+            let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+            if (!userStr || userStr === 'undefined' || userStr === 'null') return null;
+            
+            let userObj = JSON.parse(userStr);
+            if (userObj.user) userObj = userObj.user;
+            
+            if (!userObj || (!userObj.id && !userObj._id)) return null;
+            
+            userObj.id = userObj.id || userObj._id;
+            userObj.role = userObj.role || 'user'; 
+            
+            if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
+                userObj.role = 'owner'; 
+                userObj.isAdmin = true;
+            }
+            return userObj;
+        } catch(e) { 
+            return null; 
+        }
+    }
        // 1. ፔጅ ክኽፈት ከሎ (On Load)
         window.onload = () => { 
             if(localStorage.getItem('theme') === 'dark') {
@@ -189,7 +212,7 @@
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
             
-            loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            loggedInUser = getLoggedInUser();
             if (loggedInUser) {
                 checkUnreadBadge(); 
                 

@@ -3,407 +3,341 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meyda Market - Welcome</title>
+    <title>Meyda Market - Login / Signup</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
-        :root { 
-            --water-blue: #0096c7; 
-            --water-blue-hover: #0077a3;
-            --white: #ffffff; 
-            --bg-color: #f0f4f8; 
-            --text-color: #333; 
-            --shadow: 0 4px 15px rgba(0, 150, 199, 0.15); 
-            --border-color: #ddd;
+        /* =====================================================================
+           1. ሓፈሻዊ ዲዛይንን ሕብርታትን (General Styles & Meyda Brand Colors)
+           ===================================================================== */
+        :root {
+            /* ሕብሪ Meyda ብትኽክል (#00a2e8) */
+            --primary-color: #00a2e8; 
+            --primary-hover: #0084bf;
+            --bg-color: #f4f7f6;
+            --text-color: #333;
+            --white: #ffffff;
+            --error-color: #ff4d4f;
+            --border-radius: 12px;
         }
-        body.dark-mode { 
-            --white: #1e1e1e; 
-            --bg-color: #121212; 
-            --text-color: #e0e0e0; 
-            --shadow: 0 4px 15px rgba(0, 0, 0, 0.5); 
-            --border-color: #444;
-        }
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg-color); 
-            color: var(--text-color); 
-            margin: 0; 
-            transition: background 0.3s, color 0.3s; 
-        }
-        
-        /* Top Banner */
-        .top-banner { 
-            background: var(--water-blue); 
-            padding: 15px 30px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .top-banner h1 { 
-            margin: 0; 
-            color: #ffffff; 
-            font-size: 24px; 
-            font-weight: bold; 
-            letter-spacing: 1px;
-        }
-        .banner-center {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .social-icons {
-            display: flex;
-            gap: 12px;
-        }
-        .social-icons a { 
-            font-size: 16px; 
-            text-decoration: none; 
-            transition: transform 0.3s; 
-            text-shadow: 0px 0px 2px rgba(255,255,255,0.8);
-        }
-        .social-icons a:hover { transform: scale(1.2); }
-        
-        .theme-toggle { 
-            background: rgba(255,255,255,0.2); 
-            border: none; 
-            padding: 8px 10px; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            color: #ffffff; 
-            transition: 0.3s;
-        }
-        .theme-toggle:hover { background: #ffffff; color: var(--water-blue); }
 
-        /* Auth Container */
-        .auth-container { 
-            max-width: 400px; 
-            margin: 40px auto; 
-            background: var(--white); 
-            padding: 30px; 
-            border-radius: 20px; 
-            box-shadow: var(--shadow); 
-            text-align: center; 
-        }
-        .auth-container h2 { color: var(--water-blue); margin-bottom: 25px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         
-        .input-group { 
-            margin-bottom: 15px; 
-            text-align: left; 
-            position: relative;
+        body {
+            background: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh;
         }
-        .input-group input, .input-group select { 
-            width: 100%; 
-            padding: 12px; 
-            padding-right: 40px; /* Space for icon */
-            border: 1px solid var(--border-color); 
-            border-radius: 10px; 
-            background: var(--bg-color); 
-            color: var(--text-color); 
-            outline: none; 
-            box-sizing: border-box; 
-            transition: border 0.3s;
-        }
-        .input-group input:focus, .input-group select:focus {
-            border-color: var(--water-blue);
-        }
-        
-        /* Password Eye Icon */
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #888;
-        }
-        .toggle-password:hover { color: var(--water-blue); }
 
-        .btn { 
-            background: var(--water-blue); 
-            color: #fff; 
-            border: none; 
-            padding: 12px; 
-            width: 100%; 
-            border-radius: 10px; 
-            font-size: 16px;
-            font-weight: bold; 
-            cursor: pointer; 
-            box-shadow: var(--shadow); 
-            transition: 0.3s; 
+        /* =====================================================================
+           2. ማእከላይ ሳጹንን ሎጎን (Auth Container & Logo)
+           ===================================================================== */
+        .auth-container {
+            background: var(--white); width: 100%; max-width: 450px;
+            padding: 40px 30px; border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center;
         }
-        .btn:hover { background: var(--water-blue-hover); transform: translateY(-2px); }
-        
-        .toggle-form { 
-            color: var(--water-blue); 
-            cursor: pointer; 
-            margin-top: 15px; 
-            display: inline-block; 
-            font-size: 14px; 
-        }
-        .toggle-form:hover { text-decoration: underline; }
-        .form-hidden { display: none; }
 
-        /* Social Logins */
-        .divider {
-            display: flex;
-            align-items: center;
-            text-align: center;
-            margin: 20px 0;
-            color: #888;
-            font-size: 13px;
+        .brand-logo {
+            font-size: 2.8rem;
+            color: var(--primary-color);
+            font-weight: 800; margin-bottom: 25px;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
         }
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            border-bottom: 1px solid var(--border-color);
+
+        /* =====================================================================
+           3. መምረጺ ታብ (Login / Signup Tabs)
+           ===================================================================== */
+        .tabs {
+            display: flex; background: #eee; border-radius: 30px;
+            margin-bottom: 30px; position: relative; overflow: hidden;
         }
-        .divider::before { margin-right: .5em; }
-        .divider::after { margin-left: .5em; }
+
+        .tab-btn {
+            flex: 1; padding: 12px; border: none; background: none;
+            font-size: 1.1rem; font-weight: 600; color: #777;
+            cursor: pointer; transition: color 0.3s; z-index: 1;
+        }
+
+        .tab-btn.active { color: var(--white); }
+
+        .tab-slider {
+            position: absolute; top: 0; left: 0; width: 50%; height: 100%;
+            background: var(--primary-color); border-radius: 30px;
+            transition: transform 0.3s ease; z-index: 0;
+        }
+
+        /* =====================================================================
+           4. ቅጥዕታትን መእተዊታትን (Forms & Inputs)
+           ===================================================================== */
+        .auth-form { display: none; text-align: left; }
+        .auth-form.active { display: block; animation: fadeIn 0.4s ease; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 0.9rem; margin-bottom: 5px; color: #555; }
+
+        .form-group input, .form-group select {
+            width: 100%; padding: 12px; border: 1px solid #ccc;
+            border-radius: 8px; font-size: 1rem; transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color); outline: none;
+        }
+        .form-group input.error { border-color: var(--error-color); }
+
+        .phone-group { display: flex; gap: 10px; }
+        .phone-group select { width: 35%; background: #f9f9f9; cursor: pointer; }
+        .phone-group input { width: 65%; }
+
+        /* =====================================================================
+           5. መጥወቒታት (Buttons)
+           ===================================================================== */
+        .btn-submit {
+            width: 100%; padding: 12px; background: var(--primary-color);
+            color: var(--white); border: none; border-radius: 8px;
+            font-size: 1.1rem; font-weight: bold; cursor: pointer;
+            transition: background 0.3s; margin-top: 10px;
+        }
+        .btn-submit:hover { background: var(--primary-hover); }
 
         .social-btn {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 10px;
-            border: 1px solid var(--border-color);
-            background: var(--bg-color);
-            color: var(--text-color);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            transition: 0.3s;
+            width: 100%; padding: 12px; background: #fff; color: #333;
+            border: 1px solid #ddd; border-radius: 8px; font-size: 1rem; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-bottom: 15px; transition: background 0.3s;
         }
-        .social-btn:hover { background: var(--border-color); }
-        .social-btn.google i { color: #DB4437; }
-        .social-btn.phone i { color: #4CAF50; }
+        .social-btn:hover { background: #f4f4f4; }
 
+        .divider {
+            display: flex; align-items: center; text-align: center; margin: 20px 0; color: #888;
+        }
+        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #ddd; }
+        .divider:not(:empty)::before { margin-right: .25em; }
+        .divider:not(:empty)::after { margin-left: .25em; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
 
-    <div class="top-banner">
-        <h1>Meyda</h1>
-        <div class="banner-center">
-            <div class="social-icons">
-                <a href="#"><i class="fab fa-facebook-f" style="color: #1877F2;"></i></a>
-                <a href="#"><i class="fab fa-youtube" style="color: #FF0000;"></i></a>
-                <a href="#"><i class="fab fa-tiktok" style="color: #000000;"></i></a>
-                <a href="#"><i class="fab fa-instagram" style="color: #E4405F;"></i></a>
-                <a href="#"><i class="fab fa-x-twitter" style="color: #000000;"></i></a>
-                <a href="#"><i class="fab fa-telegram" style="color: #229ED9;"></i></a>
+<div class="auth-container">
+    <div class="brand-logo">
+        <i class="fas fa-shopping-bag"></i> Meyda
+    </div>
+
+    <div class="tabs">
+        <div class="tab-slider" id="tabSlider"></div>
+        <button class="tab-btn active" onclick="switchTab('login')">Login (እቶ)</button>
+        <button class="tab-btn" onclick="switchTab('signup')">Sign Up (ተመዝገብ)</button>
+    </div>
+
+    <div id="loginForm" class="auth-form active">
+        <button type="button" class="social-btn" onclick="startGoogleAuth()">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style="width: 20px;">
+            Continue with Google
+        </button>
+        
+        <div class="divider">OR</div>
+
+        <form id="loginActualForm">
+            <div class="form-group">
+                <label>Email or Phone (ኢሜይል ወይ ስልኪ)</label>
+                <input type="text" id="loginId" placeholder="Enter Email or Phone" autocomplete="email" required>
             </div>
-            <button class="theme-toggle" onclick="toggleTheme()" title="Dark/Light Mode"><i class="fas fa-moon" id="themeIcon"></i></button>
-        </div>
-    </div>
-
-    <div class="auth-container">
-        <h2 id="formTitle">Sign Up (ተመዝገብ)</h2>
-        
-          <form id="signupForm">
-    <div class="input-group">
-        <input type="text" id="signupName" placeholder="ምሉእ ስም (Full Name)" required>
-    </div>
-    <div class="input-group">
-        <input type="email" placeholder="ኢሜል (Email)" autocomplete="email" required>
-    </div>
-    <div class="input-group">
-        <input type="tel" id="signupPhone" placeholder="ስልኪ ቁጽሪ (Phone Number)" required>
-    </div>
-    <div class="input-group">
-        <select required>
-            <option value="" disabled selected>ጾታ ምረጽ (Gender)</option>
-            <option value="male">ተባዕታይ</option>
-            <option value="female">ኣንስታይ</option>
-        </select>
-    </div>
-    <div class="input-group">
-        <input type="password" id="signupPassword" placeholder="ሓዱሽ ፓስዎርድ" autocomplete="new-password" required>
-        <i class="fas fa-eye toggle-password" onclick="togglePassword('signupPassword', this)"></i>
-    </div>
-    <div class="input-group">
-        <input type="password" id="confirmPass" placeholder="ፓስዎርድ ኣረጋግጽ" autocomplete="new-password" required>
-        <i class="fas fa-eye toggle-password" onclick="togglePassword('confirmPass', this)"></i>
-    </div>
-    <button class="btn" type="submit">Sign Up</button>   
-            <div class="divider">ወይ ድማ ብዝስዕቡ እቶ</div>
-            <button type="button" class="social-btn google"><i class="fab fa-google"></i> Continue with Google</button>
-            <button type="button" class="social-btn phone"><i class="fas fa-phone-alt"></i> Continue with Phone (OTP)</button>
+            <div class="form-group">
+                <label>Password (ፓስዋርድ)</label>
+                <input type="password" id="loginPassword" placeholder="Enter Password" autocomplete="current-password" required>
+            </div>
+            <button type="submit" class="btn-submit">Login to Meyda</button>
         </form>
-
-        <form id="loginForm" class="form-hidden">
-    <div class="input-group">
-        <input type="tel" id="loginPhone" placeholder="ስልኪ ቁጽሪ (Phone Number)" required>
-    </div>
-    <div class="input-group">
-        <input type="password" id="loginPassword" placeholder="ፓስዎርድ (Password)" required>
-        <i class="fas fa-eye toggle-password" onclick="togglePassword('loginPassword', this)"></i>
-    </div>
-    <button class="btn" type="submit">Log In</button>
-
-    <div class="divider">ወይ ድማ ብዝስዕቡ እቶ</div>
-    <button type="button" class="social-btn google"><i class="fab fa-google"></i> Continue with Google</button>
-    <button type="button" class="social-btn phone"><i class="fas fa-phone-alt"></i> Continue with Phone (OTP)</button>
-</form>
-
-        <div class="toggle-form" id="toggleText" onclick="toggleAuthMode()">ኣካውንት ኣለካዶ? <b>Log In (እቶ)</b></div>
     </div>
 
-    <script>
-        // Theme Toggle Logic
-        function toggleTheme() {
-            document.body.classList.toggle('dark-mode');
-            const isDark = document.body.classList.contains('dark-mode');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
-            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-        }
-        window.onload = () => { 
-            if(localStorage.getItem('theme') === 'dark') {
-                document.body.classList.add('dark-mode');
-                document.getElementById('themeIcon').className = 'fas fa-sun';
-            } 
-        }
-
-        // Show/Hide Password Logic
-        function togglePassword(inputId, icon) {
-            const input = document.getElementById(inputId);
-            if (input.type === "password") {
-                input.type = "text";
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                input.type = "password";
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        }
-
-        // Form Toggle Logic
-        function toggleAuthMode() {
-            const signupForm = document.getElementById('signupForm');
-            const loginForm = document.getElementById('loginForm');
-            const formTitle = document.getElementById('formTitle');
-            const toggleText = document.getElementById('toggleText');
-
-            if (signupForm.classList.contains('form-hidden')) {
-                signupForm.classList.remove('form-hidden');
-                loginForm.classList.add('form-hidden');
-                formTitle.innerText = "Sign Up (ተመዝገብ)";
-                toggleText.innerHTML = "ኣካውንት ኣለካዶ? <b>Log In (እቶ)</b>";
-            } else {
-                signupForm.classList.add('form-hidden');
-                loginForm.classList.remove('form-hidden');
-                formTitle.innerText = "Log In (እቶ)";
-                toggleText.innerHTML = "ኣካውንት የብልካን? <b>Sign Up (ተመዝገብ)</b>";
-            }
-        }
-        // =====================================================================
-// API መራኸቢ: Sign Up ፎርም ምስ ሰርቨር/ዳታቤዝ
-// =====================================================================
-
-// 1. ነቲ ናይ ምዝገባ ፎርም (Sign Up Form) ብ ID ንሕዞ
-const signupFormElement = document.getElementById('signupForm');
-
-if (signupFormElement) {
-    // እቲ ፎርም ክስደድ (Submit ክኸውን) ከሎ ነዚ ዝስዕብ ሎጂክ ይሰርሕ
-    signupFormElement.addEventListener('submit', async function(e) {
+    <div id="signupForm" class="auth-form">
         
-        // እዚኣ ነቲ ዌብሳይት ሪፍረሽ (Refresh) ከይከውን ትኽልክሎ (ሓበሬታ መታን ከይጠፍእ)
-        e.preventDefault(); 
+        <div id="signupMethodSelection">
+            <button type="button" class="social-btn" onclick="startGoogleAuth()">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" style="width: 20px;">
+                Continue with Google
+            </button>
+            <button type="button" class="social-btn" onclick="showPhoneSignup()">
+                <i class="fas fa-phone-alt" style="color: var(--primary-color); font-size: 1.2rem;"></i>
+                Continue with Phone
+            </button>
+        </div>
 
-        // 2. ካብቶም ናይ ፎርም ሳጹናት (Inputs) ሓበሬታ ንወስድ
-        // (ኣስተውዕል: እዞም 'signupName', 'signupPhone' ዝብሉ IDs ምስቲ ኣብ HTML ዘለካ ኣስማት ክመሳሰሉ ኣለዎም)
-        const fullNameValue = document.getElementById('signupName').value;
-        const phoneValue = document.getElementById('signupPhone').value;
-        const passwordValue = document.getElementById('signupPassword').value;
+        <div id="signupDetails" style="display: none;">
+            <button type="button" style="background:none; border:none; color:var(--primary-color); cursor:pointer; margin-bottom:15px; font-weight: bold;" onclick="backToMethods()">
+                <i class="fas fa-arrow-left"></i> ንድሕሪት ተመለስ
+            </button>
+            
+            <form id="signupActualForm">
+                <div class="form-group">
+                    <label>Phone Number (ቁጽሪ ስልኪ)</label>
+                    <div class="phone-group">
+                        <select id="countryCode">
+                            <option value="+251">🇪🇹 +251</option>
+                            <option value="+254">🇰🇪 +254</option>
+                            <option value="+1">🇺🇸 +1</option>
+                        </select>
+                        <input type="tel" id="signupPhone" placeholder="911223344" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Full Name (ምሉእ ስም)</label>
+                    <input type="text" id="signupName" placeholder="Enter your full name" required>
+                </div>
+                <div class="form-group">
+                    <label>Create Password (ፓስዋርድ ፍጠር)</label>
+                    <input type="password" id="signupPassword" placeholder="Create a strong password" required>
+                </div>
+                <button type="submit" class="btn-submit">Complete Sign Up</button>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    // 👻 ሓዱሽ ማጂክ: ሎግ-ኢን ጌሩ እንተጸኒሑ ብቐጥታ ናብ home.html ይሰዶ!
+    function getLoggedInUser() {
+        try {
+            let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+            if (!userStr || userStr === 'undefined' || userStr === 'null') return null;
+            
+            let userObj = JSON.parse(userStr);
+            if (userObj.user) userObj = userObj.user;
+            
+            if (!userObj || (!userObj.id && !userObj._id)) return null;
+            return userObj;
+        } catch(e) { 
+            return null; 
+        }
+    }
+
+    // ፔጅ ክኽፈት ከሎ ዝግበር ፍተሻ
+    window.onload = () => {
+        const user = getLoggedInUser();
+        if (user) {
+            window.location.href = 'home.html';
+        }
+    };
+
+    function switchTab(tab) {
+        const slider = document.getElementById('tabSlider');
+        const btns = document.querySelectorAll('.tab-btn');
+        
+        if (tab === 'login') {
+            slider.style.transform = 'translateX(0)';
+            btns[0].classList.add('active');
+            btns[1].classList.remove('active');
+            document.getElementById('loginForm').classList.add('active');
+            document.getElementById('signupForm').classList.remove('active');
+            backToMethods();
+        } else {
+            slider.style.transform = 'translateX(100%)';
+            btns[1].classList.add('active');
+            btns[0].classList.remove('active');
+            document.getElementById('signupForm').classList.add('active');
+            document.getElementById('loginForm').classList.remove('active');
+        }
+    }
+
+    function showPhoneSignup() {
+        document.getElementById('signupMethodSelection').style.display = 'none';
+        document.getElementById('signupDetails').style.display = 'block';
+    }
+
+    function backToMethods() {
+        document.getElementById('signupDetails').style.display = 'none';
+        document.getElementById('signupMethodSelection').style.display = 'block';
+    }
+
+    function startGoogleAuth() {
+        alert("እዚ ናይ ጉግል ምዝገባ፡ ዌብሳይትና ናብ ኦንላይን ሆስቲንግ (Live Domain) ምስ ወጸ ብቐጥታ ዝሰርሕ እዩ!");
+    }
+
+    // SIGNUP API
+    document.getElementById('signupActualForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const phoneInput = document.getElementById('signupPhone');
+        const phoneVal = phoneInput.value.trim();
+
+        if (phoneVal.length < 9) {
+            phoneInput.classList.add('error');
+            alert("በጃኹም ትኽክለኛ ቁጽሪ ስልኪ ኣእትዉ!");
+            return;
+        } else {
+            phoneInput.classList.remove('error');
+        }
+
+        const fullPhone = document.getElementById('countryCode').value + phoneVal;
+        const name = document.getElementById('signupName').value;
+        const password = document.getElementById('signupPassword').value;
 
         try {
-            // 3. ነቲ ሓበሬታ ናብ ሰርቨርና (Localhost:5000) ንሰዶ (Fetch API ንጥቀም)
-            const response = await fetch('http://localhost:5000/api/signup', {
-                method: 'POST', // ሓበሬታ ንሰድድ ስለዘለና POST ንጥቀም
-                headers: {
-                    'Content-Type': 'application/json' // እቲ ዳታ ብ JSON ፎርማት ከምዝስደድ ንነግር
-                },
-                body: JSON.stringify({
-                    // እዞም ኣስማት ምስቲ ኣብ server.js ዘሎ Schema 100% ክመሳሰሉ ኣለዎም
-                    fullName: fullNameValue,
-                    phone: phoneValue,
-                    password: passwordValue
-                })
-            });
-
-            // 4. ካብ ሰርቨር ዝመጸና መልሲ ንቕበል
-            const data = await response.json(); 
-
-            // 5. ሰርቨር ብትኽክል ተቐቢሉዎ (Status 201) እንተኾይኑ
-            if (response.ok) {
-                alert('✅ ' + data.message); // "ብዓወት ተመዝጊብኩም..." ዝብል ፖፕ-ኣፕ የርኢ
-                signupFormElement.reset();   // ነቲ ፎርም ባዶ ይገብሮ (የጽርዮ)
-                
-                // (ኣማራጺ): ድሕሪ ምዝገባ ብቐጥታ ናብ ናይ Log In ፎርም ንክቕየር ክትገብር ትኽእል
-                // toggleAuthMode(); 
-            } else {
-                // ቁጽሪ ስልኪ ተደጊሙ ወይ ካልእ ጌጋ እንተሎ ናይ ጌጋ መልእኽቲ የርኢ
-                alert('❌ ጌጋ: ' + data.message);
-            }
-
-        } catch (error) {
-            // ሰርቨር ጠፊኡ (Run ኣይገበረን) እንተኾይኑ ዝመጽእ ጌጋ
-            console.error('Connection Error:', error);
-            alert('❌ ምስ ሰርቨር ክራኸብ ኣይከኣለን። በጃኹም ሰርቨር Run ምግባሩ ኣረጋግጹ።');
-        }
-    });
-}
-// =====================================================================
-// API መራኸቢ: Log In (እቶ) ፎርም ምስ ሰርቨር/ዳታቤዝ
-// =====================================================================
-const loginFormElement = document.getElementById('loginForm');
-
-if (loginFormElement) {
-    loginFormElement.addEventListener('submit', async function(e) {
-        
-        e.preventDefault(); // ዌብሳይት ሪፍረሽ ከይከውን ይኽልክል
-
-        // ካብ ፎርም ሓበሬታ ንወስድ
-        const phoneValue = document.getElementById('loginPhone').value;
-        const passwordValue = document.getElementById('loginPassword').value;
-
-        try {
-            // ናብ ሰርቨር ንልእኮ
-            const response = await fetch('http://localhost:5000/api/login', {
+            const response = await fetch('http://localhost:5000/api/users/register', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    phone: phoneValue,
-                    password: passwordValue
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    name: name, 
+                    phone: fullPhone,
+                    email: fullPhone.replace('+', '') + '@meyda.com', 
+                    password: password 
                 })
             });
-
             const data = await response.json();
-
-            if (response.ok) {
-                alert('✅ ' + data.message); // ብዓወት ምስ ኣተወ ፖፕ-ኣፕ የርኢ
+            
+            if(response.ok) {
+                // Auto-login after successful registration
+                const loginRes = await fetch('http://localhost:5000/api/users/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: fullPhone, password: password })
+                });
                 
-                // ብዓወት ስለዝኣተወ፡ ብቐጥታ ናብ ናይ ዕዳጋ ፔጅ (home.html) ንሰዶ!
-                window.location.href = 'home.html'; 
+                const loginData = await loginRes.json();
+                
+                if(loginRes.ok) {
+                    // 🛡️ ሓዱሽ ማጂክ: ምዕሩይ መኽዘን - 'meydaUser'
+                    localStorage.setItem('meydaUser', JSON.stringify(loginData.user || loginData));
+                    window.location.href = 'home.html';
+                }
             } else {
-                alert('❌ ጌጋ: ' + data.message); // ጌጋ ፓስዎርድ ወይ ስልኪ እንተኾይኑ
+                alert(data.message); 
             }
-
-        } catch (error) {
-            console.error('Login Error:', error);
-            alert('❌ ምስ ሰርቨር ክራኸብ ኣይከኣለን። በጃኹም ሰርቨር Run ምግባሩ ኣረጋግጹ።');
+        } catch(err) {
+            console.error("Signup Error:", err);
+            alert("ጌጋ ኣጋጢሙ። ሰርቨር ዝሰርሕ ዘሎ ምዃኑ ኣረጋግጽ።");
         }
     });
-}
-    </script>
+
+    // LOGIN API
+    document.getElementById('loginActualForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('loginId').value.trim();
+        const password = document.getElementById('loginPassword').value;
+        
+        try {
+            const response = await fetch('http://localhost:5000/api/users/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: id, password: password })
+            });
+            
+            const data = await response.json();
+            if(response.ok) {
+                // 🛡️ ሓዱሽ ማጂክ: ምዕሩይ መኽዘን - 'meydaUser'
+                localStorage.setItem('meydaUser', JSON.stringify(data.user || data));
+                window.location.href = 'home.html';
+            } else {
+                alert(data.message); 
+            }
+        } catch(err) {
+            console.error("Login Error:", err);
+            alert("ጌጋ ኣጋጢሙ። ሰርቨር ዝሰርሕ ዘሎ ምዃኑ ኣረጋግጽ።");
+        }
+    });
+</script>
+
 </body>
 </html>

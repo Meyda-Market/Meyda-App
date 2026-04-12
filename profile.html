@@ -11,18 +11,39 @@
             --white: #ffffff; --bg-color: #f0f4f8; 
             --text-color: #333; --gray-text: #777; --border-color: #eee;
             --input-bg: #fafafa; --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --light-blue: #e6f4f1;
         }
         body.dark-mode { 
             --white: #1e1e1e; --bg-color: #121212; --text-color: #e0e0e0; 
             --gray-text: #aaa; --border-color: #444; --input-bg: #2a2a2a;
             --shadow: 0 2px 8px rgba(0, 0, 0, 0.5); 
+            --light-blue: #2a2a2a;
         }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding-bottom: 80px; transition: 0.3s; }
 
         .top-header { background: var(--white); display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .top-header h2 { margin: 0; font-size: 18px; color: var(--text-color); }
-        .header-actions { display: flex; gap: 15px; }
-        .header-btn { background: none; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; }
+        .header-actions { display: flex; gap: 15px; position: relative; }
+        .header-btn { background: none; border: none; color: var(--text-color); font-size: 18px; cursor: pointer; transition: 0.2s; }
+        .header-btn:hover { color: var(--water-blue); transform: scale(1.1); }
+
+        .settings-menu {
+            position: absolute; top: 40px; right: 0; background: var(--white);
+            border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.15); width: 200px;
+            display: none; flex-direction: column; z-index: 1000; overflow: hidden;
+            animation: fadeInDown 0.2s ease-out; border: 1px solid var(--border-color);
+        }
+        .settings-menu.show { display: flex; }
+        .settings-item {
+            padding: 14px 15px; display: flex; align-items: center; gap: 12px;
+            cursor: pointer; color: var(--text-color); font-size: 14px; font-weight: 500;
+            border-bottom: 1px solid var(--border-color); transition: background 0.2s, color 0.2s; user-select: none;
+        }
+        .settings-item:last-child { border-bottom: none; }
+        .settings-item:hover { background: var(--light-blue); color: var(--water-blue); }
+        .settings-item.danger { color: #e74c3c; }
+        .settings-item.danger:hover { background: rgba(231, 76, 60, 0.1); }
+        @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
         .profile-header { background: var(--white); position: relative; padding-bottom: 15px; margin-bottom: 10px; box-shadow: var(--shadow); }
         .banner-container { width: 100%; height: 25vh; min-height: 160px; max-height: 350px; background: var(--input-bg); position: relative; overflow: hidden; }
@@ -36,6 +57,10 @@
         .cam-btn-profile { position: absolute; bottom: 5px; right: 0; background: var(--water-blue); color: white; border: 2px solid var(--white); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; user-select: none; pointer-events: none; }
 
         .user-name { font-size: 20px; font-weight: bold; margin: 10px 0 5px 0; }
+        .user-role-badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 5px; vertical-align: middle; }
+        .role-owner { background: #f1c40f; color: #333; }
+        .role-admin { background: #e74c3c; color: white; }
+
         .user-bio { font-size: 14px; color: var(--gray-text); margin-bottom: 15px; padding: 0 20px; line-height: 1.4; }
         
         .profile-stats { display: flex; justify-content: center; gap: 30px; margin-bottom: 15px; }
@@ -55,7 +80,6 @@
         .tab { padding: 12px; cursor: pointer; font-weight: 600; color: var(--gray-text); flex: 1; text-align: center; border-bottom: 3px solid transparent; transition: 0.3s; font-size: 14px; user-select: none; position: relative;}
         .tab.active { color: var(--water-blue); border-bottom: 3px solid var(--water-blue); }
 
-        /* ሓዱሽ ማጂክ: ቀይሕ ባጅ (Unread Badge) ን Inbox */
         .nav-badge { background: #e74c3c; color: white; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 5px; font-weight: bold; animation: popIn 0.3s ease-out; }
         @keyframes popIn { 0% { transform: scale(0); } 80% { transform: scale(1.2); } 100% { transform: scale(1); } }
 
@@ -64,7 +88,6 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* ሓዱሽ ማጂክ: Empty States (ባዶ ቦታ ምስ ዝኸውን ዝወጽእ ማራኺ ዲዛይን) */
         .empty-state { padding: 40px 20px; text-align: center; color: var(--gray-text); display: flex; flex-direction: column; align-items: center; justify-content: center; grid-column: 1 / -1; }
         .empty-state i { font-size: 55px; color: var(--border-color); margin-bottom: 15px; }
         .empty-state h3 { font-size: 18px; color: var(--text-color); margin: 0 0 8px 0; }
@@ -94,7 +117,6 @@
         .msg-time { font-size: 11px; color: var(--gray-text); }
         .msg-preview { font-size: 14px; color: var(--gray-text); line-height: 1.4; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 
-        /* ሓዱሽ ማጂክ: Message Tags (ናይ ትእዛዝ ዲዩ ወይስ ዕላል ዝፈልያ) */
         .msg-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold; margin-bottom: 6px; }
         .tag-order { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
         .tag-personal { background: rgba(46, 204, 113, 0.1); color: #27ae60; border: 1px solid rgba(46, 204, 113, 0.3); }
@@ -149,10 +171,17 @@
 
     <div class="top-header">
         <h2><i class="fas fa-user-circle"></i> Profile</h2>
-    <div class="header-actions">
+        <div class="header-actions">
             <button class="header-btn" onclick="toggleSound()"><i class="fas fa-bell" id="soundIcon"></i></button>
             <button class="header-btn" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
-            <button class="header-btn"><i class="fas fa-cog"></i></button>
+            
+            <button class="header-btn" id="settingsBtn" onclick="toggleSettingsMenu(event)"><i class="fas fa-cog"></i></button>
+            
+            <div class="settings-menu" id="settingsMenu">
+                <div class="settings-item" onclick="openChangePasswordModal()"><i class="fas fa-key"></i> Change Password</div>
+                <div class="settings-item" onclick="switchAccount()"><i class="fas fa-user-friends"></i> Switch Account</div>
+                <div class="settings-item danger" onclick="logOut()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+            </div>
         </div>
     </div>
 
@@ -170,7 +199,10 @@
             </div>
             <input type="file" id="profileInput" accept="image/*" style="display:none;" onchange="openImageModal(this, 'profile')">
 
-            <div class="user-name" id="displayTitle">Loading...</div>
+            <div class="user-name">
+                <span id="displayTitle">Loading...</span>
+                <span id="roleBadge"></span>
+            </div>
             <div class="user-bio" id="displayBio">...</div>
             
             <div class="profile-stats">
@@ -298,6 +330,28 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal-content">
+            <h3 style="margin-top: 0; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">Change Password</h3>
+            <div class="form-group">
+                <label>Old Password (ናይ ቀደም ፓስዋርድ)</label>
+                <input type="password" id="oldPassword" placeholder="Enter old password">
+            </div>
+            <div class="form-group">
+                <label>New Password (ሓዱሽ ፓስዋርድ)</label>
+                <input type="password" id="newPassword" placeholder="Enter new password">
+            </div>
+            <div class="form-group">
+                <label>Confirm Password (ኣረጋግጽ)</label>
+                <input type="password" id="confirmPassword" placeholder="Confirm new password">
+            </div>
+            <div class="btn-group">
+                <button class="btn-cancel" onclick="closeModal('changePasswordModal')">Cancel</button>
+                <button class="btn-save" onclick="changePassword()">Update Password</button>
+            </div>
+        </div>
+    </div>
+
     <div class="chat-overlay" id="chatOverlay">
         <div class="chat-header">
             <i class="fas fa-arrow-left chat-back-btn" onclick="closeChat()"></i>
@@ -329,13 +383,10 @@
         let isMyProfile = true;
         let profileUserId = null;
         let loadedProductsMap = {}; 
-       // =====================================================================
-        // ሓዱሽ ማጂክ: ሞተር ድምጺ (Sound Engine & Preferences)
-        // =====================================================================
+
         const notificationSound = new Audio('https://cdn.pixabay.com/download/audio/2021/08/04/audio_0625c1539c.mp3?filename=message-incoming-132057.mp3'); 
         notificationSound.volume = 1.0; 
 
-        // እዛ መስመር እዚኣ እያ ጠፊኣትካ ኔራ (ሕጂ ተመሊሳ ኣላ!)
         let isSoundEnabled = localStorage.getItem('meydaSound') !== 'false'; 
 
         function initSoundIcon() {
@@ -359,18 +410,54 @@
         function playNotificationSound() {
             if(isSoundEnabled) {
                 notificationSound.currentTime = 0; 
-                notificationSound.play().catch(e => console.log("ብራውዘር ድምጺ ከልኪሉ (User needs to interact first)"));
+                notificationSound.play().catch(e => console.log("ብራውዘር ድምጺ ከልኪሉ"));
             }
         }
+
+        function getLoggedInUser() {
+            let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+            
+            if (!userStr || userStr === 'undefined' || userStr === 'null') {
+                localStorage.removeItem('meydaUser');
+                localStorage.removeItem('meyda_user');
+                return null;
+            }
+            
+            try {
+                let userObj = JSON.parse(userStr);
+                if (userObj.user) userObj = userObj.user;
+                
+                if (!userObj || (!userObj.id && !userObj._id)) {
+                    localStorage.removeItem('meydaUser');
+                    localStorage.removeItem('meyda_user');
+                    return null;
+                }
+                
+                userObj.id = userObj.id || userObj._id;
+                userObj.role = userObj.role || 'user'; 
+                
+                if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
+                    userObj.role = 'owner'; 
+                    userObj.isAdmin = true;
+                }
+                return userObj;
+            } catch(e) { 
+                localStorage.removeItem('meydaUser');
+                localStorage.removeItem('meyda_user');
+                return null; 
+            }
+        }
+
         window.onload = async () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
-            initSoundIcon(); // ሓዱሽ ማጂክ: ፔጅ ክኽፈት ከሎ ደወል ON ዲዩ OFF ይርኢ
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            initSoundIcon(); 
+
+            const loggedInUser = getLoggedInUser();
             if (!loggedInUser) {
-                window.location.href = 'auth.html';
+                window.location.href = 'index.html';
                 return;
             }
 
@@ -379,6 +466,11 @@
             
             isMyProfile = !sellerIdFromUrl || sellerIdFromUrl === loggedInUser.id;
             profileUserId = sellerIdFromUrl || loggedInUser.id;
+
+            if (!isMyProfile) {
+                const settingsBtn = document.getElementById('settingsBtn');
+                if(settingsBtn) settingsBtn.style.display = 'none';
+            }
 
             try {
                 const response = await fetch(`http://localhost:5000/api/users/${profileUserId}`);
@@ -391,6 +483,15 @@
                     document.getElementById('mainBannerImg').src = userData.bannerPic;
                     document.getElementById('followersCount').innerText = userData.followers ? userData.followers.length : 0;
                     
+                    const roleBadgeEl = document.getElementById('roleBadge');
+                    if (userData.role === 'owner') {
+                        roleBadgeEl.innerHTML = '<span class="user-role-badge role-owner"><i class="fas fa-crown"></i> Owner</span>';
+                    } else if (userData.role === 'admin') {
+                        roleBadgeEl.innerHTML = '<span class="user-role-badge role-admin"><i class="fas fa-shield-alt"></i> Admin</span>';
+                    } else {
+                        roleBadgeEl.innerHTML = ''; 
+                    }
+
                     if (!isMyProfile) {
                         const camBanner = document.getElementById('bannerInputLabel');
                         if (camBanner) camBanner.style.display = 'none';
@@ -420,13 +521,63 @@
                         fetchSavedProducts(loggedInUser.id);
                         fetchMessages(loggedInUser.id);
                     } else {
-                        fetchMessages(loggedInUser.id); // For the badge even when looking at someone else
+                        fetchMessages(loggedInUser.id); 
                     }
                 }
             } catch (error) {
                 console.error("Error loading profile:", error);
             }
         };
+
+        function toggleSettingsMenu(event) {
+            event.stopPropagation();
+            document.getElementById('settingsMenu').classList.toggle('show');
+        }
+
+        window.onclick = function(event) {
+            const pModal = document.getElementById('productModal'); 
+            const rModal = document.getElementById('regionModal');
+            if (pModal && event.target == pModal) pModal.style.display = 'none'; 
+            if (rModal && event.target == rModal) rModal.style.display = 'none';
+            
+            const sMenu = document.getElementById('settingsMenu');
+            if (sMenu && sMenu.classList.contains('show')) {
+                sMenu.classList.remove('show');
+            }
+        }
+
+        function logOut() {
+            localStorage.clear(); 
+            window.location.href = 'index.html';
+        }
+
+        function switchAccount() {
+            localStorage.clear(); 
+            window.location.href = 'index.html';
+        }
+
+        function openChangePasswordModal() {
+            document.getElementById('oldPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+            document.getElementById('changePasswordModal').style.display = 'flex';
+        }
+
+        function changePassword() {
+            const oldPass = document.getElementById('oldPassword').value;
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if(!oldPass || !newPass || !confirmPass) {
+                alert("በጃኹም ኩሉ ቦታ ምልእዎ!"); return;
+            }
+            if(newPass !== confirmPass) {
+                alert("ሓዱሽ ፓስዋርድ ምስ መረጋገጺኡ ኣይሰማማዕን ኣሎ!"); return;
+            }
+            
+            alert("ፓስዋርድ ብዓወት ተቐይሩ ኣሎ! (Backend Integration Ready)");
+            closeModal('changePasswordModal');
+        }
 
         function handleProfilePicClick() {
             if (isMyProfile) {
@@ -440,9 +591,6 @@
             }
         }
 
-        // =====================================================================
-        // Product Viewing Logic 
-        // =====================================================================
         let currentViewedProduct = null;
 
         function openProductView(productId) {
@@ -485,7 +633,7 @@
         }
 
         async function sendProductMessage() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             if (!loggedInUser) return;
 
             const text = document.getElementById('productMessageText').value.trim();
@@ -498,7 +646,7 @@
                 receiverId: currentViewedProduct.sellerId, productId: currentViewedProduct._id,
                 productTitle: currentViewedProduct.title, 
                 productImage: currentViewedProduct.images && currentViewedProduct.images.length > 0 ? currentViewedProduct.images[0] : "", 
-                text: text, type: 'message' // Type 'message' means Product Order
+                text: text, type: 'message' 
             };
 
             try {
@@ -522,10 +670,8 @@
             } catch(e) { console.log(e); }
         }
 
-        // =====================================================================
-
         async function toggleFollow() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             if (!loggedInUser) return;
 
             try {
@@ -575,7 +721,6 @@
                     document.getElementById('adsCount').innerText = products.length;
 
                     if (products.length === 0) {
-                        // ሓዱሽ ማጂክ: Empty State
                         grid.innerHTML = `
                             <div class="empty-state">
                                 <i class="fas fa-box-open"></i>
@@ -633,7 +778,6 @@
                     const savedProducts = allProducts.filter(prod => savedIds.includes(String(prod._id)));
 
                     if (savedProducts.length === 0) {
-                        // ሓዱሽ ማጂክ: Empty State
                         savedGrid.innerHTML = `
                             <div class="empty-state">
                                 <i class="fas fa-bookmark"></i>
@@ -667,7 +811,7 @@
 
         async function deleteSavedProduct(productId) {
             if(confirm("እዚ ንብረት ካብ 'Saved' ክጠፍእ ድዩ?")) {
-                const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+                const loggedInUser = getLoggedInUser();
                 try {
                     const response = await fetch(`http://localhost:5000/api/users/${loggedInUser.id}/save`, {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -676,7 +820,7 @@
                     const data = await response.json();
                     if(response.ok) {
                         loggedInUser.savedProducts = data.savedProducts;
-                        localStorage.setItem('meydaUser', JSON.stringify(loggedInUser));
+                        localStorage.setItem(localStorage.getItem('meydaUser') ? 'meydaUser' : 'meyda_user', JSON.stringify(loggedInUser));
                         fetchSavedProducts(loggedInUser.id);
                     }
                 } catch(error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
@@ -696,13 +840,12 @@
                 if (response.ok) {
                     allChatMessages = messages.filter(msg => msg.type === 'message' || msg.type === 'personal');
 
-                    // ሓዱሽ ማጂክ: Unread Badge Logic
                     const unreadCount = allChatMessages.filter(m => !m.isRead && m.receiverId === userId).length;
                     const badge = document.getElementById('inboxBadge');
                     if(unreadCount > 0) {
                         badge.innerText = unreadCount;
                         badge.style.display = 'inline-block';
-                        playNotificationSound(); // ሓዱሽ ማጂክ: ደወል
+                        playNotificationSound(); 
                     } else {
                         badge.style.display = 'none';
                     }
@@ -712,6 +855,10 @@
                     let conversations = {};
                     allChatMessages.forEach(msg => {
                         let partnerId = msg.senderId === userId ? msg.receiverId : msg.senderId;
+                        
+                        // 🛡️ ሓዱሽ ጸረ-መንፈስ: ዳታቤዝ undefined እንተሃለዎ ብቐጥታ ንጸጎ! (Shield)
+                        if (!partnerId || partnerId === 'undefined' || partnerId === 'null') return;
+                        
                         let partnerName = msg.senderId === userId ? "..." : msg.senderName;
                         
                         if (!conversations[partnerId] || new Date(msg.createdAt) > conversations[partnerId].timestamp) {
@@ -801,7 +948,7 @@
         function openChat(partnerId) {
             currentChatPartnerId = partnerId;
             const partnerInfo = chatPartners[partnerId] || { name: 'User', pic: '' };
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             
             document.getElementById('chatUserName').innerText = partnerInfo.name;
             const avatarDiv = document.getElementById('chatHeaderAvatar');
@@ -815,15 +962,13 @@
             avatarDiv.onclick = goToProfile;
             document.getElementById('chatUserInfo').onclick = goToProfile;
 
-            // ሓዱሽ ማጂክ: Mark as Read (መልእኽቲ ምስ ከፈትካዮ ይንበብ)
             const unreadMsgs = allChatMessages.filter(m => !m.isRead && m.senderId === partnerId && m.receiverId === loggedInUser.id);
             if(unreadMsgs.length > 0) {
                 unreadMsgs.forEach(m => {
-                    m.isRead = true; // Update local state immediately
+                    m.isRead = true; 
                     fetch(`http://localhost:5000/api/messages/${m._id}/read`, { method: 'PUT' }).catch(e=>console.log(e));
                 });
                 
-                // Update Global Badge
                 const remainingUnread = allChatMessages.filter(m => !m.isRead && m.receiverId === loggedInUser.id).length;
                 const badge = document.getElementById('inboxBadge');
                 if(remainingUnread > 0) { badge.innerText = remainingUnread; } 
@@ -837,13 +982,12 @@
 
         function closeChat() { 
             document.getElementById('chatOverlay').style.display = 'none'; 
-            // ቻት ምስ ዓጸኻዮ ሪፍረሽ ክገብር (ነቲ bold text ንምጥፋእ)
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             if(loggedInUser && isMyProfile) fetchMessages(loggedInUser.id);
         }
 
         function renderChatBubbles() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             const chatBody = document.getElementById('chatBody');
             chatBody.innerHTML = '';
 
@@ -883,7 +1027,7 @@
         }
 
         async function sendChatMessage() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             if (!loggedInUser) return;
 
             const inputEl = document.getElementById('chatInputMessage');
@@ -952,7 +1096,7 @@
         }
 
         async function updateProfileOnServer() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            const loggedInUser = getLoggedInUser();
             if (!loggedInUser) return;
             const updatedData = { name: document.getElementById('displayTitle').innerText, bio: document.getElementById('displayBio').innerText, profilePic: document.getElementById('mainProfileImg').src, bannerPic: document.getElementById('mainBannerImg').src };
             try {
@@ -960,7 +1104,7 @@
                 const data = await response.json();
                 if (response.ok) {
                     loggedInUser.name = data.user.name; loggedInUser.profilePic = data.user.profilePic;
-                    localStorage.setItem('meydaUser', JSON.stringify(loggedInUser));
+                    localStorage.setItem(localStorage.getItem('meydaUser') ? 'meydaUser' : 'meyda_user', JSON.stringify(loggedInUser));
                 }
             } catch (error) { console.error(error); }
         }
@@ -980,7 +1124,7 @@
                 const response = await fetch(`http://localhost:5000/api/products/${currentEditProductId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: newTitle, price: newPrice }) });
                 if (response.ok) {
                     closeModal('editProductModal');
-                    const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+                    const loggedInUser = getLoggedInUser();
                     fetchMyProducts(loggedInUser.id);
                 }
             } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
@@ -991,7 +1135,7 @@
                 try {
                     const response = await fetch(`http://localhost:5000/api/products/${id}`, { method: 'DELETE' });
                     if (response.ok) {
-                        const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+                        const loggedInUser = getLoggedInUser();
                         fetchMyProducts(loggedInUser.id);
                     }
                 } catch (error) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }

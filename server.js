@@ -5,6 +5,8 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+// 🚀 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (Timekeeper)
+const cron = require('node-cron'); 
 
 const app = express();
 
@@ -25,7 +27,6 @@ const storage = multer.diskStorage({
     }
 });
 
-// ሓዱሽ ማጂክ: ንዓቐን ናይ ጽሑፍ (fieldSize) ክሳብ 50MB ኣዕቢናዮ ኣለና!
 const upload = multer({ 
     storage: storage,
     limits: { fieldSize: 50 * 1024 * 1024 } 
@@ -79,7 +80,12 @@ const userSchema = new mongoose.Schema({
     following: [{ type: String }], 
     savedProducts: [{ type: String }], 
     role: { type: String, enum: ['user', 'admin', 'owner'], default: 'user' }, 
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now },
+    
+    // 🚀 ሓዱሽ ማጂክ: ናይ ፓኬጅ ሓበሬታ (Subscription Data)
+    isSubscribed: { type: Boolean, default: false },
+    packageType: { type: String, default: 'none' },
+    expireDate: { type: Date, default: null }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -122,12 +128,33 @@ const newsSchema = new mongoose.Schema({
 });
 const News = mongoose.model('News', newsSchema);
 
-// 4.5 ሓዱሽ ማጂክ: መዋቕር ን ማስተር ስዊች (Global Settings Schema)
+// 4.5 መዋቕር ን ማስተር ስዊች (Global Settings Schema)
 const settingsSchema = new mongoose.Schema({
     allowPublicPosting: { type: Boolean, default: true },
+    // 🚀 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት (Default OFF / Free mode)
+    requireSubscription: { type: Boolean, default: false },
     lastUpdatedBy: String
 });
 const Settings = mongoose.model('Settings', settingsSchema);
+
+// =====================================================================
+// 🤖 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job)
+// =====================================================================
+// እዚ ኮድ ኣብ ነፍሲ-ወከፍ ለይቲ ሰዓት 12:00 AM (00:00) ይለዓል
+cron.schedule('0 0 * * *', async () => {
+    console.log('⏰ ዲጂታላዊ ዘብዐኛ: ግዜኦም ዝሓለፉ ፓኬጃት ይፍትሽ ኣሎ...');
+    try {
+        const now = new Date();
+        // ኩሎም እቶም ፓኬጅ ዘለዎምን ግዚኦም ዝሓለፈን ደሊኻ ኣውርዶም
+        const expiredUsers = await User.updateMany(
+            { isSubscribed: true, expireDate: { $lt: now } },
+            { $set: { isSubscribed: false, packageType: 'none' } }
+        );
+        console.log(`✅ ዲጂታላዊ ዘብዐኛ: ${expiredUsers.modifiedCount} ተጠቀምቲ ፓኬጆም ወዲቑ ኣሎ (Expired).`);
+    } catch (error) {
+        console.error('❌ ዲጂታላዊ ዘብዐኛ ጌጋ ኣጋጢሙዎ:', error);
+    }
+});
 
 
 // =====================================================================
@@ -170,24 +197,45 @@ app.post('/api/users/register', async (req, res) => {
     try {
         const { name, email, password, phone } = req.body;
         
-        const existingUser = await User.findOne({ email });
+        let finalEmail = email;
+        let finalPhone = phone || '';
+        
+        if (finalPhone && !finalEmail.includes('@')) {
+            const cleanPhone = finalPhone.replace('+', '');
+            finalEmail = `${cleanPhone}@meydamarket.com`;
+        }
+        
+        const existingUser = await User.findOne({ 
+            $or: [{ email: finalEmail }, { phone: finalPhone }] 
+        });
+        
         if (existingUser) {
-            return res.status(400).json({ message: "እዚ ኢሜይል ድሮ ተመዝጊቡ ኣሎ。" });
+            if (existingUser.phone === finalPhone && finalPhone !== '') {
+                return res.status(400).json({ message: "እዚ ስልኪ ቁጽሪ ድሮ ተመዝጊቡ ኣሎ። ካልእ ቁጽሪ ተጠቐሙ።" });
+            }
+            return res.status(400).json({ message: "እዚ ኢሜይል/ሓበሬታ ድሮ ተመዝጊቡ ኣሎ。" });
         }
 
+        const MASTER_PHONE = '+251933383333'; 
+        const MASTER_EMAIL = 'admin@meydamarket.com'; 
+
         let userRole = 'user';
-        if (name.toLowerCase().includes('jentra')) {
+        if (finalPhone === MASTER_PHONE || finalEmail === MASTER_EMAIL) {
             userRole = 'owner';
         }
         
         const newUser = new User({ 
-            name, email, password, phone: phone || '+251900000000',
+            name, 
+            email: finalEmail, 
+            password, 
+            phone: finalPhone || '+251900000000',
             role: userRole 
         });
         
         await newUser.save(); 
         res.status(201).json({ message: "ብዓወት ተመዝጊብኩም ኣለኹም!", userId: newUser._id });
     } catch (error) { 
+        console.error("Register Error:", error);
         res.status(500).json({ message: "ምዝገባ ኣይተኻእለን。" }); 
     }
 });
@@ -198,10 +246,21 @@ app.post('/api/users/register', async (req, res) => {
 app.post('/api/users/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await User.findOne({ email });
         
-        if (!user) return res.status(400).json({ message: "እዚ ኢሜይል ኣይተመዝገበን。" });
-        if (user.password !== password) return res.status(400).json({ message: "ፓስዎርድ ጌጋ እዩ。" });
+        let searchEmail = email;
+        const isPhoneNumber = /^[0-9+]+$/.test(email); 
+        
+        if (isPhoneNumber && !email.includes('@')) {
+            const cleanSearchPhone = email.replace('+', '');
+            searchEmail = `${cleanSearchPhone}@meydamarket.com`;
+        }
+
+        const user = await User.findOne({ 
+            $or: [{ email: searchEmail }, { phone: email }, { email: email }] 
+        });
+        
+        if (!user) return res.status(400).json({ message: "እዚ ሓበሬታ (ስልኪ/ኢሜይል) ኣይተረኽበን ወይ ፓስዋርድ ጌጋ እዩ。" });
+        if (user.password !== password) return res.status(400).json({ message: "ፓስዋርድ ጌጋ እዩ。" });
         
         res.status(200).json({ 
             message: "ብዓወት ሎግ-ኢን ጌርኩም!", 
@@ -209,11 +268,15 @@ app.post('/api/users/login', async (req, res) => {
                 id: user._id, name: user.name, email: user.email, 
                 profilePic: user.profilePic, phone: user.phone, 
                 role: user.role || 'user', 
-                isAdmin: user.role === 'admin' || user.role === 'owner' 
+                isAdmin: user.role === 'admin' || user.role === 'owner',
+                isSubscribed: user.isSubscribed || false,
+                packageType: user.packageType || 'none',
+                expireDate: user.expireDate || null
             } 
         });
     } catch (error) { 
-        res.status(500).json({ message: "ሎግ-ኢን ምግባር ኣይተኻእለን。" }); 
+        console.error("Login Error:", error);
+        res.status(500).json({ message: "ሎግ-ኢን ምግባር ኣይተኻእለን (Server Error)።" }); 
     }
 });
 
@@ -247,6 +310,54 @@ app.put('/api/users/:id', async (req, res) => {
         res.status(200).json({ message: "ፕሮፋይል ተመሓይሹ!", user: updatedUser });
     } catch (error) { 
         res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
+    }
+});
+
+// =====================================================================
+// 10.5 🚀 ሓዱሽ API: ክፍሊት ምስ ፈጸመ ፓኬጅ ምሃብ (Subscribe User)
+// =====================================================================
+app.post('/api/users/:id/subscribe', async (req, res) => {
+    try {
+        const { packageType } = req.body;
+        let daysToAdd = 0;
+
+        if (packageType === '1_week') daysToAdd = 7;
+        else if (packageType === '1_month') daysToAdd = 30;
+        else if (packageType === '3_months') daysToAdd = 90;
+        else if (packageType === '6_months') daysToAdd = 180;
+        else if (packageType === '1_year') daysToAdd = 365;
+        else return res.status(400).json({ message: "ዘይፍለጥ ፓኬጅ" });
+
+        const expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() + daysToAdd);
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            { 
+                isSubscribed: true, 
+                packageType: packageType, 
+                expireDate: expireDate 
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን" });
+
+        res.status(200).json({ 
+            message: "ብዓወት ክፍሊትኩም ተቐቢልና፡ ፓኬጅኩም ተኸፊቱ ኣሎ!", 
+            user: {
+                id: updatedUser._id, name: updatedUser.name, email: updatedUser.email, 
+                profilePic: updatedUser.profilePic, phone: updatedUser.phone, 
+                role: updatedUser.role || 'user', 
+                isAdmin: updatedUser.role === 'admin' || updatedUser.role === 'owner',
+                isSubscribed: updatedUser.isSubscribed,
+                packageType: updatedUser.packageType,
+                expireDate: updatedUser.expireDate
+            }
+        });
+    } catch (error) {
+        console.error("Subscription Error:", error);
+        res.status(500).json({ message: "ፓኬጅ ምሃብ ኣይተኻእለን。" });
     }
 });
 
@@ -522,7 +633,7 @@ app.post('/api/users/:id/follow', async (req, res) => {
 });
 
 // =====================================================================
-// 19. ሓዱሽ ማጂክ: ADMIN DASHBOARD APIs (ማእከል ቁጽጽር)
+// 19. ADMIN DASHBOARD APIs (ማእከል ቁጽጽር)
 // =====================================================================
 
 // 19.1 ዳሽቦርድ ስታቲስቲክስ (Stats)
@@ -534,7 +645,7 @@ app.get('/api/admin/stats', async (req, res) => {
         
         let settings = await Settings.findOne();
         if (!settings) {
-            settings = new Settings({ allowPublicPosting: true });
+            settings = new Settings({ allowPublicPosting: true, requireSubscription: false });
             await settings.save();
         }
 
@@ -542,7 +653,8 @@ app.get('/api/admin/stats', async (req, res) => {
             users: userCount,
             products: productCount,
             news: newsCount,
-            allowPublicPosting: settings.allowPublicPosting
+            allowPublicPosting: settings.allowPublicPosting,
+            requireSubscription: settings.requireSubscription // 🚀 ሓዱሽ
         });
     } catch (e) { res.status(500).json({ message: "Error fetching stats" }); }
 });
@@ -564,7 +676,7 @@ app.put('/api/admin/users/:id/role', async (req, res) => {
     } catch (e) { res.status(500).json({ message: "Error updating role" }); }
 });
 
-// 19.4 ማስተር ስዊች ምምሕዳር (Toggle Master Switch)
+// 19.4 ማስተር ስዊች ምምሕዳር ን ዜና (Toggle Public Posting)
 app.post('/api/admin/settings/toggle-posting', async (req, res) => {
     try {
         const { allow } = req.body;
@@ -577,12 +689,34 @@ app.post('/api/admin/settings/toggle-posting', async (req, res) => {
     } catch (e) { res.status(500).json({ message: "Error toggling setting" }); }
 });
 
-// 19.5 ማስተር ስዊች ን news.html (Check Status)
+// 19.5 🚀 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት ፓኬጅ (Toggle Paywall)
+app.post('/api/admin/settings/toggle-subscription', async (req, res) => {
+    try {
+        const { require } = req.body;
+        let settings = await Settings.findOne();
+        if (!settings) settings = new Settings();
+        
+        settings.requireSubscription = require;
+        await settings.save();
+        res.status(200).json({ requireSubscription: settings.requireSubscription });
+    } catch (e) { res.status(500).json({ message: "Error toggling subscription requirement" }); }
+});
+
+// 19.6 ማስተር ስዊች ን ዜና (Check Status)
 app.get('/api/admin/settings/posting-status', async (req, res) => {
     try {
         let settings = await Settings.findOne();
         res.status(200).json({ allow: settings ? settings.allowPublicPosting : true });
     } catch (e) { res.status(200).json({ allow: true }); }
+});
+
+// 19.7 🚀 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት (Check Status for sell.html)
+app.get('/api/admin/settings/subscription-status', async (req, res) => {
+    try {
+        let settings = await Settings.findOne();
+        // እንተዘይተዋሂቡ ብዲፎልት false (ነጻ) እዩ
+        res.status(200).json({ require: settings ? settings.requireSubscription : false });
+    } catch (e) { res.status(200).json({ require: false }); }
 });
 
 // =====================================================================

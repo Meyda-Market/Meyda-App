@@ -70,7 +70,7 @@
         .vendor-status {
             display: none; background: rgba(46, 204, 113, 0.1); color: #2ecc71;
             padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: bold;
-            border: 1px solid #2ecc71;
+            border: 1px solid #2ecc71; transition: 0.3s;
         }
 
         /* Image Upload Section */
@@ -115,7 +115,6 @@
         }
         .location-selector:hover { border-color: var(--water-blue); }
 
-        /* ሓዱሽ: Tech Specs Dynamic Fields Styles */
         .tech-specs-group {
             background: var(--light-blue); border: 1px dashed var(--water-blue);
             border-radius: 12px; padding: 15px; margin-bottom: 15px; display: none;
@@ -208,13 +207,12 @@
     <div class="container">
         
         <div class="vendor-status" id="vendorStatus">
-            <i class="fas fa-check-circle"></i> ድኳንኩም ንጡፍ እዩ (Premium Vendor)
-        </div>
+            </div>
 
         <div class="shop-promo-card" id="promoCard">
             <h3><i class="fas fa-store"></i> ድኳን ተኻረዩ (Premium Vendor)</h3>
             <p>ንብረትኩም ቀልጢፉ ንኽሽየጥን ንብዙሓት ሰባት ንኽበጽሕን ብዝተፈላለዩ ኣማራጺታት ፓኬጅ ምረጹ።</p>
-            <button class="btn-rent" onclick="openPaymentModal('vendor')">ፓኬጅ ምረጽ & ክፈል</button>
+            <button class="btn-rent" onclick="window.location.href='packages.html'">ፓኬጅ ምረጽ (View Packages)</button>
         </div>
 
         <div class="form-group" style="background: transparent; box-shadow: none; padding: 0;">
@@ -364,16 +362,71 @@
     </div>
 
     <script>
-        window.onload = () => { 
+        // 🚀 ሓዱሽ ማጂክ: Global Variables
+        let isPostingFree = false; 
+        let globalHasAccess = false;
+
+        function getLoggedInUser() {
+            try {
+                let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+                if (!userStr || userStr === 'undefined' || userStr === 'null') return null;
+                let userObj = JSON.parse(userStr);
+                if (userObj.user) userObj = userObj.user;
+                if (!userObj || (!userObj.id && !userObj._id)) return null;
+                userObj.id = userObj.id || userObj._id;
+                userObj.role = userObj.role || 'user'; 
+                return userObj;
+            } catch(e) { return null; }
+        }
+
+        window.onload = async () => { 
             if(localStorage.getItem('theme') === 'dark') {
                 document.body.classList.add('dark-mode');
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
             
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
-            if(loggedInUser && loggedInUser.isPremiumVendor) {
-                document.getElementById('promoCard').style.display = 'none';
-                document.getElementById('vendorStatus').style.display = 'block';
+            const loggedInUser = getLoggedInUser();
+            if (!loggedInUser) {
+                window.location.href = 'index.html'; 
+                return;
+            }
+
+            // 🚀 ሓዱሽ ማጂክ: ሰርቨር ቼክ (Check Master Switch)
+            try {
+                const statsRes = await fetch('http://localhost:5000/api/admin/stats');
+                if(statsRes.ok) {
+                    const stats = await statsRes.json();
+                    // requireSubscription 'false' እንተኾይኑ፡ ነጻ እዩ (Free)
+                    if(stats.requireSubscription === false) {
+                        isPostingFree = true;
+                    }
+                }
+            } catch(e) { 
+                console.log("Settings fetch error", e); 
+            }
+
+            // 🛡️ መቆጻጸሪት ኬላ (Checkpoint Access Logic)
+            globalHasAccess = isPostingFree || loggedInUser.isSubscribed || loggedInUser.isPremiumVendor || loggedInUser.role === 'owner' || loggedInUser.role === 'admin';
+
+            const vendorStatusEl = document.getElementById('vendorStatus');
+            const promoCardEl = document.getElementById('promoCard');
+
+            if(globalHasAccess) {
+                promoCardEl.style.display = 'none';
+                vendorStatusEl.style.display = 'block';
+                
+                // 🎁 ሓዱሽ UI: ንነጻ ተጠቀምቲ ፍሉይ ጽሑፍ
+                if (isPostingFree && !loggedInUser.isSubscribed && loggedInUser.role === 'user') {
+                    vendorStatusEl.style.backgroundColor = 'rgba(251, 133, 0, 0.1)';
+                    vendorStatusEl.style.color = 'var(--accent)';
+                    vendorStatusEl.style.borderColor = 'var(--accent)';
+                    vendorStatusEl.innerHTML = '<i class="fas fa-gift"></i> 🎁 ፍሉይ ህያብ: ብነጻ ንብረትኩም ሽጡ!';
+                } else {
+                    vendorStatusEl.innerHTML = '<i class="fas fa-check-circle"></i> ድኳንኩም ንጡፍ እዩ (Premium Vendor)';
+                }
+            } else {
+                promoCardEl.style.display = 'block';
+                vendorStatusEl.style.display = 'none';
             }
         }
 
@@ -384,28 +437,20 @@
             document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
 
-        // =====================================================================
-        // ሓዱሽ: Dynamic Fields Logic
-        // =====================================================================
         function checkCategory() {
             const cat = document.getElementById('category').value;
             const techSpecs = document.getElementById('dynamicTechSpecs');
             
-            // ሞባይል ወይ ላፕቶፕ እንተመሪጹ ጥራሕ እቲ ፎርም ይወጽእ
             if (cat === 'mobile' || cat === 'laptop') {
                 techSpecs.style.display = 'block';
             } else {
                 techSpecs.style.display = 'none';
-                // ካልእ እንተመሪጹ ነቶም ዝነበሩ ጽሑፋት የጽርዮም
                 document.getElementById('ramSelect').value = '';
                 document.getElementById('storageSelect').value = '';
                 document.getElementById('screenSelect').value = '';
             }
         }
 
-        // =====================================================================
-        // Image Preview Logic
-        // =====================================================================
         let totalImages = 0;
         const maxImages = 5;
         let selectedFiles = []; 
@@ -446,9 +491,6 @@
             document.getElementById('uploadBox').style.display = 'flex'; 
         }
 
-        // =====================================================================
-        // Region Logic
-        // =====================================================================
         const locationsData = {
             "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
             "Afar": ["Semera", "Asayta", "Awash"],
@@ -496,19 +538,9 @@
             finalLocation.value = locText; closeRegionModal();
         }
 
-        // =====================================================================
-        // Payment & Package Logic
-        // =====================================================================
+        // PRO AD Payment Logic
         let currentPaymentType = ''; 
         let selectedPrice = 0;
-
-        const vendorPackages = [
-            { id: 'v1', name: 'ን 7 መዓልቲ (1 Week)', price: 70 },
-            { id: 'v2', name: 'ን 1 ወርሒ (1 Month)', price: 200 },
-            { id: 'v3', name: 'ን 3 ወርሒ (3 Months)', price: 500 },
-            { id: 'v4', name: 'ን 6 ወርሒ (6 Months)', price: 850 },
-            { id: 'v5', name: 'ን 1 ዓመት (1 Year)', price: 1500 }
-        ];
 
         const proAdPackages = [
             { id: 'p1', name: 'ኣብ ባነር ን 3 መዓልቲ', price: 300 },
@@ -527,11 +559,7 @@
 
             let packagesToLoad = [];
 
-            if (type === 'vendor') {
-                titleEl.innerText = "ድኳን ተኻረዩ (Vendor Packages)";
-                descEl.innerText = "ካብዞም ዝስዕቡ ፓኬጃት ብምምራጽ ንብረትኩም ሽጡ።";
-                packagesToLoad = vendorPackages;
-            } else if (type === 'pro_ad') {
+            if (type === 'pro_ad') {
                 titleEl.innerText = "PRO ማስታወቂያ (Hero Banner)";
                 descEl.innerText = "ትካልኩም ወይ ንብረትኩም ኣብቲ ናይ መጀመርያ ገጽ (Home) ብሰፊሑ ንኽረአ ምረጹ።";
                 packagesToLoad = proAdPackages;
@@ -559,32 +587,22 @@
 
         function confirmPayment(method) {
             if(selectedPrice === 0) { alert("በጃኹም ቅድም ሓደ ፓኬጅ ምረጹ!"); return; }
-            
             alert(`✅ ብ ${method} ዝተፈጸመ ናይ ${selectedPrice} ETB ክፍሊት ብዓወት ተቐቢልና ኣለና!`);
             closePaymentModal();
-
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser')) || {};
-
-            if (currentPaymentType === 'vendor') {
-                document.getElementById('promoCard').style.display = 'none';
-                document.getElementById('vendorStatus').style.display = 'block';
-                loggedInUser.isPremiumVendor = true;
-                localStorage.setItem('meydaUser', JSON.stringify(loggedInUser));
-            } else if (currentPaymentType === 'pro_ad') {
+            if (currentPaymentType === 'pro_ad') {
                 alert("ማስታወቂያኹም ኣብ ናይ መጀመርያ ገጽ (Hero Banner) ክወጽእ እዩ። የቐንየልና!");
             }
         }
 
-        // =====================================================================
-        // Post Product Logic
-        // =====================================================================
         async function postFinal() {
-            const loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
-            if (!loggedInUser) { alert("በጃኹም ቅድም ሎግ-ኢን ግበሩ (Sign In)!"); window.location.href = 'auth.html'; return; }
+            const loggedInUser = getLoggedInUser();
+            if (!loggedInUser) { alert("በጃኹም ቅድም ሎግ-ኢን ግበሩ (Sign In)!"); window.location.href = 'index.html'; return; }
 
-            if (!loggedInUser.isPremiumVendor) {
-                alert("በጃኹም ንብረት ቅድሚ ምልጣፍኩም ሓደ ካብቶም ናይ 'ድኳን ክራይ' ፓኬጅ ምረጹ!");
-                openPaymentModal('vendor'); return;
+            // 🚀 ሓዱሽ ማጂክ: Checkpoint! ንብረት ቅድሚ ምልጣፉ መሊሱ ይፍትሽ። 
+            if (!globalHasAccess) {
+                alert("በጃኹም ንብረት ቅድሚ ምልጣፍኩም ናይ መሸጣ ፓኬጅ (Subscription) ምረጹ!");
+                window.location.href = 'packages.html'; // ብቐጥታ ናብታ ሓዳስ ፔጅ ይድርብዮ
+                return;
             }
 
             const titleValue = document.getElementById('title').value;
@@ -599,9 +617,6 @@
                 alert("በጃኹም ስም ንብረት፣ ዋጋ፣ ቦታን ስልክን ብትኽክል ምልኡ!"); return; 
             }
 
-            // ==============================================================
-            // ሓዱሽ ማጂክ: ቴክኒካዊ ሓበሬታ ጠርኒፍና ምስቲ መግለጺ ነላግቦ (Smart Append)
-            // ==============================================================
             if (categoryValue === 'mobile' || categoryValue === 'laptop') {
                 const ram = document.getElementById('ramSelect').value;
                 const storage = document.getElementById('storageSelect').value;
@@ -630,13 +645,13 @@
             if(categoryValue === 'furniture') iconValue = 'fa-couch';
             if(categoryValue === 'laptop') iconValue = 'fa-laptop';
 
-           const formData = new FormData();
+            const formData = new FormData();
             formData.append('title', titleValue);
             formData.append('price', priceValue + " Br");
             formData.append('category', categoryValue);
             formData.append('condition', conditionValue);
             formData.append('location', locationValue);
-            formData.append('description', descValue); // ሕጂ ቴክ-ስፔክስ ሒዙ ኣሎ!
+            formData.append('description', descValue); 
             formData.append('icon', iconValue);
             formData.append('sellerId', loggedInUser.id); 
             formData.append('phone', finalPhone);

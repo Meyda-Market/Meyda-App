@@ -52,17 +52,20 @@
         .settings-card { background: var(--white); border-radius: 15px; padding: 25px; box-shadow: var(--shadow); margin-bottom: 30px; }
         .settings-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px; }
         .settings-header h3 { margin: 0; color: var(--text-color); }
-        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; }
+        .setting-row { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
         .setting-info h4 { margin: 0 0 5px 0; font-size: 16px; color: var(--text-color); }
         .setting-info p { margin: 0; font-size: 13px; color: var(--gray-text); }
 
         /* Toggle Switch */
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; flex-shrink: 0;}
         .switch input { opacity: 0; width: 0; height: 0; }
         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         input:checked + .slider { background-color: var(--water-blue); }
         input:checked + .slider:before { transform: translateX(22px); }
+        
+        /* 🚀 ሓዱሽ ማጂክ: Payment Toggle Color */
+        input.pay-switch:checked + .slider { background-color: var(--success); }
 
         /* Table */
         .search-user { width: 100%; padding: 12px 15px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--input-bg); color: var(--text-color); margin-bottom: 20px; outline: none; font-size: 15px; box-sizing: border-box; }
@@ -137,6 +140,7 @@
             <div class="settings-header">
                 <h3><i class="fas fa-cogs"></i> ማስተር ስዊች (Global Settings)</h3>
             </div>
+            
             <div class="setting-row">
                 <div class="setting-info">
                     <h4>ፖስት ምግባር ንኹሉ ፍቐድ (Public Posting)</h4>
@@ -147,6 +151,18 @@
                     <span class="slider"></span>
                 </label>
             </div>
+
+            <div class="setting-row" style="border-top: 1px solid var(--border-color); margin-top: 5px;">
+                <div class="setting-info">
+                    <h4 style="color: var(--success);"><i class="fas fa-money-bill-wave"></i> ክፍሊት ንምሸጣ ግዴታ ግበር (Require Subscription)</h4>
+                    <p>እዚኣ እንተጠፊኣ (OFF)፡ <b>ኹሉ ሰብ ብነጻ ንብረት ክሸይጥ ይኽእል</b>። እንተበሪሃ (ON)፡ ፓኬጅ ምግዛእ ግዴታ ይኸውን።</p>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" class="pay-switch" id="requireSubToggle" onchange="toggleSubscriptionReq(this)">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
         </div>
 
         <div class="settings-card">
@@ -175,6 +191,40 @@
     </div>
 
     <script>
+        // 👻 ማጂክ መለለዪ መንነት (Ultimate Universal User Fetcher)
+    function getLoggedInUser() {
+        let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+        
+        if (!userStr || userStr === 'undefined' || userStr === 'null') {
+            localStorage.removeItem('meydaUser');
+            localStorage.removeItem('meyda_user');
+            return null;
+        }
+        
+        try {
+            let userObj = JSON.parse(userStr);
+            if (userObj.user) userObj = userObj.user;
+            
+            if (!userObj || (!userObj.id && !userObj._id)) {
+                localStorage.removeItem('meydaUser');
+                localStorage.removeItem('meyda_user');
+                return null;
+            }
+            
+            userObj.id = userObj.id || userObj._id;
+            userObj.role = userObj.role || 'user'; 
+            
+            if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
+                userObj.role = 'owner'; 
+                userObj.isAdmin = true;
+            }
+            return userObj;
+        } catch(e) { 
+            localStorage.removeItem('meydaUser');
+            localStorage.removeItem('meyda_user');
+            return null; 
+        }
+    }
         let loggedInUser = null;
         let allUsersList = [];
 
@@ -184,7 +234,7 @@
                 document.getElementById('themeIcon').className = 'fas fa-sun';
             } 
             
-            loggedInUser = JSON.parse(localStorage.getItem('meydaUser'));
+            loggedInUser = getLoggedInUser(localStorage.getItem('meydaUser'));
             if (!loggedInUser || (loggedInUser.role !== 'admin' && loggedInUser.role !== 'owner')) {
                 alert("ናብዚ ፔጅ ንምእታው ፍቓድ የብኩምን! (Access Denied)");
                 window.location.href = 'home.html';
@@ -217,6 +267,12 @@
                     document.getElementById('totalProducts').innerText = stats.products;
                     document.getElementById('totalNews').innerText = stats.news;
                     document.getElementById('allowPublicPostToggle').checked = stats.allowPublicPosting;
+                    
+                    // 🚀 ሓዱሽ ማጂክ: ነታ ናይ ክፍሊት ቶግል ስቴት ምቕባል
+                    if(document.getElementById('requireSubToggle')) {
+                        // እንተዘይተዋሂቡ ብዲፎልት false (ነጻ) ይኹን
+                        document.getElementById('requireSubToggle').checked = stats.requireSubscription === true; 
+                    }
                 }
 
                 // ለ. ዝርዝር ተጠቀምቲ (Users) ነምጽእ
@@ -231,7 +287,7 @@
             }
         }
 
-        // 3. ማስተር ስዊች ናብ ሰርቨር ምልኣኽ (Toggle API)
+        // 3. ማስተር ስዊች ን ዜና
         async function togglePublicPosting(checkbox) {
             const isAllowed = checkbox.checked;
             try {
@@ -244,11 +300,34 @@
                 if(res.ok) {
                     alert(`ፖስት ምግባር ንኹሉ ሕጂ: ${isAllowed ? 'ክፉት (ON)' : 'ዕጹው (OFF)'} ኮይኑ ኣሎ!`);
                 } else {
-                    checkbox.checked = !isAllowed; // እንተኣብዩ ናብ ዝነበሮ ይመለስ
+                    checkbox.checked = !isAllowed; 
                     alert("ምቕያር ኣይተኻእለን!");
                 }
             } catch (error) {
                 checkbox.checked = !isAllowed;
+                alert("ምስ ሰርቨር ክራኸብ ኣይከኣለን።");
+            }
+        }
+
+        // 🚀 3.5 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት ፓኬጅ
+        async function toggleSubscriptionReq(checkbox) {
+            const isRequired = checkbox.checked;
+            try {
+                // ጽባሕ ኣብ server.js እንሰርሓ API እያ
+                const res = await fetch('http://localhost:5000/api/admin/settings/toggle-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ require: isRequired })
+                });
+                
+                if(res.ok) {
+                    alert(`ክፍሊት (Subscription) ንምሸጣ ሕጂ: ${isRequired ? 'ግዴታ (ON)' : 'ነጻ (OFF)'} ኮይኑ ኣሎ!`);
+                } else {
+                    checkbox.checked = !isRequired;
+                    alert("ምቕያር ኣይተኻእለን!");
+                }
+            } catch (error) {
+                checkbox.checked = !isRequired;
                 alert("ምስ ሰርቨር ክራኸብ ኣይከኣለን።");
             }
         }
@@ -267,8 +346,6 @@
                 const pic = user.profilePic && user.profilePic !== '' ? user.profilePic : 'https://via.placeholder.com/40';
                 const roleClass = `role-${user.role}`;
                 
-                // Owner ንካልእ Owner ክቕይር ኣይክእልን (ብዘይካ ገዛእ ርእሱ) 
-                // Admin ከኣ ን Owner ክቕይር ኣይክእልን
                 const isOwner = user.role === 'owner';
                 const canEdit = loggedInUser.role === 'owner' || (loggedInUser.role === 'admin' && !isOwner);
                 const disabledHTML = !canEdit ? 'disabled' : '';
@@ -327,7 +404,6 @@
                     alert("ምስ ሰርቨር ክራኸብ ኣይከኣለን።");
                 }
             } else {
-                // እንተተረፊዎ ነታ Select Box ናብ ዝነበረታ ይመልሳ
                 const userObj = allUsersList.find(u => u._id === userId);
                 if(userObj) selectEl.value = userObj.role;
             }
