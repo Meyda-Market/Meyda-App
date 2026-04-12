@@ -327,7 +327,7 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'em
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: 'https://meyda-app.vercel.app/login.html' }),
   (req, res) => {
     // ብዓወት ምስ ኣተወ፡ ናብታ ዋና ገጽካ ይምለስ (ምስቲ ዳታ ናይ ሎጊን)
-    res.redirect(`https://meyda-app.vercel.app/index.html?token=${req.user._id}`);
+    res.redirect(`https://meyda-app.vercel.app/home.html?token=${req.user._id}`);
   }
 );
 
