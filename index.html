@@ -253,8 +253,10 @@
     }
 
     function startGoogleAuth() {
-        alert("እዚ ናይ ጉግል ምዝገባ፡ ዌብሳይትና ናብ ኦንላይን ሆስቲንግ (Live Domain) ምስ ወጸ ብቐጥታ ዝሰርሕ እዩ!");
-    }
+    // ብቐጥታ ናብቲ ናይ Render ባክ-ኤንድ (Backend) ክወስደና እዩ
+    window.location.href = "https://meyda-app.onrender.com/auth/google";
+}
+
 
     // SIGNUP API
     document.getElementById('signupActualForm').addEventListener('submit', async (e) => {
