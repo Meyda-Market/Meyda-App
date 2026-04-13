@@ -380,6 +380,48 @@
     </div>
 
    <script>
+    // 🚀 ሓዱሽ ማጂክ: ቅልጡፍ ፕሮፋይል (Optimistic UI - No Loading)
+document.addEventListener("DOMContentLoaded", async () => {
+    // 1. መጀመርታ: ብዘይ ዝኾነ ሎዲንግ፡ ነቲ ኣብ ኮምፒተርና (LocalStorage) ዘሎ ዳታ ብኡንብኡ ነውጽኦ!
+    const localUserStr = localStorage.getItem('meydaUser');
+    
+    if (localUserStr) {
+        const localUser = JSON.parse(localUserStr);
+        // እዘን ስእልን ስምን ብኡንብኡ (ኣብ 0.001 ካልኢት) ኣብ ስክሪን ይረኣያ!
+        if(document.getElementById('profilePic')) document.getElementById('profilePic').src = localUser.profilePic;
+        if(document.getElementById('profileName')) document.getElementById('profileName').textContent = localUser.name;
+        
+        // 2. ካልኣይ: ብድሕሪ መጋረጃ ድማ ነቲ ሓዱሽ ዳታ ካብ ዳታቤዝ ነምጽኦ (ብዘይ ሎዲንግ)
+        try {
+            // ⚠️ እታ ማጂክ ኣብዚኣ እያ: localUser.id ብኣውቶማቲክ ተኣትያ ኣላ ⚠️
+            const response = await fetch(`https://meyda-app.onrender.com/api/users/${localUser.id}`);
+            if (response.ok) {
+                const freshUser = await response.json();
+                
+                // ሓዱሽ ዝተቐየረ ነገር እንተሃልዩ ብድሕሪት ቀስ ኢሉ ይቕይሮ
+                if(document.getElementById('profilePic')) document.getElementById('profilePic').src = freshUser.profilePic;
+                if(document.getElementById('profileName')) document.getElementById('profileName').textContent = freshUser.name;
+                
+                // ነቲ ሓዱሽ ዳታ ድማ ኣብ LocalStorage ንዕቅቦ
+                const userForStorage = {
+                    id: freshUser._id, name: freshUser.name, email: freshUser.email, 
+                    profilePic: freshUser.profilePic, phone: freshUser.phone, 
+                    role: freshUser.role || 'user', 
+                    isAdmin: freshUser.role === 'admin' || freshUser.role === 'owner',
+                    isSubscribed: freshUser.isSubscribed || false,
+                    packageType: freshUser.packageType || 'none',
+                    expireDate: freshUser.expireDate || null
+                };
+                localStorage.setItem('meydaUser', JSON.stringify(userForStorage));
+            }
+        } catch (error) {
+            console.log("Internet Data Fetch Error:", error);
+        }
+    } else {
+        // ሰብ እንተዘይኣትዩ ኔሩ ናብ መእተዊ ይመልሶ
+        window.location.href = "index.html"; 
+    }
+});
         let isMyProfile = true;
         let profileUserId = null;
         let loadedProductsMap = {}; 

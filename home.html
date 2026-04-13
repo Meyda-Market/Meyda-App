@@ -458,7 +458,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (product.images && product.images.length > 0) {
             let imgHTML = '<div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; width: 100%; height: 100%; border-radius: 10px; scrollbar-width: none;">';
             product.images.forEach(img => {
-                imgHTML += `<img src="https://meyda-app.onrender.com${img}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
+                imgHTML += `<img src="${getImageUrl(img)}" style="min-width: 100%; height: 100%; object-fit: contain; background: var(--input-bg); scroll-snap-align: center;">`;
             });
             imgHTML += '</div>';
             if(product.images.length > 1) {
@@ -575,26 +575,53 @@ document.addEventListener("DOMContentLoaded", async () => {
         const pModal = document.getElementById('productModal'); const rModal = document.getElementById('regionModal');
         if (event.target == pModal) pModal.style.display = 'none'; if (event.target == rModal) rModal.style.display = 'none';
     }
+    // =====================================================================
+    // 🛠️ ሓዱሽ ማጂክ: ንኹሉ ዓይነት ስእሊ ዘንብብ (Smart Image URL Fixer)
+    // =====================================================================
+    function getImageUrl(imgStr) {
+        if (!imgStr) return '';
+        if (imgStr.startsWith('http') || imgStr.startsWith('data:image')) return imgStr;
+        return `https://meyda-app.onrender.com${imgStr}`;
+    }
 
     // =====================================================================
-    // ሓዱሽ ማጂክ: ብሓንሳብ ንኹሎም ሸየጥቲ ከተምጽእ (Bulk Fetch Users)
+    // ⚡ ሓዱሽ ማጂክ: በርቂ ፍጥነት (Optimistic Loading & Bulk Fetch) ⚡
+    // እዚ ምዕራፍ እዚ ነቲ ዌብሳይትኩም "ዜሮ ሎዲንግ" ንክህልዎ ይገብር። ዳታ ካብ ኮምፒተር
+    // ብቕጽበት ኣውጺኡ የርኢ፡ ብድሕሪ መጋረጃ ድማ ሓዱሽ ዳታ ካብ ሰርቨር የምጽእ።
     // =====================================================================
     let allProducts = []; 
     let sellersCache = {}; 
 
     async function loadProducts() {
         const productsGrid = document.querySelector('.products-grid');
+        
+        // 1. መጀመርታ: ካብ LocalStorage (ኮምፒተር) ዳታ ኣውጺእና ብኡንብኡ ነርኢ (ዜሮ ሎዲንግ ማጂክ)
         try {
-            // 1. መጀመርታ ኣቕሑት ነምጽእ
+            const cachedProducts = localStorage.getItem('meydaProducts');
+            const cachedSellers = localStorage.getItem('meydaSellers');
+            
+            if (cachedProducts && cachedSellers) {
+                allProducts = JSON.parse(cachedProducts);
+                sellersCache = JSON.parse(cachedSellers);
+                // ሓንቲ ካልኢት ከይወሰደ በሪሁ ይጸንሕ!
+                applyFilters(); 
+                updateHeroBanner();
+            }
+        } catch(e) {
+            console.log("Cache read error", e);
+        }
+
+        // 2. ካልኣይ: ብድሕሪ መጋረጃ (Background) ሓዱሽ ዳታ ካብ ሰርቨር (ዳታቤዝ) ነምጽእ
+        try {
             const response = await fetch('https://meyda-app.onrender.com/api/products');
-            allProducts = await response.json(); 
+            const freshProducts = await response.json(); 
             
-            // 2. ንኹሎም እቶም ኣብቲ ኣቕሑት ዘለዉ ሸየጥቲ ጥራሕ ነጽርዮም
-            const uniqueSellerIds = [...new Set(allProducts.map(p => p.sellerId).filter(id => id))];
+            // ንኹሎም እቶም ኣብቲ ኣቕሑት ዘለዉ ሸየጥቲ ንምፍላጥ
+            const uniqueSellerIds = [...new Set(freshProducts.map(p => p.sellerId).filter(id => id))];
             
-            // 3. ንኹሎም እቶም ሸየጥቲ ብሓንሳብ ንሰርቨር ንሓትት (Faster!)
             try {
-                const usersRes = await fetch('https://meyda-app.onrender.com/api/admin/users'); // Use admin route to get all users easily
+                // ንኹሎም ሸየጥቲ ብሓንሳብ ምምጻእ (ስእሊ ፕሮፋይሎም ምእንቲ ክረኣየና)
+                const usersRes = await fetch('https://meyda-app.onrender.com/api/admin/users');
                 if (usersRes.ok) {
                     const allUsers = await usersRes.json();
                     allUsers.forEach(u => {
@@ -603,14 +630,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                         }
                     });
                 }
-            } catch(e) { console.log("Failed to bulk load users", e); }
+            } catch(e) { console.log("Failed to load background users", e); }
             
-            // 4. ኹሉ ምስ መጸ ዳሕራይ ንካርድታት (UI) ንስኣሎም
+            // 3. እቲ ሓዱሽ ዳታ ኣብ LocalStorage ንመጻኢ ንዕቅቦ (ንጽባሕ ወይ ንኻልእ ፔጅ መታን ክቐልጥፍ)
+            try {
+                localStorage.setItem('meydaProducts', JSON.stringify(freshProducts));
+                localStorage.setItem('meydaSellers', JSON.stringify(sellersCache));
+            } catch (e) {
+                // Base64 ስእሊ ምስ ዝበዝሕ LocalStorage ክመልእ ይኽእል እዩ፣ እዚ ኮድ ድማ ካብ ምብልሻው የድሕኖ (Golden Rule!)
+                console.log("Local storage full, cannot cache", e);
+            }
+            
+            // 4. ኣቕሑት ብሓዱሽ ሓበሬታ (ብዘይ ሎዲንግ) ቀስ ኢሉ ንቕይሮም (UI Update)
+            allProducts = freshProducts;
             applyFilters(); 
             updateHeroBanner(); 
             
         } catch (error) { 
-            productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:red;">ምስ ዳታቤዝ ክራኸብ ኣይከኣለን። ሰርቨር ሪስታርት ግበሩ።</p>'; 
+            // ኢንተርኔት እንተዘይሃልዩን ኮምፒተር ዳታ እንተዘይብሉን ጥራሕ ጌጋ የርኢ
+            if(allProducts.length === 0) {
+                productsGrid.innerHTML = '<p style="text-align:center; width:100%; color:red;">ምስ ዳታቤዝ ክራኸብ ኣይከኣለን። ሰርቨር ሪስታርት ግበሩ ወይ ኢንተርኔትኩም ኣረጋግጹ።</p>'; 
+            }
         }
     }
 
@@ -626,7 +666,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const slide = document.createElement('div'); slide.className = 'carousel-slide'; slide.style.backgroundColor = '#000'; slide.style.cursor = 'pointer';
                 slide.onclick = () => openProduct(product);
                 slide.innerHTML = `
-                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://meyda-app.onrender.com${product.images[0]}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('${getImageUrl(product.images[0])}'); background-size: contain; background-repeat: no-repeat; background-position: center; z-index: 1;"></div>
                     <div style="position: absolute; top: 12px; left: 12px; background: #f1c40f; color: #333; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.5); z-index: 2;"><i class="fas fa-crown"></i> PRO AD</div>
                     <div style="position: absolute; bottom: 0; left: 0; width: 100%; padding: 40px 15px 15px 15px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); color: white; box-sizing: border-box; text-align: left; z-index: 2;">
                         <div style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -660,9 +700,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             productCard.onclick = () => openProduct(product);
 
             let imageHTML = product.images && product.images.length > 0 
-                ? `<img src="https://meyda-app.onrender.com${product.images[0]}" style="width: 100%; height: 140px; object-fit: cover; border-radius: 10px;">` 
-                : `<div class="product-img-placeholder"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
-
+    ? `<img src="${getImageUrl(product.images[0])}" style="width: 100%; height: 140px; object-fit: contain; background: var(--input-bg); border-radius: 10px;">` 
+    : `<div class="product-img-placeholder"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
             const isSaved = mySavedList.includes(product._id);
             const heartClass = isSaved ? 'fas' : 'far'; const heartStyle = isSaved ? 'color: #ff4757;' : '';
             

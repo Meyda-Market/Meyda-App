@@ -8,27 +8,42 @@ const cors = require('cors');
 // 🚀 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (Timekeeper)
 const cron = require('node-cron'); 
 
+// =====================================================================
+// ☁️ ሓዱሽ ማጂክ: CLOUDINARY (ዘይድምሰስ ናይ ደበና መኽዘን)
+// =====================================================================
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// 1. ምስ Cloudinary ንምትእስሳር ዝሕግዙ ምስጢራዊ ኮዳት (ካብ .env)
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
 const app = express();
 
 // =====================================================================
-// 1. መኽዘን ስእልታት (Uploads Folder Setup)
+// 1. መኽዘን ስእልታት (Cloudinary Setup & Fallback)
 // =====================================================================
+// እዚ ናይ ቀደም ፎልደር እዩ (ንኣረገውቲ ስእልታት ምእንቲ ክሰርሕ ኣይነጥፍኦን ኢና)
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
 app.use('/uploads', express.static('uploads'));
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) { 
-        cb(null, 'uploads/'); 
-    },
-    filename: function (req, file, cb) { 
-        cb(null, Date.now() + '-' + file.originalname); 
+// 2. 🚀 እቲ ሓዱሽ ናይ ደበና መኽዘን (Cloudinary Storage)
+const storage = new CloudinaryStorage({
+    cloudinary: cloudinary,
+    params: {
+        folder: 'meyda_uploads', // ኣብ Cloudinary ዝፍጠር ፎልደር
+        resource_type: 'auto',   // ስእልን ቪድዮን ንኽቕበል
+        allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp', 'mp4', 'mov'] // ዝፍቀዱ ፋይላት
     }
 });
 
 const upload = multer({ 
-    storage: storage,
+    storage: storage, // ሕጂ ስእልታት ብቐጥታ ናብ Cloudinary እዮም ዝኸዱ!
     limits: { fieldSize: 50 * 1024 * 1024 } 
 });
 
@@ -38,6 +53,7 @@ const upload = multer({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
 // ====== 🚀 GOOGLE LOGIN SETUP (PASSPORT) ======
 const session = require('express-session');
 const passport = require('passport');
@@ -171,21 +187,18 @@ const News = mongoose.model('News', newsSchema);
 // 4.5 መዋቕር ን ማስተር ስዊች (Global Settings Schema)
 const settingsSchema = new mongoose.Schema({
     allowPublicPosting: { type: Boolean, default: true },
-    // 🚀 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት (Default OFF / Free mode)
     requireSubscription: { type: Boolean, default: false },
     lastUpdatedBy: String
 });
 const Settings = mongoose.model('Settings', settingsSchema);
 
 // =====================================================================
-// 🤖 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job)
+// 🤖 ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job)
 // =====================================================================
-// እዚ ኮድ ኣብ ነፍሲ-ወከፍ ለይቲ ሰዓት 12:00 AM (00:00) ይለዓል
 cron.schedule('0 0 * * *', async () => {
     console.log('⏰ ዲጂታላዊ ዘብዐኛ: ግዜኦም ዝሓለፉ ፓኬጃት ይፍትሽ ኣሎ...');
     try {
         const now = new Date();
-        // ኩሎም እቶም ፓኬጅ ዘለዎምን ግዚኦም ዝሓለፈን ደሊኻ ኣውርዶም
         const expiredUsers = await User.updateMany(
             { isSubscribed: true, expireDate: { $lt: now } },
             { $set: { isSubscribed: false, packageType: 'none' } }
@@ -210,12 +223,15 @@ app.get('/api/products', async (req, res) => {
 });
 
 // =====================================================================
-// 6. API: ሓዱሽ ንብረት ንምምዝጋብ (POST Product)
+// 6. API: ሓዱሽ ንብረት ንምምዝጋብ (POST Product) - ☁️ CLOUDINARY UPDATED
 // =====================================================================
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
         const { title, price, category, condition, location, description, sellerId, icon, phone, isPro } = req.body; 
-        const imagePaths = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
+        
+        // ⚠️ ሓዱሽ ለውጢ: ሕጂ `file.path` እዩ ዝውሰድ (እዚ ማለት እታ ናይ Cloudinary ናይ ደበና ሊንክ እዩ)
+        // ናይ ቀደም '/uploads/' ዝብል የለን ምኽንያቱ ስእሊ ኣብ ደበና እዩ ዘሎ
+        const imagePaths = req.files ? req.files.map(file => file.path) : [];
         
         const newProduct = new Product({ 
             title, price, category, condition, location, description, sellerId, icon, phone, 
@@ -226,6 +242,7 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
         await newProduct.save(); 
         res.status(201).json({ message: "ንብረትኩም ብዓወት ንዕዳጋ ቀሪቡ ኣሎ!" });
     } catch (error) { 
+        console.error("Product Upload Error:", error);
         res.status(500).json({ message: "ንብረት ምምዝጋብ ኣይተኻእለን。" }); 
     }
 });
@@ -319,6 +336,7 @@ app.post('/api/users/login', async (req, res) => {
         res.status(500).json({ message: "ሎግ-ኢን ምግባር ኣይተኻእለን (Server Error)።" }); 
     }
 });
+
 // =====================================================================
 // 8.5 API: GOOGLE LOGIN ROUTES
 // =====================================================================
@@ -326,7 +344,6 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'em
 
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: 'https://meyda-app.vercel.app/login.html' }),
   (req, res) => {
-    // ብዓወት ምስ ኣተወ፡ ናብታ ዋና ገጽካ ይምለስ (ምስቲ ዳታ ናይ ሎጊን)
     res.redirect(`https://meyda-app.vercel.app/home.html?token=${req.user._id}`);
   }
 );
@@ -365,7 +382,7 @@ app.put('/api/users/:id', async (req, res) => {
 });
 
 // =====================================================================
-// 10.5 🚀 ሓዱሽ API: ክፍሊት ምስ ፈጸመ ፓኬጅ ምሃብ (Subscribe User)
+// 10.5 🚀 API: ክፍሊት ምስ ፈጸመ ፓኬጅ ምሃብ (Subscribe User)
 // =====================================================================
 app.post('/api/users/:id/subscribe', async (req, res) => {
     try {
@@ -530,7 +547,7 @@ app.put('/api/messages/user/:userId/readAll', async (req, res) => {
 });
 
 // =====================================================================
-// 17. APIs ን ዜና (News / Posts)
+// 17. APIs ን ዜና (News / Posts) - ☁️ CLOUDINARY UPDATED
 // =====================================================================
 
 function filterBadWords(text) {
@@ -559,7 +576,8 @@ app.post('/api/news', upload.single('media'), async (req, res) => {
         
         let mediaUrl = ""; let mediaType = "";
         if (req.file) {
-            mediaUrl = '/uploads/' + req.file.filename;
+            // ⚠️ ሓዱሽ ለውጢ: ንዜና ዝኸውን ስእሊ ወይ ቪድዮ እውን ብቐጥታ ካብ Cloudinary (.path) ይውሰድ
+            mediaUrl = req.file.path; 
             if (req.file.mimetype.startsWith('video/')) { mediaType = 'video'; } 
             else { mediaType = 'image'; }
         }
@@ -705,7 +723,7 @@ app.get('/api/admin/stats', async (req, res) => {
             products: productCount,
             news: newsCount,
             allowPublicPosting: settings.allowPublicPosting,
-            requireSubscription: settings.requireSubscription // 🚀 ሓዱሽ
+            requireSubscription: settings.requireSubscription
         });
     } catch (e) { res.status(500).json({ message: "Error fetching stats" }); }
 });
@@ -740,7 +758,7 @@ app.post('/api/admin/settings/toggle-posting', async (req, res) => {
     } catch (e) { res.status(500).json({ message: "Error toggling setting" }); }
 });
 
-// 19.5 🚀 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት ፓኬጅ (Toggle Paywall)
+// 19.5 🚀 ማስተር ስዊች ን ክፍሊት ፓኬጅ (Toggle Paywall)
 app.post('/api/admin/settings/toggle-subscription', async (req, res) => {
     try {
         const { require } = req.body;
@@ -761,11 +779,10 @@ app.get('/api/admin/settings/posting-status', async (req, res) => {
     } catch (e) { res.status(200).json({ allow: true }); }
 });
 
-// 19.7 🚀 ሓዱሽ ማጂክ: ማስተር ስዊች ን ክፍሊት (Check Status for sell.html)
+// 19.7 🚀 ማስተር ስዊች ን ክፍሊት (Check Status for sell.html)
 app.get('/api/admin/settings/subscription-status', async (req, res) => {
     try {
         let settings = await Settings.findOne();
-        // እንተዘይተዋሂቡ ብዲፎልት false (ነጻ) እዩ
         res.status(200).json({ require: settings ? settings.requireSubscription : false });
     } catch (e) { res.status(200).json({ require: false }); }
 });
