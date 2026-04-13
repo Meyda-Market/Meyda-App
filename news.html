@@ -178,6 +178,14 @@
     </div>
 
     <script>
+        // እዚ እቲ ትኽክለኛ ኣቀማምጣ እዩ (Top of your script)
+const API_BASE_URL = "https://meyda-app.onrender.com";
+
+function getImageUrl(img) {
+    if (!img) return 'https://via.placeholder.com/150'; 
+    if (img.startsWith('http')) return img; 
+    return `${API_BASE_URL}${img}`; // ኣብዚኣ ነታ API_BASE_URL ትጥቀም ኣላ
+}
         let allNews = [];
         let currentFilter = 'all';
         let loggedInUser = null;
@@ -306,9 +314,9 @@
                 let mediaHTML = '';
                 if (news.mediaUrl) {
                     if (news.mediaType === 'video') {
-                        mediaHTML = `<div class="news-media"><video src="https://meyda-app.onrender.com${news.mediaUrl}" controls></video></div>`;
+                        mediaHTML = `<div class="news-media"><video src="${getImageUrl(news.mediaUrl)}" controls></video></div>`;
                     } else {
-                        mediaHTML = `<div class="news-media"><img src="https://meyda-app.onrender.com${news.mediaUrl}" alt="News Media"></div>`;
+                        mediaHTML = `<div class="news-media"><img src="${getImageUrl(news.mediaUrl)}" alt="News Media"></div>`;
                     }
                 }
 

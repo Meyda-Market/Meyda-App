@@ -380,6 +380,19 @@
     </div>
 
    <script>
+    // እታ ስእሊ ካብ ደበና ወይ ካብ ሰርቨር ምዃና መለለዪት ማጂክ
+function getImageUrl(img) {
+    if (!img) return 'https://via.placeholder.com/150'; // ስእሊ እንተዘየላ
+    if (img.startsWith('http')) return img; // ካብ Cloudinary እንተኾይኑ
+    return `https://meyda-app.onrender.com${img}`; // ካብ ናይ ቀደም ሰርቨር እንተኾይኑ
+}
+
+// ፕሮፋይል ንምርኣይ (Example usage in your display function)
+function displayProfile(user) {
+    document.getElementById('profilePic').src = getImageUrl(user.profilePic);
+    document.getElementById('bannerPic').src = getImageUrl(user.bannerPic);
+    // ... ካልእ ኮድካ
+}
     // 🚀 ሓዱሽ ማጂክ: ቅልጡፍ ፕሮፋይል (Optimistic UI - No Loading)
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. መጀመርታ: ብዘይ ዝኾነ ሎዲንግ፡ ነቲ ኣብ ኮምፒተርና (LocalStorage) ዘሎ ዳታ ብኡንብኡ ነውጽኦ!
@@ -388,7 +401,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (localUserStr) {
         const localUser = JSON.parse(localUserStr);
         // እዘን ስእልን ስምን ብኡንብኡ (ኣብ 0.001 ካልኢት) ኣብ ስክሪን ይረኣያ!
-        if(document.getElementById('profilePic')) document.getElementById('profilePic').src = localUser.profilePic;
+        if(document.getElementById('profilePic')) document.getElementById('profilePic').src = getImageUrl(localUser.profilePic);
         if(document.getElementById('profileName')) document.getElementById('profileName').textContent = localUser.name;
         
         // 2. ካልኣይ: ብድሕሪ መጋረጃ ድማ ነቲ ሓዱሽ ዳታ ካብ ዳታቤዝ ነምጽኦ (ብዘይ ሎዲንግ)
@@ -399,7 +412,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const freshUser = await response.json();
                 
                 // ሓዱሽ ዝተቐየረ ነገር እንተሃልዩ ብድሕሪት ቀስ ኢሉ ይቕይሮ
-                if(document.getElementById('profilePic')) document.getElementById('profilePic').src = freshUser.profilePic;
+               if(document.getElementById('profilePic')) document.getElementById('profilePic').src = getImageUrl(freshUser.profilePic);
                 if(document.getElementById('profileName')) document.getElementById('profileName').textContent = freshUser.name;
                 
                 // ነቲ ሓዱሽ ዳታ ድማ ኣብ LocalStorage ንዕቅቦ
