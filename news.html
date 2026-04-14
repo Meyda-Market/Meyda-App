@@ -295,13 +295,31 @@ function getImageUrl(img) {
         // ============================================================================
         // 2. ዜና ኣብ ስክሪን ምስኣልን (Render)
         // ============================================================================
+        async function fetchNews() {
+            try {
+                const response = await fetch('https://meyda-app.onrender.com/api/news');
+                if (response.ok) {
+                    allNews = await response.json();
+                    renderNews();
+                } else {
+                    // 🚀 ሓዱሽ ፕሮ-ማጂክ: ሰርቨር እንተኣብዩ ሎዲንግ ከይተታለልና ክነግረና
+                    document.getElementById('newsFeed').innerHTML = `<div style="text-align: center; color: #ff4757; padding: 30px;"><i class="fas fa-exclamation-circle" style="font-size: 30px; margin-bottom:10px;"></i><br>ጌጋ ኣጋጢሙ: ዜና ክመጽእ ኣይከኣለን (Error ${response.status})</div>`;
+                }
+            } catch (error) {
+                document.getElementById('newsFeed').innerHTML = '<div style="color:red; text-align:center; padding: 30px;">ምስ ሰርቨር ክራኸብ ኣይከኣለን።</div>';
+            }
+        }
+
+        // ============================================================================
+        // 2. ዜና ኣብ ስክሪን ምስኣልን (Render) - Safe Version
+        // ============================================================================
         function renderNews() {
             const feed = document.getElementById('newsFeed');
             feed.innerHTML = '';
 
             let filteredNews = currentFilter === 'all' ? allNews : allNews.filter(n => n.category === currentFilter);
 
-            if (filteredNews.length === 0) {
+            if (!filteredNews || filteredNews.length === 0) {
                 feed.innerHTML = '<div style="text-align: center; color: var(--gray-text); padding: 30px;">ዛጊት ዝተለጥፈ ዜና የለን።</div>';
                 return;
             }
@@ -310,7 +328,11 @@ function getImageUrl(img) {
             const isGodMode = (userRole === 'owner' || userRole === 'admin');
 
             filteredNews.forEach(news => {
-                const isLikedByMe = loggedInUser && news.likes.includes(loggedInUser.id);
+                // 🚀 ሓዱሽ ፕሮ-ማጂክ: ዳታቤዝ ኣረጊት ወይ ባዶ እንተኾይኑ ንስክሪፕትካ ከይቐትሎ ንከላኸል (Safe Fallbacks)
+                const safeLikes = news.likes || []; 
+                const safeComments = news.comments || [];
+
+                const isLikedByMe = loggedInUser && safeLikes.includes(loggedInUser.id);
                 const likeBtnClass = isLikedByMe ? 'fas liked' : 'far';
                 
                 const dateObj = new Date(news.createdAt);
@@ -340,7 +362,7 @@ function getImageUrl(img) {
                 }
 
                 let commentsHTML = '';
-                news.comments.forEach(c => {
+                safeComments.forEach(c => {
                     const canDeleteComment = loggedInUser && (isGodMode || loggedInUser.id === c.userId || loggedInUser.id === news.authorId);
                     const deleteBtn = canDeleteComment ? `<i class="fas fa-times comment-delete" onclick="deleteComment('${news._id}', '${c._id}')"></i>` : '';
                     
@@ -348,7 +370,7 @@ function getImageUrl(img) {
                         <div class="comment-item" data-userid="${c.userId}">
                             <img src="${c.userPic || 'https://via.placeholder.com/40'}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;" onclick="goToProfile('${c.userId}')">
                             <div class="comment-bubble">
-                                <span class="comment-author" onclick="goToProfile('${c.userId}')">${c.userName}</span>
+                                <span class="comment-author" onclick="goToProfile('${c.userId}')">${c.userName || 'User'}</span>
                                 <div class="comment-text">${c.text}</div>
                                 ${deleteBtn}
                             </div>
@@ -362,14 +384,14 @@ function getImageUrl(img) {
                         <div class="news-header">
                             <img src="${news.authorPic || 'https://via.placeholder.com/40'}" class="author-pic" onclick="goToProfile('${news.authorId}')">
                             <div class="author-info">
-                                <div class="author-name" onclick="goToProfile('${news.authorId}')">${news.authorName}</div>
+                                <div class="author-name" onclick="goToProfile('${news.authorId}')">${news.authorName || 'Meyda User'}</div>
                                 <div class="post-time">${timeString} • <i class="fas fa-globe-africa"></i></div>
                             </div>
                             ${optionsHTML}
                         </div>
                         
                         <div class="news-content">
-                            <span class="news-tag">${news.category}</span>
+                            <span class="news-tag">${news.category || 'ሓበሬታ'}</span>
                             ${news.title ? `<div class="news-title">${news.title}</div>` : ''}
                             <div class="news-desc">${news.description}</div>
                         </div>
@@ -377,8 +399,8 @@ function getImageUrl(img) {
                         ${mediaHTML}
                         
                         <div class="news-stats">
-                            <span id="like-count-${news._id}">${news.likes.length} Likes</span>
-                            <span><span id="comment-count-${news._id}">${news.comments.length}</span> Comments</span>
+                            <span id="like-count-${news._id}">${safeLikes.length} Likes</span>
+                            <span><span id="comment-count-${news._id}">${safeComments.length}</span> Comments</span>
                         </div>
                         
                         <div class="action-buttons">
@@ -399,6 +421,8 @@ function getImageUrl(img) {
                     </div>
                 `;
             });
+            
+            // ... እቲ ናይ URL Params ቼክ ዝገብር (setTimeout) ከም ዘለዎ ይቕጽል ...
 
             setTimeout(() => {
                 const urlParams = new URLSearchParams(window.location.search);
