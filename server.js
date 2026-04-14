@@ -119,7 +119,9 @@ const productSchema = new mongoose.Schema({
     icon: { type: String, default: 'fa-box' },
     isPro: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
-    sellerId: { type: String, required: true }
+    sellerId: { type: String, required: true },
+    // 🚀 ሓዱሽ ማጂክ: እዚ ንብረት መዓስ ከም ዝጠፍእ ዝሕዝ (Expiration Date)
+    expiresAt: { type: Date, required: true } 
 });
 const Product = mongoose.model('Product', productSchema);
 
@@ -196,14 +198,21 @@ const Settings = mongoose.model('Settings', settingsSchema);
 // 🤖 ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job)
 // =====================================================================
 cron.schedule('0 0 * * *', async () => {
-    console.log('⏰ ዲጂታላዊ ዘብዐኛ: ግዜኦም ዝሓለፉ ፓኬጃት ይፍትሽ ኣሎ...');
+    console.log('⏰ ዲጂታላዊ ዘብዐኛ: ግዜኦም ዝሓለፉ ፓኬጃትን ኣቕሑትን ይፍትሽ ኣሎ...');
     try {
         const now = new Date();
+        
+        // 1. ፓኬጅ ዝወደቑ ተጠቀምቲ የጻሪ
         const expiredUsers = await User.updateMany(
             { isSubscribed: true, expireDate: { $lt: now } },
             { $set: { isSubscribed: false, packageType: 'none' } }
         );
-        console.log(`✅ ዲጂታላዊ ዘብዐኛ: ${expiredUsers.modifiedCount} ተጠቀምቲ ፓኬጆም ወዲቑ ኣሎ (Expired).`);
+        
+        // 🚀 2. ሓዱሽ: ግዜኦም ዝሓለፉ ኣቕሑት (7 መዓልቲ ወይ 30 መዓልቲ ዝመልኦም) ካብ ዳታቤዝ የጥፍእ
+        const deletedProducts = await Product.deleteMany({ expiresAt: { $lt: now } });
+        
+        console.log(`✅ ዲጂታላዊ ዘብዐኛ: ${expiredUsers.modifiedCount} ተጠቀምቲ ፓኬጆም ወዲቑ ኣሎ.`);
+        console.log(`🧹 ዲጂታላዊ ዘብዐኛ: ${deletedProducts.deletedCount} ዝኣረጉ ኣቕሑት ብዓወት ተደምሲሶም ኣለዉ.`);
     } catch (error) {
         console.error('❌ ዲጂታላዊ ዘብዐኛ ጌጋ ኣጋጢሙዎ:', error);
     }
@@ -229,14 +238,30 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
         const { title, price, category, condition, location, description, sellerId, icon, phone, isPro } = req.body; 
         
-        // ⚠️ ሓዱሽ ለውጢ: ሕጂ `file.path` እዩ ዝውሰድ (እዚ ማለት እታ ናይ Cloudinary ናይ ደበና ሊንክ እዩ)
-        // ናይ ቀደም '/uploads/' ዝብል የለን ምኽንያቱ ስእሊ ኣብ ደበና እዩ ዘሎ
         const imagePaths = req.files ? req.files.map(file => file.path) : [];
         
+        // 🚀 1. ሓበሬታ ናይቲ ሸያጢ ነምጽእ (ፓኬጁ ንምፍላጥ)
+        const seller = await User.findById(sellerId);
+        let daysToLive = 7; // ብዲፎልት 7 መዓልቲ ንገብሮ
+        
+        if (seller && seller.packageType) {
+            if (seller.packageType === '1_week') {
+                daysToLive = 7; // ናይ ሓደ ሰሙን ፓኬጅ፡ ንብረቱ ድሕሪ 7 መዓልቲ ይጠፍእ
+            } else if (seller.packageType !== 'none') {
+                // ናይ ወርሒ, 3 ወርሒ, 6 ወርሒ ወይ ዓመት እንተኾይኑ፡ ንብረት ልዕሊ 30 መዓልቲ ኣይጸንሕን!
+                daysToLive = 30; 
+            }
+        }
+
+        // 🚀 2. እታ ንብረት እትጠፍኣላ ትኽክለኛ ዕለት (Expiration Date) ክንሰርሕ
+        const expireDate = new Date();
+        expireDate.setDate(expireDate.getDate() + daysToLive);
+
         const newProduct = new Product({ 
             title, price, category, condition, location, description, sellerId, icon, phone, 
             isPro: isPro === 'true',
-            images: imagePaths 
+            images: imagePaths,
+            expiresAt: expireDate // 🚀 3. ነታ ዕለት ኣብ ዳታቤዝ ንዕቅባ
         });
         
         await newProduct.save(); 
@@ -361,6 +386,7 @@ app.get('/api/users/:id', async (req, res) => {
         res.status(500).json({ message: "ጌጋ ተፈጢሩ" }); 
     }
 });
+
 // =====================================================================
 // 10. API: ፕሮፋይል ተጠቃሚ ንምምሕያሽ (Edit Profile)
 // =====================================================================
@@ -379,10 +405,6 @@ app.post('/api/upload/profile', upload.single('image'), async (req, res) => {
     }
 });
 
-
-// =====================================================================
-// 10. API: ፕሮፋይል ተጠቃሚ ንምምሕያሽ (Edit Profile)
-// =====================================================================
 app.put('/api/users/:id', async (req, res) => {
     try {
         const { name, bio, profilePic, bannerPic, phone } = req.body;
@@ -594,7 +616,6 @@ app.post('/api/news', upload.single('media'), async (req, res) => {
         
         let mediaUrl = ""; let mediaType = "";
         if (req.file) {
-            // ⚠️ ሓዱሽ ለውጢ: ንዜና ዝኸውን ስእሊ ወይ ቪድዮ እውን ብቐጥታ ካብ Cloudinary (.path) ይውሰድ
             mediaUrl = req.file.path; 
             if (req.file.mimetype.startsWith('video/')) { mediaType = 'video'; } 
             else { mediaType = 'image'; }
