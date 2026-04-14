@@ -543,8 +543,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (response.ok) {
                     document.getElementById('displayTitle').innerText = userData.name;
                     document.getElementById('displayBio').innerText = userData.bio;
-                    document.getElementById('mainProfileImg').src = userData.profilePic;
-                    document.getElementById('mainBannerImg').src = userData.bannerPic;
+                    document.getElementById('mainProfileImg').src = getImageUrl(userData.profilePic);
+                    document.getElementById('mainBannerImg').src = getImageUrl(userData.bannerPic);
                     document.getElementById('followersCount').innerText = userData.followers ? userData.followers.length : 0;
                     
                     const roleBadgeEl = document.getElementById('roleBadge');
@@ -671,7 +671,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             const modalImgArea = document.getElementById('modalImageArea');
             if (product.images && product.images.length > 0) {
-                modalImgArea.innerHTML = `<img src="https://meyda-app.onrender.com${product.images[0]}" style="width:100%; height:100%; object-fit:contain; background:var(--input-bg);">`;
+                modalImgArea.innerHTML = `<img src="${getImageUrl(product.images[0])}" style="width:100%; height:100%; object-fit:contain; background:var(--input-bg);">`;
             } else {
                 modalImgArea.innerHTML = `<div class="product-img-placeholder" style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:50px;"><i class="fas ${product.icon || 'fa-box'}"></i></div>`;
             }
@@ -798,7 +798,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         loadedProductsMap[prod._id] = prod; 
 
                         let imgContent = prod.images && prod.images.length > 0 
-                            ? `<img src="https://meyda-app.onrender.com${prod.images[0]}" class="product-img">` 
+                            ? `<img src="${getImageUrl(prod.images[0])}" class="product-img">` 
                             : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
 
                         let actionsHTML = '';
