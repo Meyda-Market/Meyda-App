@@ -380,11 +380,20 @@
     </div>
 
    <script>
-    // እታ ስእሊ ካብ ደበና ወይ ካብ ሰርቨር ምዃና መለለዪት ማጂክ
+    const API_BASE_URL = "https://meyda-app.onrender.com";
+
 function getImageUrl(img) {
-    if (!img) return 'https://via.placeholder.com/150'; // ስእሊ እንተዘየላ
-    if (img.startsWith('http')) return img; // ካብ Cloudinary እንተኾይኑ
-    return `https://meyda-app.onrender.com${img}`; // ካብ ናይ ቀደም ሰርቨር እንተኾይኑ
+    if (!img) return 'https://via.placeholder.com/150'; 
+    
+    if (img.startsWith('http')) {
+        // ስእሊ ካብ Cloudinary እንተኾይኑ፡ ጸሚቕካ (f_auto,q_auto) ኣምጽኣዮ ንብሎ ኣለና
+        if (img.includes('res.cloudinary.com') && !img.includes('f_auto')) {
+            return img.replace('/upload/', '/upload/f_auto,q_auto,w_800/');
+        }
+        return img;
+    } 
+    
+    return `${API_BASE_URL}${img}`;
 }
 
 // ፕሮፋይል ንምርኣይ (Example usage in your display function)
