@@ -26,7 +26,6 @@ const app = express();
 // =====================================================================
 // 1. መኽዘን ስእልታት (Cloudinary Setup & Fallback)
 // =====================================================================
-// እዚ ናይ ቀደም ፎልደር እዩ (ንኣረገውቲ ስእልታት ምእንቲ ክሰርሕ ኣይነጥፍኦን ኢና)
 if (!fs.existsSync('./uploads')) {
     fs.mkdirSync('./uploads');
 }
@@ -36,14 +35,14 @@ app.use('/uploads', express.static('uploads'));
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'meyda_uploads', // ኣብ Cloudinary ዝፍጠር ፎልደር
-        resource_type: 'auto',   // ስእልን ቪድዮን ንኽቕበል
-        allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp', 'mp4', 'mov'] // ዝፍቀዱ ፋይላት
+        folder: 'meyda_uploads',
+        resource_type: 'auto',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'gif', 'webp', 'mp4', 'mov']
     }
 });
 
 const upload = multer({ 
-    storage: storage, // ሕጂ ስእልታት ብቐጥታ ናብ Cloudinary እዮም ዝኸዱ!
+    storage: storage,
     limits: { fieldSize: 50 * 1024 * 1024 } 
 });
 
@@ -73,15 +72,13 @@ passport.use(new GoogleStrategy({
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
-        // 1. እዚ ተጠቃሚ ቅድሚ ሕጂ ብጉግል ኣትዩ ዶ ይፈልጥ?
         let user = await User.findOne({ email: profile.emails[0].value });
         
         if (!user) {
-            // 2. ሓዱሽ እንተኾይኑ፡ ሓዱሽ ፕሮፋይል ንክፈተሉ
             user = new User({
                 name: profile.displayName,
                 email: profile.emails[0].value,
-                password: "Google_Auth_No_Password", // ፓስዋርድ ኣየድልዮን
+                password: "Google_Auth_No_Password",
                 profilePic: profile.photos[0].value,
                 role: 'user'
             });
@@ -120,8 +117,7 @@ const productSchema = new mongoose.Schema({
     isPro: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now },
     sellerId: { type: String, required: true },
-    // 🚀 ሓዱሽ ማጂክ: እዚ ንብረት መዓስ ከም ዝጠፍእ ዝሕዝ (Expiration Date)
-    expiresAt: { type: Date, required: true } 
+    expiresAt: { type: Date, required: true } // ንኣቕሑት ግዜ መወዳእታ
 });
 const Product = mongoose.model('Product', productSchema);
 
@@ -140,7 +136,6 @@ const userSchema = new mongoose.Schema({
     role: { type: String, enum: ['user', 'admin', 'owner'], default: 'user' }, 
     createdAt: { type: Date, default: Date.now },
     
-    // 🚀 ሓዱሽ ማጂክ: ናይ ፓኬጅ ሓበሬታ (Subscription Data)
     isSubscribed: { type: Boolean, default: false },
     packageType: { type: String, default: 'none' },
     expireDate: { type: Date, default: null }
@@ -182,7 +177,7 @@ const newsSchema = new mongoose.Schema({
         likes: [{ type: String }],
         createdAt: { type: Date, default: Date.now }
     }],
-    createdAt: { type: Date, default: Date.now }
+    createdAt: { type: Date, default: Date.now } // ንዜና እዚኣ እያ መለለዪት ክትኮነና
 });
 const News = mongoose.model('News', newsSchema);
 
@@ -195,10 +190,10 @@ const settingsSchema = new mongoose.Schema({
 const Settings = mongoose.model('Settings', settingsSchema);
 
 // =====================================================================
-// 🤖 ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job)
+// 🤖 ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job) - 🚀 ሓዱሽ: ዜና እውን ይጸርግ!
 // =====================================================================
 cron.schedule('0 0 * * *', async () => {
-    console.log('⏰ ዲጂታላዊ ዘብዐኛ: ግዜኦም ዝሓለፉ ፓኬጃትን ኣቕሑትን ይፍትሽ ኣሎ...');
+    console.log('⏰ ዲጂታላዊ ዘብዐኛ: ግዜኦም ዝሓለፉ ፓኬጃት፣ ኣቕሑትን ዜናታትን ይፍትሽ ኣሎ...');
     try {
         const now = new Date();
         
@@ -208,11 +203,18 @@ cron.schedule('0 0 * * *', async () => {
             { $set: { isSubscribed: false, packageType: 'none' } }
         );
         
-        // 🚀 2. ሓዱሽ: ግዜኦም ዝሓለፉ ኣቕሑት (7 መዓልቲ ወይ 30 መዓልቲ ዝመልኦም) ካብ ዳታቤዝ የጥፍእ
+        // 2. ግዜኦም ዝሓለፉ ኣቕሑት የጥፍእ
         const deletedProducts = await Product.deleteMany({ expiresAt: { $lt: now } });
         
+        // 🚀 3. ሓዱሽ: 6 ወርሒ ዝገበሩ ዜናታት ካብ ዳታቤዝ የጥፍእ!
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6); // ካብ ሎሚ ናብ 6 ወርሒ ንድሕሪት!
+        
+        const deletedNews = await News.deleteMany({ createdAt: { $lt: sixMonthsAgo } });
+        
         console.log(`✅ ዲጂታላዊ ዘብዐኛ: ${expiredUsers.modifiedCount} ተጠቀምቲ ፓኬጆም ወዲቑ ኣሎ.`);
-        console.log(`🧹 ዲጂታላዊ ዘብዐኛ: ${deletedProducts.deletedCount} ዝኣረጉ ኣቕሑት ብዓወት ተደምሲሶም ኣለዉ.`);
+        console.log(`🛍️ ዲጂታላዊ ዘብዐኛ: ${deletedProducts.deletedCount} ዝኣረጉ ኣቕሑት ብዓወት ተደምሲሶም.`);
+        console.log(`📰 ዲጂታላዊ ዘብዐኛ: ${deletedNews.deletedCount} ዝኣረጉ ዜናታት (6 ወርሒ ዝገበሩ) ብዓወት ተደምሲሶም.`);
     } catch (error) {
         console.error('❌ ዲጂታላዊ ዘብዐኛ ጌጋ ኣጋጢሙዎ:', error);
     }
@@ -232,7 +234,7 @@ app.get('/api/products', async (req, res) => {
 });
 
 // =====================================================================
-// 6. API: ሓዱሽ ንብረት ንምምዝጋብ (POST Product) - ☁️ CLOUDINARY UPDATED
+// 6. API: ሓዱሽ ንብረት ንምምዝጋብ (POST Product)
 // =====================================================================
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
@@ -240,20 +242,17 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
         
         const imagePaths = req.files ? req.files.map(file => file.path) : [];
         
-        // 🚀 1. ሓበሬታ ናይቲ ሸያጢ ነምጽእ (ፓኬጁ ንምፍላጥ)
         const seller = await User.findById(sellerId);
-        let daysToLive = 7; // ብዲፎልት 7 መዓልቲ ንገብሮ
+        let daysToLive = 7; 
         
         if (seller && seller.packageType) {
             if (seller.packageType === '1_week') {
-                daysToLive = 7; // ናይ ሓደ ሰሙን ፓኬጅ፡ ንብረቱ ድሕሪ 7 መዓልቲ ይጠፍእ
+                daysToLive = 7; 
             } else if (seller.packageType !== 'none') {
-                // ናይ ወርሒ, 3 ወርሒ, 6 ወርሒ ወይ ዓመት እንተኾይኑ፡ ንብረት ልዕሊ 30 መዓልቲ ኣይጸንሕን!
                 daysToLive = 30; 
             }
         }
 
-        // 🚀 2. እታ ንብረት እትጠፍኣላ ትኽክለኛ ዕለት (Expiration Date) ክንሰርሕ
         const expireDate = new Date();
         expireDate.setDate(expireDate.getDate() + daysToLive);
 
@@ -261,7 +260,7 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
             title, price, category, condition, location, description, sellerId, icon, phone, 
             isPro: isPro === 'true',
             images: imagePaths,
-            expiresAt: expireDate // 🚀 3. ነታ ዕለት ኣብ ዳታቤዝ ንዕቅባ
+            expiresAt: expireDate 
         });
         
         await newProduct.save(); 
@@ -390,14 +389,11 @@ app.get('/api/users/:id', async (req, res) => {
 // =====================================================================
 // 10. API: ፕሮፋይል ተጠቃሚ ንምምሕያሽ (Edit Profile)
 // =====================================================================
-
-// ☁️ ሓዱሽ: ስእሊ ፕሮፋይል ወይ ባነር ናብ ደበና (Cloudinary) ንምጽዓን
 app.post('/api/upload/profile', upload.single('image'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ message: "ስእሊ ኣይተረኽበን" });
         }
-        // እታ 스እሊ ናብ Cloudinary ምስ ከደት፡ እታ ሊንክ ንመልስ
         res.status(200).json({ imageUrl: req.file.path });
     } catch (error) {
         console.error("Profile Image Upload Error:", error);
@@ -587,7 +583,7 @@ app.put('/api/messages/user/:userId/readAll', async (req, res) => {
 });
 
 // =====================================================================
-// 17. APIs ን ዜና (News / Posts) - ☁️ CLOUDINARY UPDATED
+// 17. APIs ን ዜና (News / Posts)
 // =====================================================================
 
 function filterBadWords(text) {
