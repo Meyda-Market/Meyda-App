@@ -262,7 +262,7 @@
         </div>
 
         <div class="form-group">
-            <label>ቦታ (Location)</label>
+            <label id="locationLabel">ቦታ (Location)</label>
             <div class="location-selector" onclick="openRegionModal()">
                 <span id="selectedLocationDisplay" style="color: var(--gray-text);">ክልልን ከተማን ምረጽ...</span>
                 <i class="fas fa-chevron-down" style="color: var(--gray-text);"></i>
@@ -306,6 +306,7 @@
                     <option value="2GB">2GB</option>
                     <option value="4GB">4GB</option>
                     <option value="8GB">8GB</option>
+                    <option value="12GB">12GB</option>
                     <option value="16GB">16GB</option>
                     <option value="32GB+">32GB+</option>
                 </select>
@@ -327,7 +328,7 @@
             <textarea id="desc" rows="4" placeholder="ብዛዕባቲ ንብረት ዝርዝር ሓበሬታ ጸሓፍ..."></textarea>
         </div>
 
-        <div class="form-group phone-group">
+        <div class="form-group phone-group" id="phoneGroup">
             <label style="color: var(--water-blue); font-size: 14px;"><i class="fas fa-phone-alt"></i> መደወሊ ስልኪ (Phone Number)</label>
             <div class="phone-input-wrapper">
                 <div class="country-code">🇪🇹 +251</div>
@@ -657,21 +658,24 @@
             document.getElementById('priceGroup').style.display = 'none';
             document.getElementById('catCondGroup').style.display = 'none';
             document.getElementById('dynamicTechSpecs').style.display = 'none';
+            
+            // 🚀 ሓዱሽ ማጂክ: ነቲ ናይ ስልኪ ፎርም ብምሉኡ ንሓብኦ
+            document.getElementById('phoneGroup').style.display = 'none';
 
             // ን Advert ዝምችው ጽሑፋት ይቕየሩ
             document.getElementById('titleLabel').innerHTML = '<i class="fas fa-building"></i> ስም ትካል (Business / Brand Name)';
             document.getElementById('title').placeholder = 'ንኣብነት፦ ስካይላይት ሆቴል / ABC Real Estate';
             
+            // 🚀 ሓዱሽ ማጂክ: ቦታ (Location) ምርጫ ምዃኑ ይነግሮ
+            document.getElementById('locationLabel').innerHTML = 'ቦታ (Location) - <span style="color:var(--gray-text); font-size:11px;">ምርጫ (Optional)</span>';
+            
             document.getElementById('descLabel').innerHTML = 'መግለጺ ማስታወቂያ (Advert Description)';
             document.getElementById('desc').placeholder = 'ብዛዕባ ትካልኩም ወይ ኣገልግሎትኩም ሰፊሕ መግለጺ ጸሓፉ...';
-            
-            document.getElementById('phoneHelp').innerText = 'ዓማዊል ምስ ትካልኩም ቀጥታ ዝራኸቡላ ቁጽሪ (ንኣብነት፡ 944123456)';
 
             // Advert Badge ንምርኣይ
             document.getElementById('vendorStatus').style.display = 'none';
             document.getElementById('advertBadge').style.display = 'block';
         }
-
 
         async function postFinal() {
             const loggedInUser = getLoggedInUser();
@@ -730,14 +734,20 @@
                 if(categoryValue === 'furniture') iconValue = 'fa-couch';
                 if(categoryValue === 'laptop') iconValue = 'fa-laptop';
 
-            } else {
+           } else {
                 // ን Advert
-                if(!titleValue || !locationValue || !phoneInput) { 
-                    alert("በጃኹም ስም ትካልኩም፣ ቦታን ስልክን ብትኽክል ምልኡ!"); return; 
+                if(!titleValue) { 
+                    alert("በጃኹም ስም ትካልኩም ብትኽክል ምልኡ!"); return; 
+                }
+                
+                // 🚀 ሓዱሽ ማጂክ: ቦታ እንተዘይመሊኡዎ፡ ሰርቨር ከይኣቢ "ኩሉ ቦታ" ንብሎ
+                if(!locationValue) {
+                    locationValue = "ኩሉ ቦታ (All Regions)";
                 }
             }
 
-            const finalPhone = "+251" + phoneInput.replace(/^0+/, ''); 
+            // 🚀 ሓዱሽ ማጂክ: ስልኪ እንተዘይኣትዩ (ንኣብነት ኣብ Advert) ባዶ ይገብሮ
+            const finalPhone = phoneInput ? "+251" + phoneInput.replace(/^0+/, '') : "";
 
             const formData = new FormData();
             formData.append('title', titleValue);
