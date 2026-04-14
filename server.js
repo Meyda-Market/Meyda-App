@@ -115,6 +115,8 @@ const productSchema = new mongoose.Schema({
     images: [{ type: String }],
     icon: { type: String, default: 'fa-box' },
     isPro: { type: Boolean, default: false },
+    // 🚀 ሓዱሽ ማጂክ: ዓይነት ፖስት (ንቡር መሸጣ ድዩ ወይስ መወዓውዒ?)
+    adType: { type: String, default: 'market' },
     createdAt: { type: Date, default: Date.now },
     sellerId: { type: String, required: true },
     expiresAt: { type: Date, required: true } // ንኣቕሑት ግዜ መወዳእታ
@@ -238,18 +240,31 @@ app.get('/api/products', async (req, res) => {
 // =====================================================================
 app.post('/api/products', upload.array('images', 5), async (req, res) => {
     try {
-        const { title, price, category, condition, location, description, sellerId, icon, phone, isPro } = req.body; 
+        // 🚀 ሓዱሽ ማጂክ: adType ተወሲኻ ኣላ 
+        const { title, price, category, condition, location, description, sellerId, icon, phone, isPro, adType } = req.body; 
         
         const imagePaths = req.files ? req.files.map(file => file.path) : [];
         
         const seller = await User.findById(sellerId);
-        let daysToLive = 7; 
+        let daysToLive = 7; // ብዲፎልት 7 መዓልቲ
         
+        // 🚀 ሓዱሽ ማጂክ: Advert እንተኾይኑ ዋላ ካብ 30 መዓልቲ ንላዕሊ ክጸንሕ ፍቐደሉ
+        const isAdvert = adType === 'advert';
+
         if (seller && seller.packageType) {
-            if (seller.packageType === '1_week') {
-                daysToLive = 7; 
-            } else if (seller.packageType !== 'none') {
-                daysToLive = 30; 
+            if (isAdvert) {
+                // Advert Packages
+                if (seller.packageType === '1_month') daysToLive = 30;
+                else if (seller.packageType === '3_months') daysToLive = 90;
+                else if (seller.packageType === '6_months') daysToLive = 180;
+                else if (seller.packageType === '1_year') daysToLive = 365;
+            } else {
+                // Normal Market Packages
+                if (seller.packageType === '1_week') {
+                    daysToLive = 7; 
+                } else if (seller.packageType !== 'none') {
+                    daysToLive = 30; 
+                }
             }
         }
 
@@ -259,6 +274,7 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
         const newProduct = new Product({ 
             title, price, category, condition, location, description, sellerId, icon, phone, 
             isPro: isPro === 'true',
+            adType: adType || 'market', // Advert ድዩ ወይስ Market ኣብ ዳታቤዝ ይምዝገብ
             images: imagePaths,
             expiresAt: expireDate 
         });
@@ -270,7 +286,6 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
         res.status(500).json({ message: "ንብረት ምምዝጋብ ኣይተኻእለን。" }); 
     }
 });
-
 // =====================================================================
 // 7. API: ሓዱሽ ተጠቃሚ ንምምዝጋብ (Sign Up)
 // =====================================================================

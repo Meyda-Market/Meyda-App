@@ -48,7 +48,12 @@
         .back-btn { font-size: 20px; color: var(--text-color); text-decoration: none; }
         .theme-toggle { background: none; border: none; color: var(--text-color); font-size: 20px; cursor: pointer; }
         
-        .pro-ad-btn { background: #ffd700; color: #333; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 215, 0, 0.4); margin-right: 15px;}
+        /* 🚀 ሓዱሽ ማጂክ: Dropdown Menu ን PRO */
+        .pro-ad-btn { background: #ffd700; color: #333; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer; box-shadow: 0 2px 5px rgba(255, 215, 0, 0.4); margin-right: 10px;}
+        .pro-menu { display: none; position: absolute; right: 40px; top: 50px; background: var(--white); box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 12px; overflow: hidden; z-index: 200; border: 1px solid var(--border-color); width: 220px; animation: fadeIn 0.2s; }
+        .pro-menu-item { padding: 12px 15px; cursor: pointer; font-size: 14px; font-weight: bold; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; transition: 0.2s; }
+        .pro-menu-item:hover { background: var(--input-bg); }
+        .pro-menu-item.advert { color: #d4af37; border-bottom: none; }
 
         .container { padding: 20px; max-width: 600px; margin: 0 auto; }
 
@@ -72,6 +77,13 @@
             padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: bold;
             border: 1px solid #2ecc71; transition: 0.3s;
         }
+        
+        .advert-mode-badge {
+            display: none; background: rgba(212, 175, 55, 0.1); color: #d4af37;
+            padding: 10px; border-radius: 10px; text-align: center; margin-bottom: 20px; font-weight: bold;
+            border: 1px solid #d4af37; transition: 0.3s; animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); } 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); } }
 
         /* Image Upload Section */
         .image-upload-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: none; }
@@ -200,14 +212,27 @@
     <div class="header">
         <a href="home.html" class="back-btn"><i class="fas fa-arrow-left"></i></a>
         <h2>ንብረት መዝግብ (Post Ad)</h2>
-        <button class="pro-ad-btn" onclick="openProAdModal()"><i class="fas fa-crown"></i> PRO</button>
-        <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+        
+        <div style="position: relative; display: flex; gap: 10px; align-items: center;">
+            <button class="pro-ad-btn" onclick="toggleProMenu(event)"><i class="fas fa-crown"></i> PRO</button>
+            
+            <div id="proMenu" class="pro-menu">
+                <div class="pro-menu-item" onclick="openPaymentModal('market_pro')">
+                    <i class="fas fa-store" style="color: var(--water-blue);"></i> PRO Market (መሸጣ)
+                </div>
+                <div class="pro-menu-item advert" onclick="openPaymentModal('advert_pro')">
+                    <i class="fas fa-bullhorn"></i> PRO Advert (መወዓውዒ)
+                </div>
+            </div>
+
+            <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
+        </div>
     </div>
 
     <div class="container">
         
-        <div class="vendor-status" id="vendorStatus">
-            </div>
+        <div class="vendor-status" id="vendorStatus"></div>
+        <div class="advert-mode-badge" id="advertBadge"><i class="fas fa-crown"></i> Advert Mode: ትካልኩም ብብራንድ የማዕርጉ!</div>
 
         <div class="shop-promo-card" id="promoCard">
             <h3><i class="fas fa-store"></i> ድኳን ተኻረዩ (Premium Vendor)</h3>
@@ -216,7 +241,7 @@
         </div>
 
         <div class="form-group" style="background: transparent; box-shadow: none; padding: 0;">
-            <label style="color: var(--text-color); font-size: 15px;">ስእልታት ንብረት (<span id="imgCount">0</span>/5)</label>
+            <label style="color: var(--text-color); font-size: 15px;">ስእልታት ወይ ባነር (<span id="imgCount">0</span>/5)</label>
             <div class="image-upload-container" id="imageArea">
                 <label class="upload-box" for="fileInput" id="uploadBox">
                     <i class="fas fa-camera" style="font-size: 28px;"></i>
@@ -227,11 +252,11 @@
         </div>
 
         <div class="form-group">
-            <label>ስም ንብረት (Title)</label>
+            <label id="titleLabel">ስም ንብረት (Title)</label>
             <input type="text" id="title" placeholder="ንኣብነት፦ Samsung S21 Ultra" required>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="priceGroup">
             <label>ዋጋ (Price in ETB)</label>
             <input type="number" id="price" placeholder="0.00" required>
         </div>
@@ -245,7 +270,7 @@
             <input type="hidden" id="finalLocation" value="">
         </div>
 
-        <div style="display: flex; gap: 15px;">
+        <div style="display: flex; gap: 15px;" id="catCondGroup">
             <div class="form-group" style="flex: 1;">
                 <label>ምድብ (Category)</label>
                 <select id="category" required onchange="checkCategory()">
@@ -298,17 +323,17 @@
         </div>
 
         <div class="form-group">
-            <label>መግለጺ (Description)</label>
+            <label id="descLabel">መግለጺ (Description)</label>
             <textarea id="desc" rows="4" placeholder="ብዛዕባቲ ንብረት ዝርዝር ሓበሬታ ጸሓፍ..."></textarea>
         </div>
 
         <div class="form-group phone-group">
-            <label style="color: var(--water-blue); font-size: 14px;"><i class="fas fa-phone-alt"></i> መደወሊ ስልኪ ንዓደግቲ (Phone Number)</label>
+            <label style="color: var(--water-blue); font-size: 14px;"><i class="fas fa-phone-alt"></i> መደወሊ ስልኪ (Phone Number)</label>
             <div class="phone-input-wrapper">
                 <div class="country-code">🇪🇹 +251</div>
                 <input type="tel" id="productPhone" class="phone-input" placeholder="911 23 45 67" required>
             </div>
-            <small style="color: var(--gray-text); font-size: 11px; margin-top: 8px; display: block;">
+            <small style="color: var(--gray-text); font-size: 11px; margin-top: 8px; display: block;" id="phoneHelp">
                 ዓደግቲ ነዚ ኣቕሓ ክዕድጉ ከለዉ ቀጥታ ዝድውሉላ ቁጽሪ እያ (ንኣብነት፡ 944123456)
             </small>
         </div>
@@ -349,7 +374,7 @@
     <div class="success-overlay" id="successScreen">
         <div class="success-icon"><i class="fas fa-check-circle"></i></div>
         <h2 style="color: var(--text-color);">ብጽቡቕ ተለጢፉ!</h2>
-        <p style="color: var(--gray-text); margin-bottom: 30px;">ንብረትካ ሕጂ ኣብ ዕዳጋ Meyda Market ይርአ ኣሎ。</p>
+        <p style="color: var(--gray-text); margin-bottom: 30px;">ንብረትካ/ትካልካ ሕጂ ኣብ ዕዳጋ Meyda Market ይርአ ኣሎ。</p>
         <button class="submit-btn" style="width:250px;" onclick="window.location.href='home.html'"><i class="fas fa-home"></i> ናብ ዕዳጋ ተመለስ</button>
     </div>
 
@@ -365,6 +390,7 @@
         // 🚀 ሓዱሽ ማጂክ: Global Variables
         let isPostingFree = false; 
         let globalHasAccess = false;
+        let currentAdType = 'market'; // ብዲፎልት 'market' እዩ
 
         function getLoggedInUser() {
             try {
@@ -391,12 +417,10 @@
                 return;
             }
 
-            // 🚀 ሓዱሽ ማጂክ: ሰርቨር ቼክ (Check Master Switch)
             try {
                 const statsRes = await fetch('https://meyda-app.onrender.com/api/admin/stats');
                 if(statsRes.ok) {
                     const stats = await statsRes.json();
-                    // requireSubscription 'false' እንተኾይኑ፡ ነጻ እዩ (Free)
                     if(stats.requireSubscription === false) {
                         isPostingFree = true;
                     }
@@ -405,7 +429,6 @@
                 console.log("Settings fetch error", e); 
             }
 
-            // 🛡️ መቆጻጸሪት ኬላ (Checkpoint Access Logic)
             globalHasAccess = isPostingFree || loggedInUser.isSubscribed || loggedInUser.isPremiumVendor || loggedInUser.role === 'owner' || loggedInUser.role === 'admin';
 
             const vendorStatusEl = document.getElementById('vendorStatus');
@@ -415,7 +438,6 @@
                 promoCardEl.style.display = 'none';
                 vendorStatusEl.style.display = 'block';
                 
-                // 🎁 ሓዱሽ UI: ንነጻ ተጠቀምቲ ፍሉይ ጽሑፍ
                 if (isPostingFree && !loggedInUser.isSubscribed && loggedInUser.role === 'user') {
                     vendorStatusEl.style.backgroundColor = 'rgba(251, 133, 0, 0.1)';
                     vendorStatusEl.style.color = 'var(--accent)';
@@ -437,7 +459,22 @@
             document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
 
+        // 🚀 PRO Dropdown Logic
+        function toggleProMenu(e) {
+            e.stopPropagation();
+            const menu = document.getElementById('proMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        window.onclick = function(e) {
+            if (!e.target.matches('.pro-ad-btn')) {
+                const menu = document.getElementById('proMenu');
+                if (menu && menu.style.display === 'block') menu.style.display = 'none';
+            }
+        }
+
         function checkCategory() {
+            if (currentAdType === 'advert') return; // ን Advert ቴክ ስፔክ ኣየድልን
             const cat = document.getElementById('category').value;
             const techSpecs = document.getElementById('dynamicTechSpecs');
             
@@ -491,6 +528,7 @@
             document.getElementById('uploadBox').style.display = 'flex'; 
         }
 
+        // Region Logic (Unchanged)
         const locationsData = {
             "Tigray": ["Mekelle", "Adigrat", "Alamata", "Adwa", "Axum", "Shire", "Humera", "Wukro"],
             "Afar": ["Semera", "Asayta", "Awash"],
@@ -538,14 +576,22 @@
             finalLocation.value = locText; closeRegionModal();
         }
 
-        // PRO AD Payment Logic
+        // 🚀 PRO AD & ADVERT Payment Logic
         let currentPaymentType = ''; 
         let selectedPrice = 0;
 
-        const proAdPackages = [
-            { id: 'p1', name: 'ኣብ ባነር ን 3 መዓልቲ', price: 300 },
-            { id: 'p2', name: 'ኣብ ባነር ን 1 ሰሙን', price: 600 },
-            { id: 'p3', name: 'ኣብ ባነር ን 1 ወርሒ', price: 2000 }
+        const marketProPackages = [
+            { id: 'm1', name: 'ኣብ ባነር ን 3 መዓልቲ', price: 300 },
+            { id: 'm2', name: 'ኣብ ባነር ን 1 ሰሙን', price: 600 },
+            { id: 'm3', name: 'ኣብ ባነር ን 1 ወርሒ', price: 2000 }
+        ];
+
+        // 🚀 ሓዱሽ: ን Advert ፍሉይ ፓኬጃት (ካብ 1 ወርሒ ክሳብ 1 ዓመት)
+        const advertProPackages = [
+            { id: 'a1', name: 'መወዓውዒ ን 1 ወርሒ (1 Month)', price: 3000 },
+            { id: 'a2', name: 'መወዓውዒ ን 3 ወርሒ (3 Months)', price: 8000 },
+            { id: 'a3', name: 'መወዓውዒ ን 6 ወርሒ (6 Months)', price: 15000 },
+            { id: 'a4', name: 'መወዓውዒ ን 1 ዓመት (1 Year)', price: 25000 }
         ];
 
         function openPaymentModal(type) { 
@@ -559,10 +605,14 @@
 
             let packagesToLoad = [];
 
-            if (type === 'pro_ad') {
-                titleEl.innerText = "PRO ማስታወቂያ (Hero Banner)";
-                descEl.innerText = "ትካልኩም ወይ ንብረትኩም ኣብቲ ናይ መጀመርያ ገጽ (Home) ብሰፊሑ ንኽረአ ምረጹ።";
-                packagesToLoad = proAdPackages;
+            if (type === 'market_pro') {
+                titleEl.innerText = "PRO Market (ንቡር ባነር)";
+                descEl.innerText = "ንብረትኩም ኣብቲ ናይ መጀመርያ ገጽ ብሰፊሑ ንኽረአ ምረጹ።";
+                packagesToLoad = marketProPackages;
+            } else if (type === 'advert_pro') {
+                titleEl.innerText = "PRO Advert (መወዓውዒ ትካል)";
+                descEl.innerText = "ትካልኩም ብብራንድ የማዕርጉ! ስእሊ/ቪድዮን ሓበሬታን ኣብቲ ባነር ክስቀል እዩ።";
+                packagesToLoad = advertProPackages;
             }
 
             packagesToLoad.forEach(pkg => {
@@ -577,7 +627,6 @@
             document.getElementById('paymentModal').style.display = 'flex'; 
         }
 
-        function openProAdModal() { openPaymentModal('pro_ad'); }
         function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
 
         function selectPkg(el, price) {
@@ -589,65 +638,110 @@
             if(selectedPrice === 0) { alert("በጃኹም ቅድም ሓደ ፓኬጅ ምረጹ!"); return; }
             alert(`✅ ብ ${method} ዝተፈጸመ ናይ ${selectedPrice} ETB ክፍሊት ብዓወት ተቐቢልና ኣለና!`);
             closePaymentModal();
-            if (currentPaymentType === 'pro_ad') {
-                alert("ማስታወቂያኹም ኣብ ናይ መጀመርያ ገጽ (Hero Banner) ክወጽእ እዩ። የቐንየልና!");
+            
+            // 🚀 ሓዱሽ ማጂክ: ክፍሊት Advert ምስ ተፈጸመ UI ናብ Advert ይቕየር!
+            if (currentPaymentType === 'advert_pro') {
+                applyAdvertUI();
+                alert("ማስታወቂያኹም ክፍሊት ተቐቢልና ኣለና። ሕጂ ስም ትካልኩምን መግለጽን ምልኡ!");
+            } else if (currentPaymentType === 'market_pro') {
+                currentAdType = 'market';
+                alert("ክፍሊትኩም ተቐቢልና ኣለና። ንብረትኩም ኣብ ባነር ክወጽእ እዩ!");
             }
         }
+
+        // 🚀 ሓዱሽ ማጂክ: Dynamic Form Changer (ን Advert)
+        function applyAdvertUI() {
+            currentAdType = 'advert';
+            
+            // እቶም ን Advert ዘየድልዩ ይሕብኡ
+            document.getElementById('priceGroup').style.display = 'none';
+            document.getElementById('catCondGroup').style.display = 'none';
+            document.getElementById('dynamicTechSpecs').style.display = 'none';
+
+            // ን Advert ዝምችው ጽሑፋት ይቕየሩ
+            document.getElementById('titleLabel').innerHTML = '<i class="fas fa-building"></i> ስም ትካል (Business / Brand Name)';
+            document.getElementById('title').placeholder = 'ንኣብነት፦ ስካይላይት ሆቴል / ABC Real Estate';
+            
+            document.getElementById('descLabel').innerHTML = 'መግለጺ ማስታወቂያ (Advert Description)';
+            document.getElementById('desc').placeholder = 'ብዛዕባ ትካልኩም ወይ ኣገልግሎትኩም ሰፊሕ መግለጺ ጸሓፉ...';
+            
+            document.getElementById('phoneHelp').innerText = 'ዓማዊል ምስ ትካልኩም ቀጥታ ዝራኸቡላ ቁጽሪ (ንኣብነት፡ 944123456)';
+
+            // Advert Badge ንምርኣይ
+            document.getElementById('vendorStatus').style.display = 'none';
+            document.getElementById('advertBadge').style.display = 'block';
+        }
+
 
         async function postFinal() {
             const loggedInUser = getLoggedInUser();
             if (!loggedInUser) { alert("በጃኹም ቅድም ሎግ-ኢን ግበሩ (Sign In)!"); window.location.href = 'index.html'; return; }
 
-            // 🚀 ሓዱሽ ማጂክ: Checkpoint! ንብረት ቅድሚ ምልጣፉ መሊሱ ይፍትሽ። 
             if (!globalHasAccess) {
                 alert("በጃኹም ንብረት ቅድሚ ምልጣፍኩም ናይ መሸጣ ፓኬጅ (Subscription) ምረጹ!");
-                window.location.href = 'packages.html'; // ብቐጥታ ናብታ ሓዳስ ፔጅ ይድርብዮ
+                window.location.href = 'packages.html'; 
                 return;
             }
 
             const titleValue = document.getElementById('title').value;
-            const priceValue = document.getElementById('price').value;
             const locationValue = document.getElementById('finalLocation').value;
-            const categoryValue = document.getElementById('category').value;
-            const conditionValue = document.getElementById('condition').value;
             let descValue = document.getElementById('desc').value;
             const phoneInput = document.getElementById('productPhone').value.trim();
 
-            if(!titleValue || !priceValue || !locationValue || !categoryValue || !phoneInput) { 
-                alert("በጃኹም ስም ንብረት፣ ዋጋ፣ ቦታን ስልክን ብትኽክል ምልኡ!"); return; 
-            }
+            let priceValue = '0 Br';
+            let categoryValue = 'advert';
+            let conditionValue = 'new';
+            let iconValue = 'fa-bullhorn'; // Default ን Advert
+            
+            // 🚀 ሓዱሽ ማጂክ: ናይ Validation ፍልልይ (Advert vs Market)
+            if (currentAdType === 'market') {
+                priceValue = document.getElementById('price').value + " Br";
+                categoryValue = document.getElementById('category').value;
+                conditionValue = document.getElementById('condition').value;
 
-            if (categoryValue === 'mobile' || categoryValue === 'laptop') {
-                const ram = document.getElementById('ramSelect').value;
-                const storage = document.getElementById('storageSelect').value;
-                const screen = document.getElementById('screenSelect').value;
-                
-                let specsArray = [];
-                if(ram) specsArray.push(`RAM: ${ram}`);
-                if(storage) specsArray.push(`Storage: ${storage}`);
-                if(screen) specsArray.push(`Screen: ${screen}`);
-                
-                if(specsArray.length > 0) {
-                    descValue = descValue + "\n\n🛠️ ቴክኒካዊ ሓበሬታ (Tech Specs):\n" + specsArray.join(' | ');
+                if(!titleValue || !document.getElementById('price').value || !locationValue || !categoryValue || !phoneInput) { 
+                    alert("በጃኹም ስም ንብረት፣ ዋጋ፣ ቦታን ስልክን ብትኽክል ምልኡ!"); return; 
+                }
+
+                // Tech Specs (Only for Mobile & Laptop)
+                if (categoryValue === 'mobile' || categoryValue === 'laptop') {
+                    const ram = document.getElementById('ramSelect').value;
+                    const storage = document.getElementById('storageSelect').value;
+                    const screen = document.getElementById('screenSelect').value;
+                    
+                    let specsArray = [];
+                    if(ram) specsArray.push(`RAM: ${ram}`);
+                    if(storage) specsArray.push(`Storage: ${storage}`);
+                    if(screen) specsArray.push(`Screen: ${screen}`);
+                    
+                    if(specsArray.length > 0) {
+                        descValue = descValue + "\n\n🛠️ ቴክኒካዊ ሓበሬታ (Tech Specs):\n" + specsArray.join(' | ');
+                    }
+                }
+
+                // Dynamic Icons
+                if(categoryValue === 'vehicles') iconValue = 'fa-car';
+                if(categoryValue === 'electronics') iconValue = 'fa-tv';
+                if(categoryValue === 'mobile') iconValue = 'fa-mobile-alt';
+                if(categoryValue === 'music') iconValue = 'fa-guitar';
+                if(categoryValue === 'fashion') iconValue = 'fa-tshirt';
+                if(categoryValue === 'houses') iconValue = 'fa-home';
+                if(categoryValue === 'sports') iconValue = 'fa-futbol';
+                if(categoryValue === 'furniture') iconValue = 'fa-couch';
+                if(categoryValue === 'laptop') iconValue = 'fa-laptop';
+
+            } else {
+                // ን Advert
+                if(!titleValue || !locationValue || !phoneInput) { 
+                    alert("በጃኹም ስም ትካልኩም፣ ቦታን ስልክን ብትኽክል ምልኡ!"); return; 
                 }
             }
 
             const finalPhone = "+251" + phoneInput.replace(/^0+/, ''); 
 
-            let iconValue = 'fa-box';
-            if(categoryValue === 'vehicles') iconValue = 'fa-car';
-            if(categoryValue === 'electronics') iconValue = 'fa-tv';
-            if(categoryValue === 'mobile') iconValue = 'fa-mobile-alt';
-            if(categoryValue === 'music') iconValue = 'fa-guitar';
-            if(categoryValue === 'fashion') iconValue = 'fa-tshirt';
-            if(categoryValue === 'houses') iconValue = 'fa-home';
-            if(categoryValue === 'sports') iconValue = 'fa-futbol';
-            if(categoryValue === 'furniture') iconValue = 'fa-couch';
-            if(categoryValue === 'laptop') iconValue = 'fa-laptop';
-
             const formData = new FormData();
             formData.append('title', titleValue);
-            formData.append('price', priceValue + " Br");
+            formData.append('price', priceValue);
             formData.append('category', categoryValue);
             formData.append('condition', conditionValue);
             formData.append('location', locationValue);
@@ -655,9 +749,13 @@
             formData.append('icon', iconValue);
             formData.append('sellerId', loggedInUser.id); 
             formData.append('phone', finalPhone);
+            
+            // 🚀 ሓዱሽ ማጂክ: ንሰርቨር "እዚ ኣድቨርት ድዩ ወይስ ማርኬት?" ንብሎ ኣለና
+            formData.append('adType', currentAdType); 
 
-            const isProAd = currentPaymentType === 'pro_ad' && selectedPrice > 0;
-            formData.append('isPro', isProAd); 
+            // ናይ ክፍሊት ኩነታት ይተሓሓዝ
+            const isPro = currentPaymentType === 'market_pro' || currentPaymentType === 'advert_pro';
+            formData.append('isPro', isPro); 
 
             for(let i = 0; i < selectedFiles.length; i++) {
                 if(selectedFiles[i] !== null) {
