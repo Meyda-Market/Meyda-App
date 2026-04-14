@@ -361,6 +361,24 @@ app.get('/api/users/:id', async (req, res) => {
         res.status(500).json({ message: "ጌጋ ተፈጢሩ" }); 
     }
 });
+// =====================================================================
+// 10. API: ፕሮፋይል ተጠቃሚ ንምምሕያሽ (Edit Profile)
+// =====================================================================
+
+// ☁️ ሓዱሽ: ስእሊ ፕሮፋይል ወይ ባነር ናብ ደበና (Cloudinary) ንምጽዓን
+app.post('/api/upload/profile', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "ስእሊ ኣይተረኽበን" });
+        }
+        // እታ 스እሊ ናብ Cloudinary ምስ ከደት፡ እታ ሊንክ ንመልስ
+        res.status(200).json({ imageUrl: req.file.path });
+    } catch (error) {
+        console.error("Profile Image Upload Error:", error);
+        res.status(500).json({ message: "ስእሊ ምጽዓን ኣይተኻእለን" });
+    }
+});
+
 
 // =====================================================================
 // 10. API: ፕሮፋይል ተጠቃሚ ንምምሕያሽ (Edit Profile)

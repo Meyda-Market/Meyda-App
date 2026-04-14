@@ -1125,27 +1125,65 @@ document.addEventListener("DOMContentLoaded", async () => {
             document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
         }
 
-        let currentImageType = ''; let tempImageData = '';
-        function openImageModal(input, type) {
-            if (input.files && input.files[0]) {
-                currentImageType = type;
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    tempImageData = e.target.result;
-                    document.getElementById('previewImgElement').src = tempImageData;
-                    document.getElementById('imageModalTitle').innerText = (type === 'profile') ? 'Update Profile Picture' : 'Update Banner';
-                    document.getElementById('imageModal').style.display = 'flex';
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-            input.value = ''; 
-        }
+        let currentImageType = ''; 
+let tempImageData = '';
+let currentImageFile = null; // 🚀 ሓዱሽ: ነታ ሓቀኛ ፋይል ንሕዘላ
 
-        function applyImage() {
-            if (currentImageType === 'profile') document.getElementById('mainProfileImg').src = tempImageData;
-            else if (currentImageType === 'banner') document.getElementById('mainBannerImg').src = tempImageData;
-            closeModal('imageModal'); updateProfileOnServer(); 
+function openImageModal(input, type) {
+    if (input.files && input.files[0]) {
+        currentImageType = type;
+        currentImageFile = input.files[0]; // 🚀 እታ ፋይል ኣብዚኣ ተታሒዛ ኣላ
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            tempImageData = e.target.result;
+            document.getElementById('previewImgElement').src = tempImageData;
+            document.getElementById('imageModalTitle').innerText = (type === 'profile') ? 'Update Profile Picture' : 'Update Banner';
+            document.getElementById('imageModal').style.display = 'flex';
         }
+        reader.readAsDataURL(input.files[0]);
+    }
+    input.value = ''; 
+}
+
+async function applyImage() {
+    closeModal('imageModal'); 
+    if (!currentImageFile) return;
+
+    // ሎዲንግ ምልክት ንምርኣይ (ግዘ ክሳብ ዝወስድ)
+    const targetImgId = currentImageType === 'profile' ? 'mainProfileImg' : 'mainBannerImg';
+    document.getElementById(targetImgId).style.opacity = '0.5'; 
+
+    // ነታ ፋይል ንምስዳድ ነዳሉ (FormData)
+    const formData = new FormData();
+    formData.append('image', currentImageFile);
+
+    try {
+        // 🚀 1. ናብታ ኣብ server.js ዝፈጠርናያ ሓዳስ ሻምብቆ (Cloudinary) ንሰዳ
+        const uploadRes = await fetch(`${API_BASE_URL}/api/upload/profile`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (uploadRes.ok) {
+            const data = await uploadRes.json();
+            
+            // 🚀 2. እታ ካብ ደበና (Cloudinary) ዝመጸት ሊንክ ኣብ ስክሪን ነርእያ
+            document.getElementById(targetImgId).src = getImageUrl(data.imageUrl);
+            document.getElementById(targetImgId).style.opacity = '1';
+            
+            // 🚀 3. ብድሕሪኡ ነቲ ፕሮፋይል ዳታቤዝ ብዓወት ንሕድሶ!
+            updateProfileOnServer(); 
+        } else {
+            alert("ስእሊ ናብ ደበና ምጽዓን ኣይተኻእለን።");
+            document.getElementById(targetImgId).style.opacity = '1';
+        }
+    } catch (error) {
+        console.error("Upload Error:", error);
+        alert("ምስ ሰርቨር ኣይተራኸበን።");
+        document.getElementById(targetImgId).style.opacity = '1';
+    }
+}
 
         function openProfileEditModal() {
             document.getElementById('inputName').value = document.getElementById('displayTitle').innerText;
