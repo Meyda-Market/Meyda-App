@@ -531,13 +531,17 @@ app.post('/api/products/:id/report', async (req, res) => {
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
 
+        // 🛡️ Bulletproof: ኣረጊት ንብረት እንተኾይኑ ሳጹን ሪፖርት ባዕሉ ይፍጠር
+        if (!product.reports) product.reports = [];
+
         if (!product.reports.includes(userId)) {
             product.reports.push(userId);
             await product.save();
         }
         res.status(200).json({ message: "ሪፖርትኩም ተቐቢልናዮ ኣለና። የቐንየልና!", reportsCount: product.reports.length });
     } catch (error) {
-        res.status(500).json({ message: "ሪፖርት ምግባር ኣይተኻእለን።" });
+        console.error("Report Error:", error);
+        res.status(500).json({ message: "ሪፖርት ምግባር ኣይተኻእለን。" });
     }
 });
 
@@ -550,12 +554,16 @@ app.post('/api/products/:id/comment', async (req, res) => {
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
 
+        // 🛡️ Bulletproof: ኣረጊት ንብረት እንተኾይኑ ሳጹን ኮሜንት ባዕሉ ይፍጠር
+        if (!product.comments) product.comments = [];
+
         const newComment = { userId, userName, userPic, text };
         product.comments.push(newComment);
         await product.save();
 
         res.status(201).json({ message: "ኮሜንትኩም ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
+        console.error("Comment Error:", error);
         res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን。" });
     }
 });
@@ -572,12 +580,16 @@ app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
         const comment = product.comments.id(req.params.commentId);
         if (!comment) return res.status(404).json({ message: "ኮሜንት ኣይተረኽበን" });
 
+        // 🛡️ Bulletproof: ኣረጊት ኮሜንት እንተኾይኑ ሳጹን ሪፕላይ ባዕሉ ይፍጠር
+        if (!comment.replies) comment.replies = [];
+
         const newReply = { userId, userName, userPic, text };
         comment.replies.push(newReply);
         await product.save();
 
         res.status(201).json({ message: "ሪፕላይ ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
+        console.error("Reply Error:", error);
         res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን。" });
     }
 });
