@@ -936,9 +936,10 @@
                 ? `<img src="${sellerPic}" alt="Seller">` 
                 : `<i class="fas fa-user"></i>`;
 
+            // 👇 ካብ መስመር 939 ጀሚርካ በዚ ተክኣዮ
             let deleteBtnHTML = '';
             if (isGodMode || (loggedInUser && loggedInUser.id === product.sellerId)) {
-                deleteBtnHTML = `<div class="delete-ad-btn" onclick="event.stopPropagation(); deleteProductAdmin('${product._id}')" title="ኣቕሓ ደምስስ"><i class="fas fa-trash"></i></div>`;
+                deleteBtnHTML = `<div class="delete-ad-btn" style="top: 50px; right: 12px; width: 30px; height: 30px;" onclick="event.stopPropagation(); deleteProductAdmin('${product._id}')" title="ኣቕሓ ደምስስ"><i class="fas fa-trash" style="font-size: 13px;"></i></div>`;
             }
 
             let gridPriceHTML = (product.adType === 'advert' || product.category === 'advert')
@@ -948,19 +949,23 @@
             // 🚀 ሓዱሽ ማጂክ: ቆጻሪ (Count)
             const saveCount = (product.savedBy && product.savedBy.length > 0) ? product.savedBy.length : '';
             
+            const heartBoxStyle = saveCount 
+                ? "display: flex; flex-direction: row; justify-content: center; align-items: center; width: auto; height: 30px; padding: 0 10px; border-radius: 15px; gap: 5px; top: 12px; right: 12px;"
+                : "display: flex; justify-content: center; align-items: center; width: 30px; height: 30px; padding: 0; border-radius: 50%; top: 12px; right: 12px;";
+
             productCard.innerHTML = `
                 ${imageHTML}
-                <div class="wishlist-icon" style="flex-direction: column; height: auto; min-height: 40px; padding: 6px 0; border-radius: 20px; gap: 2px;" onclick="event.stopPropagation(); toggleHeart(this, '${product._id}')">
-                    <i class="${heartClass} fa-heart" style="${heartStyle}; font-size: 16px;"></i>
-                    <span class="save-count" style="font-size: 11px; font-weight: bold; color: var(--text-color);">${saveCount}</span>
+                <div class="wishlist-icon" style="${heartBoxStyle}" onclick="event.stopPropagation(); toggleHeart(this, '${product._id}')">
+                    <i class="${heartClass} fa-heart" style="${heartStyle}; font-size: 13px;"></i>
+                    <span class="save-count" style="font-size: 12px; font-weight: bold; color: var(--text-color); margin-top: 1px;">${saveCount}</span>
                 </div>
-                ...
                 ${deleteBtnHTML}
                 <div class="user-icon" onclick="event.stopPropagation(); goToProfile('${product.sellerId}')">${avatarHTML}</div>
                 ${gridPriceHTML}
                 <div class="product-title">${product.title}</div>
                 <div class="product-location"><i class="fas fa-map-marker-alt" style="font-size:10px;"></i> ${product.location}</div>
             `;
+    
             productsGrid.appendChild(productCard);
         });
     }
