@@ -573,9 +573,9 @@
                     const rPic = reply.userPic && reply.userPic.trim() !== "" ? getImageUrl(reply.userPic) : 'https://via.placeholder.com/150';
                     repliesHTML += `
                         <div class="reply-card">
-                            <img src="${rPic}" class="reply-avatar">
+                            <img src="${rPic}" class="reply-avatar" style="cursor:pointer;" onclick="goToProfile('${reply.userId}')" title="ፕሮፋይል ርአ">
                             <div class="reply-body">
-                                <span style="font-weight:bold; color:var(--water-blue);">${reply.userName}</span>: 
+                                <span style="font-weight:bold; color:var(--water-blue); cursor:pointer;" onclick="goToProfile('${reply.userId}')">${reply.userName}</span>: 
                                 <span>${reply.text}</span>
                             </div>
                         </div>
@@ -585,10 +585,11 @@
 
             listEl.innerHTML += `
                 <div class="comment-card">
-                    <img src="${pic}" class="comment-avatar">
+                    <img src="${pic}" class="comment-avatar" style="cursor:pointer;" onclick="goToProfile('${comment.userId}')" title="ፕሮፋይል ርአ">
                     <div style="flex:1;">
                         <div class="comment-body">
-                            <div class="comment-name">${comment.userName} <span style="color:var(--gray-text); font-size:10px; font-weight:normal; float:right;">${dateStr}</span></div>
+                            <div class="comment-name" style="cursor:pointer; display:inline-block;" onclick="goToProfile('${comment.userId}')">${comment.userName}</div>
+                            <span style="color:var(--gray-text); font-size:10px; font-weight:normal; float:right;">${dateStr}</span>
                             <div class="comment-text">${comment.text}</div>
                         </div>
                         <button class="reply-btn" onclick="toggleReplyBox('${comment._id}')">ሪፕላይ ሃብ (Reply)</button>
@@ -606,7 +607,6 @@
             `;
         });
     }
-
     function toggleReplyBox(commentId) {
         const box = document.getElementById(`replyArea_${commentId}`);
         box.style.display = box.style.display === 'block' ? 'none' : 'block';
