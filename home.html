@@ -350,6 +350,21 @@
             </div>
         </div>
     </div>
+    <div class="modal-overlay" id="reportConfirmModal" style="z-index: 3000;">
+        <div class="modal-content" style="text-align: center; max-width: 320px; padding: 25px 20px;">
+            <div style="width: 60px; height: 60px; background: rgba(231, 76, 60, 0.1); color: #e74c3c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; margin: 0 auto 15px auto;">
+                <i class="fas fa-flag"></i>
+            </div>
+            <h3 style="margin: 0 0 10px 0; color: var(--text-color);">ሪፖርት (Report)</h3>
+            <p style="font-size: 14px; color: var(--gray-text); line-height: 1.5; margin: 0 0 20px 0;">
+                እዚ ልጣፍ ሓሶት ወይ ሕማቕ (Inappropriate) እዩ ኢልኩም ሪፖርት ክትገብሩዎ ትደልዩ ዶ?
+            </p>
+            <div style="display: flex; gap: 10px;">
+                <button onclick="document.getElementById('reportConfirmModal').style.display='none'" style="flex: 1; background: var(--input-bg); color: var(--text-color); border: 1px solid var(--border-color); padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s;">ኣይፋል</button>
+                <button onclick="executeReport()" style="flex: 1; background: #e74c3c; color: white; border: none; padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 4px 10px rgba(231,76,60,0.3);">እወ ሪፖርት ግበር</button>
+            </div>
+        </div>
+    </div>
 
     <div class="bottom-nav">
         <a href="home.html" class="nav-item active"><i class="fas fa-home"></i></a>
@@ -530,24 +545,33 @@
     function closeProduct() { document.getElementById('productModal').style.display = 'none'; }
 
     // =====================================================================
-    // 🚀 ሓዱሽ ማጂክ: Report Logic (ሪፖርት ምግባር)
+    // 🚀 ሓዱሽ ማጂክ: Report Logic (ሪፖርት ምግባር) ብውቁብ ፖፕኣፕ
     // =====================================================================
-    async function reportProduct() {
+    function reportProduct() {
         const loggedInUser = getLoggedInUser();
         if (!loggedInUser) { alert("ሪፖርት ንምግባር ሎግ-ኢን ግበሩ!"); window.location.href = 'index.html'; return; }
         if (!currentViewedProduct) return;
 
-        if(confirm("እዚ ልጣፍ ሓሶት ወይ ሕማቕ (Inappropriate) እዩ ኢልኩም ሪፖርት ክትገብሩዎ ትደልዩ ዶ?")) {
-            try {
-                const response = await fetch(`https://meyda-app.onrender.com/api/products/${currentViewedProduct._id}/report`, {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ userId: loggedInUser.id })
-                });
-                const data = await response.json();
-                if(response.ok) alert(data.message);
-                else alert("ጌጋ ኣጋጢሙ: " + data.message);
-            } catch(e) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
-        }
+        // ነታ ሓዳስ ውቅብቲ ፖፕኣፕ ንኽፈታ (ክንዲ Browser Confirm)
+        document.getElementById('reportConfirmModal').style.display = 'flex';
+    }
+
+    async function executeReport() {
+        document.getElementById('reportConfirmModal').style.display = 'none'; // ፖፕኣፕ ዕጸዎ
+        const loggedInUser = getLoggedInUser();
+        
+        try {
+            const response = await fetch(`https://meyda-app.onrender.com/api/products/${currentViewedProduct._id}/report`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: loggedInUser.id })
+            });
+            const data = await response.json();
+            if(response.ok) {
+                alert("🚩 ሪፖርትኩም ተቐቢልናዮ ኣለና። የቐንየልና!"); 
+            } else {
+                alert("ጌጋ ኣጋጢሙ: " + data.message);
+            }
+        } catch(e) { alert("ምስ ሰርቨር ኣይተራኸበን።"); }
     }
 
     // =====================================================================
