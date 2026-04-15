@@ -116,6 +116,8 @@ const productSchema = new mongoose.Schema({
     icon: { type: String, default: 'fa-box' },
     isPro: { type: Boolean, default: false },
     adType: { type: String, default: 'market' },
+    // 🚀 ሓዱሽ: ክንደይ ሰብ ከም ዝፈተዎ (Save ዝገበሮ) ይሕዝ
+    savedBy: [{ type: String }],
     
     // 🚀 ሓዱሽ ማጂክ: መዋቕር ን ኮሜንትን ሪፖርትን
     reports: [{ type: String }], // መን መን ሪፖርት ከም ዝገበሮ ዝሕዝ (User IDs)
@@ -383,8 +385,10 @@ app.post('/api/users/login', async (req, res) => {
                 isAdmin: user.role === 'admin' || user.role === 'owner',
                 isSubscribed: user.isSubscribed || false,
                 packageType: user.packageType || 'none',
-                expireDate: user.expireDate || null
-            } 
+                expireDate: user.expireDate || null,
+                // 🚀 ሓዱሽ ማጂክ: እዚኣ ጠፊኣትና ነይራ (Save State Persistence)
+                savedProducts: user.savedProducts || [] 
+            }
         });
     } catch (error) { 
         console.error("Login Error:", error);
@@ -615,16 +619,22 @@ app.post('/api/users/:userId/save', async (req, res) => {
     try {
         const { productId, action } = req.body;
         const user = await User.findById(req.params.userId);
-        if (!user) return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን" });
-        
+        const product = await Product.findById(productId); // 🚀 ሓዱሽ: ንብረት እውን ንደልዮ
+
+        if (!user || !product) return res.status(404).json({ message: "ኣይተረኽበን" });
+        if (!product.savedBy) product.savedBy = []; // Bulletproof
+
         if (action === 'add' && !user.savedProducts.includes(productId)) {
             user.savedProducts.push(productId);
+            if (!product.savedBy.includes(user._id.toString())) product.savedBy.push(user._id.toString());
         } else if (action === 'remove') {
             user.savedProducts = user.savedProducts.filter(id => id !== productId);
+            product.savedBy = product.savedBy.filter(id => id !== user._id.toString());
         }
         
         await user.save(); 
-        res.status(200).json({ message: "ብዓወት ተዓቂቡ!", savedProducts: user.savedProducts });
+        await product.save();
+        res.status(200).json({ message: "ብዓወት ተዓቂቡ!", savedProducts: user.savedProducts, savesCount: product.savedBy.length });
     } catch (error) { 
         res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }

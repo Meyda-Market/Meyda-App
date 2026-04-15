@@ -855,7 +855,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         loadedProductsMap[prod._id] = prod; 
 
                         let imgContent = prod.images && prod.images.length > 0 
-                            ? `<img src="https://meyda-app.onrender.com${prod.images[0]}" class="product-img">` 
+                            ? `<img src="${getImageUrl(prod.images[0])}" class="product-img">` 
                             : `<div class="product-img"><i class="fas ${prod.icon || 'fa-box'}"></i></div>`;
 
                         savedGrid.innerHTML += `
@@ -1066,7 +1066,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const dateObj = new Date(msg.createdAt);
                 const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
                 
-                const imgHtml = msg.productImage ? `<img src="https://meyda-app.onrender.com${msg.productImage}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="fetchAndOpenProduct('${msg.productId}')"><br>` : '';
+                const imgHtml = msg.productImage ? `<img src="${getImageUrl(msg.productImage)}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onclick="fetchAndOpenProduct('${msg.productId}')"><br>` : '';
 
                 if (msg.senderId === loggedInUser.id) {
                     chatBody.innerHTML += `
