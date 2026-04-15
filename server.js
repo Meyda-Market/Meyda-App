@@ -915,7 +915,7 @@ app.get('/api/admin/settings/subscription-status', async (req, res) => {
 // =====================================================================
 // 20. ሰርቨር ምጅማር (Start Server)
 // =====================================================================
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Meyda ሰርቨር ኣብ ፖርት ${PORT} ይሰርሕ ኣሎ...`);
 });
