@@ -115,14 +115,30 @@ const productSchema = new mongoose.Schema({
     images: [{ type: String }],
     icon: { type: String, default: 'fa-box' },
     isPro: { type: Boolean, default: false },
-    // 🚀 ሓዱሽ ማጂክ: ዓይነት ፖስት (ንቡር መሸጣ ድዩ ወይስ መወዓውዒ?)
     adType: { type: String, default: 'market' },
+    
+    // 🚀 ሓዱሽ ማጂክ: መዋቕር ን ኮሜንትን ሪፖርትን
+    reports: [{ type: String }], // መን መን ሪፖርት ከም ዝገበሮ ዝሕዝ (User IDs)
+    comments: [{
+        userId: String,
+        userName: String,
+        userPic: String,
+        text: String,
+        createdAt: { type: Date, default: Date.now },
+        replies: [{ // 🚀 ሓዱሽ: ን ኮሜንት ሪፕላይ (Reply) መግበሪ
+            userId: String,
+            userName: String,
+            userPic: String,
+            text: String,
+            createdAt: { type: Date, default: Date.now }
+        }]
+    }],
+
     createdAt: { type: Date, default: Date.now },
     sellerId: { type: String, required: true },
-    expiresAt: { type: Date, required: true } // ንኣቕሑት ግዜ መወዳእታ
+    expiresAt: { type: Date, required: true } 
 });
 const Product = mongoose.model('Product', productSchema);
-
 // 4.2 መዋቕር ን ተጠቀምቲ (User Schema)
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -504,6 +520,65 @@ app.put('/api/products/:id', async (req, res) => {
         res.status(200).json({ message: "ንብረት ብዓወት ተመሓይሹ!" });
     } catch (error) { 
         res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
+    }
+});
+// =====================================================================
+// 12.5 🚀 ሓዱሽ ማጂክ: API ን ሪፖርት (Report Product)
+// =====================================================================
+app.post('/api/products/:id/report', async (req, res) => {
+    try {
+        const { userId } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
+
+        if (!product.reports.includes(userId)) {
+            product.reports.push(userId);
+            await product.save();
+        }
+        res.status(200).json({ message: "ሪፖርትኩም ተቐቢልናዮ ኣለና። የቐንየልና!", reportsCount: product.reports.length });
+    } catch (error) {
+        res.status(500).json({ message: "ሪፖርት ምግባር ኣይተኻእለን።" });
+    }
+});
+
+// =====================================================================
+// 12.6 🚀 ሓዱሽ ማጂክ: API ን ኮሜንት ኣብ ኣቕሑት (Comment on Product)
+// =====================================================================
+app.post('/api/products/:id/comment', async (req, res) => {
+    try {
+        const { userId, userName, userPic, text } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
+
+        const newComment = { userId, userName, userPic, text };
+        product.comments.push(newComment);
+        await product.save();
+
+        res.status(201).json({ message: "ኮሜንትኩም ተለጢፉ ኣሎ!", comments: product.comments });
+    } catch (error) {
+        res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን。" });
+    }
+});
+
+// =====================================================================
+// 12.7 🚀 ሓዱሽ ማጂክ: API ን ሪፕላይ ኣብ ኮሜንት (Reply to Comment)
+// =====================================================================
+app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
+    try {
+        const { userId, userName, userPic, text } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
+
+        const comment = product.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ message: "ኮሜንት ኣይተረኽበን" });
+
+        const newReply = { userId, userName, userPic, text };
+        comment.replies.push(newReply);
+        await product.save();
+
+        res.status(201).json({ message: "ሪፕላይ ተለጢፉ ኣሎ!", comments: product.comments });
+    } catch (error) {
+        res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን。" });
     }
 });
 
