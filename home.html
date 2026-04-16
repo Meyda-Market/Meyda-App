@@ -375,6 +375,27 @@
     </div>
 
    <script>
+    // =====================================================================
+    // 🚀 ሓዱሽ ማጂክ: ካብ Google Login ዝመጸ ቶከን ካብ URL ምቕባል
+    // =====================================================================
+    document.addEventListener("DOMContentLoaded", () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const userId = urlParams.get('userId');
+
+        if (token) {
+            // 1. ነቲ ቶከን ኣብ ጅባ ነቐምጦ
+            localStorage.setItem('meydaToken', token);
+            
+            // 2. ነቲ ዩዘር ኣይዲ እውን ንግዚኡ ነቐምጦ (እንተደሊናዮ)
+            if (userId) {
+                localStorage.setItem('meydaUser', JSON.stringify({ id: userId }));
+            }
+
+            // 3. እቲ ሊንክ (URL) ጽሩይ ምእንቲ ክኸውን፡ ነቲ ቶከን ካብቲ ሊንክ ንሓክኮ
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    });
     document.addEventListener("DOMContentLoaded", async () => {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');

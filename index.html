@@ -349,6 +349,7 @@
                 
                 if(loginRes.ok) {
                     // 🛡️ ሓዱሽ ማጂክ: ምዕሩይ መኽዘን - 'meydaUser'
+                    localStorage.setItem('meydaToken', loginData.token);
                     localStorage.setItem('meydaUser', JSON.stringify(loginData.user || loginData));
                     window.location.href = 'home.html';
                 }
@@ -377,6 +378,7 @@
             const data = await response.json();
             if(response.ok) {
                 // 🛡️ ሓዱሽ ማጂክ: ምዕሩይ መኽዘን - 'meydaUser'
+                localStorage.setItem('meydaToken', data.token);
                 localStorage.setItem('meydaUser', JSON.stringify(data.user || data));
                 window.location.href = 'home.html';
             } else {
