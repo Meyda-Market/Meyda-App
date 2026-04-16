@@ -479,11 +479,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        function getLoggedInUser() {
+        // =====================================================================
+    // 🚀 ሓዱሽ ማጂክ: ጽሩይ ሓላው ኣፍደገ (ስም ዘይብሉ - ብ Role ጥራሕ ዝሰርሕ)
+    // =====================================================================
+    function getLoggedInUser() {
         const token = localStorage.getItem('meydaToken');
         let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
 
-        // 1. 🚀 ሓዱሽ ማጂክ: ቶከን ወይ ሓበሬታ ዩዘር እንተዘይብሉ፡ ብቐጥታ ናብ ሎግ-ኢን ይምለስ
         if (!token || !userStr || userStr === 'undefined' || userStr === 'null') {
             localStorage.removeItem('meydaUser');
             localStorage.removeItem('meydaToken');
@@ -502,14 +504,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return null;
             }
 
+            // 🛡️ ኣካውንትካ ብትኽክል ካብ ዳታቤዝ ዝመጸ ስልጣን (Role) ጥራሕ ይጥቀም!
             userObj.id = userObj.id || userObj._id;
             userObj.role = userObj.role || 'user';
-
-            // 2. 🛡️ እታ ናትካ ፍልይቲ ማጂክ (Admin Check) ከም ዘላታ ትቕጸል!
-            if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
-                userObj.role = 'owner';
-                userObj.isAdmin = true;
-            }
+            
             return userObj;
         } catch(e) {
             localStorage.removeItem('meydaUser');
@@ -518,7 +516,6 @@ document.addEventListener("DOMContentLoaded", async () => {
             return null;
         }
     }
-        
 
         window.onload = async () => { 
             if(localStorage.getItem('theme') === 'dark') {
