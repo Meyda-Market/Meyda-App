@@ -30,6 +30,7 @@ cloudinary.config({
 });
 
 const app = express();
+app.set('trust proxy', 1);
 
 // =====================================================================
 // 1. መኽዘን ስእልታት (Cloudinary Setup & Fallback)
@@ -449,11 +450,11 @@ app.post('/api/users/login', async (req, res) => {
 // 8.5 API: GOOGLE LOGIN ROUTES
 // =====================================================================
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: 'https://meyda-app.vercel.app/index.html' }),
   (req, res) => {
-    // 1. 🚀 መጀመርታ ነታ ቶከን ክንሰርሓ ኣለና (እዚኣ እያ ጠፊኣትካ ነይራ!)
-    const token = jwt.sign({ id: req.user._id, role: req.user.role || 'user' }, JWT_SECRET, { expiresIn: '30d' });
+    // 1. 🚀 ነታ ቶከን ክንሰርሓ ኣለና (ምስ ውሑስ ፓስዋርድ)
+    const jwtSecretKey = process.env.JWT_SECRET || 'meyda_super_secret_key_2024';
+    const token = jwt.sign({ id: req.user._id, role: req.user.role || 'user' }, jwtSecretKey, { expiresIn: '30d' });
 
     // 2. 🛡️ ውሑስ ዝኾነ ናይ ዩዘር ሓበሬታ
     const safeName = req.user.name || 'User';
