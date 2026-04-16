@@ -450,11 +450,16 @@ app.post('/api/users/login', async (req, res) => {
 // =====================================================================
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: 'https://meyda-app.vercel.app/login.html' }),
+app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: 'https://meyda-app.vercel.app/index.html' }),
   (req, res) => {
-   // 🚀 ሓዱሽ ማጂክ: ስምን ኢሜልን ተወሲኹዎ ናብ ዌብሳይት ይምለስ
-   const safeName = req.user.name || 'User';
+    // 1. 🚀 መጀመርታ ነታ ቶከን ክንሰርሓ ኣለና (እዚኣ እያ ጠፊኣትካ ነይራ!)
+    const token = jwt.sign({ id: req.user._id, role: req.user.role || 'user' }, JWT_SECRET, { expiresIn: '30d' });
+
+    // 2. 🛡️ ውሑስ ዝኾነ ናይ ዩዘር ሓበሬታ
+    const safeName = req.user.name || 'User';
     const safeEmail = req.user.email || '';
+
+    // 3. 🚀 ኩሉ ሒዙ ናብ ዌብሳይትና (Vercel) ይምለስ
     res.redirect(`https://meyda-app.vercel.app/home.html?token=${token}&userId=${req.user._id}&name=${encodeURIComponent(safeName)}&email=${encodeURIComponent(safeEmail)}`);
   }
 );
