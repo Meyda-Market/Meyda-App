@@ -179,8 +179,8 @@
             
             <div class="settings-menu" id="settingsMenu">
                 <div class="settings-item" onclick="openChangePasswordModal()"><i class="fas fa-key"></i> Change Password</div>
-                <div class="settings-item" onclick="switchAccount()"><i class="fas fa-user-friends"></i> Switch Account</div>
-                <div class="settings-item danger" onclick="logOut()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+                <div class="settings-item" onclick="logoutUser()"><i class="fas fa-user-friends"></i> Switch Account</div>
+                <div class="settings-item danger" onclick="logoutUser()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
                 <div class="settings-item danger" onclick="deleteMyAccount()"><i class="fas fa-user-times"></i> Delete Account</div>
             </div>
         </div>
@@ -1276,6 +1276,15 @@ async function applyImage() {
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
         }
+
+    // =====================================================================
+    // 🚀 ሓዱሽ ማጂክ: Log Out & Switch Account (ካብ ኣካውንት ምውጻእ)
+    // =====================================================================
+    function logoutUser() {
+        localStorage.removeItem('meydaUser');
+        localStorage.removeItem('meydaToken');
+        window.location.href = 'index.html';
+    }
     </script> 
 </body>
 </html>
