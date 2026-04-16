@@ -7,6 +7,8 @@ const path = require('path');
 const cors = require('cors');
 // 🚀 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (Timekeeper)
 const cron = require('node-cron'); 
+// 🚀 ሓዱሽ ማጂክ: ፓስዋርድ ዝሓብእ ሓያል ማጂክ
+const bcrypt = require('bcrypt');
 
 // =====================================================================
 // ☁️ ሓዱሽ ማጂክ: CLOUDINARY (ዘይድምሰስ ናይ ደበና መኽዘን)
@@ -342,10 +344,14 @@ app.post('/api/users/register', async (req, res) => {
             userRole = 'owner';
         }
         
+        // 🚀 ሓዱሽ ማጂክ: ፓስዋርድ ናብ ዘይፍታሕ ምስጢር (Hash) ምቕያር
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
         const newUser = new User({ 
             name, 
             email: finalEmail, 
-            password, 
+            password: hashedPassword, // ሓዱሽ ምስጢራዊ ፓስዋርድ
             phone: finalPhone || '+251900000000',
             role: userRole 
         });
@@ -378,7 +384,11 @@ app.post('/api/users/login', async (req, res) => {
         });
         
         if (!user) return res.status(400).json({ message: "እዚ ሓበሬታ (ስልኪ/ኢሜይል) ኣይተረኽበን ወይ ፓስዋርድ ጌጋ እዩ。" });
-        if (user.password !== password) return res.status(400).json({ message: "ፓስዋርድ ጌጋ እዩ。" });
+       if (!user) return res.status(400).json({ message: "እዚ ሓበሬታ (ስልኪ/ኢሜይል) ኣይተረኽበን ወይ ፓስዋርድ ጌጋ እዩ。" });
+        
+        // 🚀 ሓዱሽ ማጂክ: እቲ ዘእተዎ ፓስዋርድ ምስቲ ኣብ ዳታቤዝ ዘሎ ምስጢር (Hash) ይሰማማዕ ዶ?
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: "ፓስዋርድ ጌጋ እዩ。" });
         
         res.status(200).json({ 
             message: "ብዓወት ሎግ-ኢን ጌርኩም!", 
@@ -542,9 +552,12 @@ app.post('/api/users/reset-password', async (req, res) => {
             resetOTPExpire: { $gt: Date.now() } // ግዚኡ ዘይሓለፈ
         });
 
-        if (!user) return res.status(400).json({ message: "OTP ጌጋ እዩ ወይ ግዚኡ ሓሊፉ ኣሎ。" });
+      if (!user) return res.status(400).json({ message: "OTP ጌጋ እዩ ወይ ግዚኡ ሓሊፉ ኣሎ。" });
 
-        user.password = newPassword;
+        // 🚀 ሓዱሽ ማጂክ: ነቲ ሓዱሽ ዝፈጠሮ ፓስዋርድ እውን ንሓብኦ
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+        
         user.resetOTP = null; // OTP ነጽርዮ
         user.resetOTPExpire = null;
         await user.save();
