@@ -11,8 +11,7 @@ const cron = require('node-cron');
 const bcrypt = require('bcrypt');
 // 🚀 ሓዱሽ ማጂክ: መከላኸሊ ቦትን መጥቃዕቲ DDoS (Rate Limiter)
 const rateLimit = require('express-rate-limit');
-// 🚀 ሓዱሽ ማጂክ: ጽሬት ዳታን ምክልኻል ሃከራትን (Sanitization)
-const xss = require('xss-clean');
+
 // 🚀 ሓዱሽ ማጂክ: JWT (JSON Web Token) ን ዘይስረቕ ዲጂታላዊ መንነት
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'meyda_super_secret_key_2024';
@@ -62,13 +61,6 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// =====================================================================
-// 2.2 🚀 ሓዱሽ ማጂክ: ጽሬት ዳታ (Data Sanitization against NoSQL query injection & XSS)
-// =====================================================================
-
-
-// ናይ ጃቫስክሪፕት መጥቃዕቲ ካብ ርእይቶታትን መግለጺታትን ይሓጽብ (XSS)
-app.use(xss());
 
 // =====================================================================
 // 2.5 🚀 ሓዱሽ ማጂክ: ሓላው-ኣፍደገ (Rate Limiting & DDoS Protection)
