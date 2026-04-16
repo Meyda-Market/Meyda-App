@@ -11,6 +11,9 @@ const cron = require('node-cron');
 const bcrypt = require('bcrypt');
 // 🚀 ሓዱሽ ማጂክ: መከላኸሊ ቦትን መጥቃዕቲ DDoS (Rate Limiter)
 const rateLimit = require('express-rate-limit');
+// 🚀 ሓዱሽ ማጂክ: ጽሬት ዳታን ምክልኻል ሃከራትን (Sanitization)
+const xss = require('xss-clean');
+const mongoSanitize = require('express-mongo-sanitize');
 
 // =====================================================================
 // ☁️ ሓዱሽ ማጂክ: CLOUDINARY (ዘይድምሰስ ናይ ደበና መኽዘን)
@@ -56,6 +59,15 @@ const upload = multer({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// =====================================================================
+// 2.2 🚀 ሓዱሽ ማጂክ: ጽሬት ዳታ (Data Sanitization against NoSQL query injection & XSS)
+// =====================================================================
+// ን MongoDB ዝኸውን መጥቃዕቲ ይከላኸል (NoSQL Injection)
+app.use(mongoSanitize());
+
+// ናይ ጃቫስክሪፕት መጥቃዕቲ ካብ ርእይቶታትን መግለጺታትን ይሓጽብ (XSS)
+app.use(xss());
 
 // =====================================================================
 // 2.5 🚀 ሓዱሽ ማጂክ: ሓላው-ኣፍደገ (Rate Limiting & DDoS Protection)
