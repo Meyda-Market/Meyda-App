@@ -480,38 +480,45 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         function getLoggedInUser() {
-            let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
-            
-            if (!userStr || userStr === 'undefined' || userStr === 'null') {
+        const token = localStorage.getItem('meydaToken');
+        let userStr = localStorage.getItem('meydaUser') || localStorage.getItem('meyda_user');
+
+        // 1. 🚀 ሓዱሽ ማጂክ: ቶከን ወይ ሓበሬታ ዩዘር እንተዘይብሉ፡ ብቐጥታ ናብ ሎግ-ኢን ይምለስ
+        if (!token || !userStr || userStr === 'undefined' || userStr === 'null') {
+            localStorage.removeItem('meydaUser');
+            localStorage.removeItem('meydaToken');
+            window.location.href = 'index.html';
+            return null;
+        }
+
+        try {
+            let userObj = JSON.parse(userStr);
+            if (userObj.user) userObj = userObj.user;
+
+            if (!userObj || (!userObj.id && !userObj._id)) {
                 localStorage.removeItem('meydaUser');
-                localStorage.removeItem('meyda_user');
+                localStorage.removeItem('meydaToken');
+                window.location.href = 'index.html';
                 return null;
             }
-            
-            try {
-                let userObj = JSON.parse(userStr);
-                if (userObj.user) userObj = userObj.user;
-                
-                if (!userObj || (!userObj.id && !userObj._id)) {
-                    localStorage.removeItem('meydaUser');
-                    localStorage.removeItem('meyda_user');
-                    return null;
-                }
-                
-                userObj.id = userObj.id || userObj._id;
-                userObj.role = userObj.role || 'user'; 
-                
-                if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
-                    userObj.role = 'owner'; 
-                    userObj.isAdmin = true;
-                }
-                return userObj;
-            } catch(e) { 
-                localStorage.removeItem('meydaUser');
-                localStorage.removeItem('meyda_user');
-                return null; 
+
+            userObj.id = userObj.id || userObj._id;
+            userObj.role = userObj.role || 'user';
+
+            // 2. 🛡️ እታ ናትካ ፍልይቲ ማጂክ (Admin Check) ከም ዘላታ ትቕጸል!
+            if(userObj.name && userObj.name.toLowerCase().includes('jentra')) {
+                userObj.role = 'owner';
+                userObj.isAdmin = true;
             }
+            return userObj;
+        } catch(e) {
+            localStorage.removeItem('meydaUser');
+            localStorage.removeItem('meydaToken');
+            window.location.href = 'index.html';
+            return null;
         }
+    }
+        
 
         window.onload = async () => { 
             if(localStorage.getItem('theme') === 'dark') {
