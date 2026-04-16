@@ -452,7 +452,8 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'em
 
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: 'https://meyda-app.vercel.app/login.html' }),
   (req, res) => {
-    res.redirect(`https://meyda-app.vercel.app/home.html?token=${req.user._id}`);
+   // 🚀 ሓዱሽ ማጂክ: ስምን ኢሜልን ተወሲኹዎ ናብ ዌብሳይት ይምለስ
+    res.redirect(`https://meyda-app.vercel.app/home.html?token=${token}&userId=${req.user._id}&name=${encodeURIComponent(req.user.name)}&email=${encodeURIComponent(req.user.email)}`);
   }
 );
 

@@ -376,24 +376,34 @@
 
    <script>
     // =====================================================================
-    // 🚀 ሓዱሽ ማጂክ: ካብ Google Login ዝመጸ ቶከን ካብ URL ምቕባል
+    // 🚀 ሓዱሽ ማጂክ: ካብ Google Login ዝመጸ ምሉእ ሓበሬታ ምቕባል
     // =====================================================================
     document.addEventListener("DOMContentLoaded", () => {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const userId = urlParams.get('userId');
+        const userName = urlParams.get('name');     // ሓዱሽ
+        const userEmail = urlParams.get('email');   // ሓዱሽ
 
         if (token) {
-            // 1. ነቲ ቶከን ኣብ ጅባ ነቐምጦ
+            // 1. ቶከን ኣብ ጅባ (localStorage) ዕቀብ
             localStorage.setItem('meydaToken', token);
             
-            // 2. ነቲ ዩዘር ኣይዲ እውን ንግዚኡ ነቐምጦ (እንተደሊናዮ)
+            // 2. ምሉእ ሓበሬታ ዩዘር ዕቀብ (Admin ምዃንካ ምእንቲ ክፍለጥ)
             if (userId) {
-                localStorage.setItem('meydaUser', JSON.stringify({ id: userId }));
+                const userObj = { 
+                    id: userId, 
+                    name: userName ? decodeURIComponent(userName) : 'Jentra', 
+                    email: userEmail ? decodeURIComponent(userEmail) : ''
+                };
+                localStorage.setItem('meydaUser', JSON.stringify(userObj));
             }
 
             // 3. እቲ ሊንክ (URL) ጽሩይ ምእንቲ ክኸውን፡ ነቲ ቶከን ካብቲ ሊንክ ንሓክኮ
             window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // 4. እቲ ናይ Admin ዳሽቦርድ ብኡንብኡ ክመጽእ ፔጅ ሪፍረሽ ንግበሮ
+            window.location.reload(); 
         }
     });
     document.addEventListener("DOMContentLoaded", async () => {
