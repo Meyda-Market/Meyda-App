@@ -158,7 +158,11 @@ const userSchema = new mongoose.Schema({
     
     isSubscribed: { type: Boolean, default: false },
     packageType: { type: String, default: 'none' },
-    expireDate: { type: Date, default: null }
+    expireDate: { type: Date, default: null },
+
+    // 🚀 ሓዱሽ ማጂክ: መቐመጢ ናይ 4 ቁጽሪ OTP ን ግዜኡን (Security)
+    resetOTP: { type: String, default: null },
+    resetOTPExpire: { type: Date, default: null }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -497,6 +501,81 @@ app.post('/api/users/:id/subscribe', async (req, res) => {
     } catch (error) {
         console.error("Subscription Error:", error);
         res.status(500).json({ message: "ፓኬጅ ምሃብ ኣይተኻእለን。" });
+    }
+});
+// =====================================================================
+// 10.8 🚀 API: ፓስዋርድ ምሕዳስን (Forgot Password) ኣካውንት ምድምሳስን (Delete Account)
+// =====================================================================
+
+// 1. OTP መሕተቲ (Request OTP)
+app.post('/api/users/forgot-password', async (req, res) => {
+    try {
+        const { identifier } = req.body; // email or phone
+        const user = await User.findOne({ $or: [{ email: identifier }, { phone: identifier }, { email: `${identifier.replace('+', '')}@meydamarket.com` }] });
+        
+        if (!user) return res.status(404).json({ message: "እዚ ሓበሬታ ዘለዎ ኣካውንት ኣይተረኽበን።" });
+
+        // 4 ቁጽሪ OTP ምፍጣር
+        const otp = Math.floor(1000 + Math.random() * 9000).toString();
+        
+        user.resetOTP = otp;
+        user.resetOTPExpire = Date.now() + 10 * 60 * 1000; // ን 10 ደቒቕ ጥራሕ ዝጸንሕ
+        await user.save();
+
+        // ⚠️ ንግዚኡ ኣብ Console ይወጽእ (ድሒሩ ምስ ሓቀኛ SMS API ይተኣሳሰር)
+        console.log(`\n🔔 [SMS SIMULATION] ን ${user.name} ዝተላእከ OTP: ${otp}\n`);
+
+        res.status(200).json({ message: "OTP ብዓወት ተላኢኹ ኣሎ! (ንግዚኡ ኣብ Console ናይ ሰርቨር ርኣይዎ)" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "OTP ምስዳድ ኣይተኻእለን。" });
+    }
+});
+
+// 2. OTP ኣረጋጊጽካ ፓስዋርድ ምቕያር (Verify OTP & Reset Password)
+app.post('/api/users/reset-password', async (req, res) => {
+    try {
+        const { identifier, otp, newPassword } = req.body;
+        const user = await User.findOne({ 
+            $or: [{ email: identifier }, { phone: identifier }, { email: `${identifier.replace('+', '')}@meydamarket.com` }],
+            resetOTP: otp,
+            resetOTPExpire: { $gt: Date.now() } // ግዚኡ ዘይሓለፈ
+        });
+
+        if (!user) return res.status(400).json({ message: "OTP ጌጋ እዩ ወይ ግዚኡ ሓሊፉ ኣሎ。" });
+
+        user.password = newPassword;
+        user.resetOTP = null; // OTP ነጽርዮ
+        user.resetOTPExpire = null;
+        await user.save();
+
+        res.status(200).json({ message: "ፓስዋርድኩም ብዓወት ተቐይሩ ኣሎ! ሕጂ ሎግ-ኢን ግበሩ።" });
+    } catch (error) {
+        res.status(500).json({ message: "ፓስዋርድ ምቕያር ኣይተኻእለን。" });
+    }
+});
+
+// 3. ኣካውንት ብምሉኡ ምድምሳስ (Delete Account - App Store requirement)
+app.delete('/api/users/:id', async (req, res) => {
+    try {
+        const userId = req.params.id;
+        
+        // 1. ነቲ ተጠቃሚ ደምስሶ
+        const deletedUser = await User.findByIdAndDelete(userId);
+        if (!deletedUser) return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን" });
+
+        // 2. ኩሉ ኣቕሑቱ ደምስስ
+        await Product.deleteMany({ sellerId: userId });
+
+        // 3. ኩሉ ዜናታቱ ደምስስ
+        await News.deleteMany({ authorId: userId });
+
+        // 4. ዝለኣኾ ወይ ዝተቐበሎ መልእኽትታት ደምስስ
+        await Message.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] });
+
+        res.status(200).json({ message: "ኣካውንትኩምን ኩሉ ሓበሬታኹምን ብዓወት ተደምሲሱ ኣሎ!" });
+    } catch (error) {
+        res.status(500).json({ message: "ኣካውንት ምድምሳስ ኣይተኻእለን。" });
     }
 });
 

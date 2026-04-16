@@ -181,6 +181,7 @@
                 <div class="settings-item" onclick="openChangePasswordModal()"><i class="fas fa-key"></i> Change Password</div>
                 <div class="settings-item" onclick="switchAccount()"><i class="fas fa-user-friends"></i> Switch Account</div>
                 <div class="settings-item danger" onclick="logOut()"><i class="fas fa-sign-out-alt"></i> Log Out</div>
+                <div class="settings-item danger" onclick="deleteMyAccount()"><i class="fas fa-user-times"></i> Delete Account</div>
             </div>
         </div>
     </div>
@@ -610,14 +611,38 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
-        function logOut() {
-            localStorage.clear(); 
-            window.location.href = 'index.html';
-        }
+        // =====================================================================
+        // 🚀 ሓዱሽ ማጂክ: Delete Account Logic
+        // =====================================================================
+        async function deleteMyAccount() {
+            const loggedInUser = getLoggedInUser();
+            if (!loggedInUser) return;
 
-        function switchAccount() {
-            localStorage.clear(); 
-            window.location.href = 'index.html';
+            // ቀዳማይ መረጋገጺ
+            const confirm1 = confirm("⚠️ መጠንቀቕታ: ኣካውንትኩም ብምሉኡ ክድምሰስ ድዩ?");
+            if (!confirm1) return;
+
+            // ካልኣይ መረጋገጺ (Double Confirmation for safety)
+            const confirm2 = confirm("🚨 ኩሉ ኣቕሑትኩምን መልእኽትታትኩምን ንሓዋሩ ክጠፍእ እዩ። ብርግጽ ትድምስሱዎ ኣለኹም?");
+            if (!confirm2) return;
+
+            try {
+                // ናብቲ ኣብ server.js ዝጸሓፍናዮ ሓዱሽ API ይልእኽ
+                const response = await fetch(`https://meyda-app.onrender.com/api/users/${loggedInUser.id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    alert("ኣካውንትኩም ብዓወት ተደምሲሱ ኣሎ። ብደሓን ኩኑ!");
+                    localStorage.clear(); // ዳታ ካብ ሞባይሉ የጽርዮ
+                    window.location.href = 'index.html'; // ናብ መእተዊ ይድርብዮ
+                } else {
+                    const data = await response.json();
+                    alert("ጌጋ: " + data.message);
+                }
+            } catch (error) {
+                alert("ምስ ሰርቨር ኣይተራኸበን።");
+            }
         }
 
         function openChangePasswordModal() {
