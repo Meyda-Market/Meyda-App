@@ -14,6 +14,9 @@ const rateLimit = require('express-rate-limit');
 // 🚀 ሓዱሽ ማጂክ: ጽሬት ዳታን ምክልኻል ሃከራትን (Sanitization)
 const xss = require('xss-clean');
 const mongoSanitize = require('express-mongo-sanitize');
+// 🚀 ሓዱሽ ማጂክ: JWT (JSON Web Token) ን ዘይስረቕ ዲጂታላዊ መንነት
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'meyda_super_secret_key_2024';
 
 // =====================================================================
 // ☁️ ሓዱሽ ማጂክ: CLOUDINARY (ዘይድምሰስ ናይ ደበና መኽዘን)
@@ -392,7 +395,10 @@ app.post('/api/users/register', async (req, res) => {
         });
         
         await newUser.save(); 
-        res.status(201).json({ message: "ብዓወት ተመዝጊብኩም ኣለኹም!", userId: newUser._id });
+       // 🚀 ሓዱሽ ማጂክ: JWT ቶከን ምፍጣር
+        const token = jwt.sign({ id: newUser._id, role: newUser.role }, JWT_SECRET, { expiresIn: '30d' });
+
+        res.status(201).json({ message: "ብዓወት ተመዝጊብኩም ኣለኹም!", userId: newUser._id, token: token });
     } catch (error) { 
         console.error("Register Error:", error);
         res.status(500).json({ message: "ምዝገባ ኣይተኻእለን。" }); 
@@ -425,10 +431,14 @@ app.post('/api/users/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(400).json({ message: "ፓስዋርድ ጌጋ እዩ。" });
         
+       // 🚀 ሓዱሽ ማጂክ: JWT ቶከን ምፍጣር (ን 30 መዓልቲ ዝጸንሕ)
+        const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
+
         res.status(200).json({ 
             message: "ብዓወት ሎግ-ኢን ጌርኩም!", 
+            token: token, // 🚀 ነዚ ዘይስረቕ ቶከን ናብ ሞባይል ይሰዶ
             user: { 
-                id: user._id, name: user.name, email: user.email, 
+                id: user._id, name: user.name, email: user.email,
                 profilePic: user.profilePic, phone: user.phone, 
                 role: user.role || 'user', 
                 isAdmin: user.role === 'admin' || user.role === 'owner',
