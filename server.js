@@ -9,6 +9,8 @@ const cors = require('cors');
 const cron = require('node-cron'); 
 // 🚀 ሓዱሽ ማጂክ: ፓስዋርድ ዝሓብእ ሓያል ማጂክ
 const bcrypt = require('bcrypt');
+// 🚀 ሓዱሽ ማጂክ: መከላኸሊ ቦትን መጥቃዕቲ DDoS (Rate Limiter)
+const rateLimit = require('express-rate-limit');
 
 // =====================================================================
 // ☁️ ሓዱሽ ማጂክ: CLOUDINARY (ዘይድምሰስ ናይ ደበና መኽዘን)
@@ -54,6 +56,27 @@ const upload = multer({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+// =====================================================================
+// 2.5 🚀 ሓዱሽ ማጂክ: ሓላው-ኣፍደገ (Rate Limiting & DDoS Protection)
+// =====================================================================
+// ሓፈሻዊ መከላኸሊ (Global Limiter)
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 ደቒቕ
+    max: 200, // ሓደ IP ኣድራሻ ኣብ 15 ደቒቕ ካብ 200 ግዜ ንላዕሊ ትእዛዝ ክሰድድ ኣይክእልን
+    message: { message: "⚠️ ብዙሕ ትእዛዛት ብሓንሳብ መጺኡ! በጃኹም ቁሩብ ጸኒሕኩም ፈትኑ።" }
+});
+app.use('/api', globalLimiter); // ኣብ ኩሉ API ይትግበር
+
+// ተሪር መከላኸሊ ን ሎግ-ኢንን ምዝገባን (Auth Limiter - Brute force protection)
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 ሰዓት
+    max: 10, // ኣብ 1 ሰዓት 10 ግዜ ጥራሕ ጌጋ ፓስዋርድ ክንፈትን ወይ ኣካውንት ክንከፍት ንኽእል
+    message: { message: "🚨 ብዙሕ ግዜ ብጌጋ ፈቲንኩም! በጃኹም ድሕሪ 1 ሰዓት ተመለሱ።" }
+});
+app.use('/api/users/login', authLimiter);
+app.use('/api/users/register', authLimiter);
+app.use('/api/users/forgot-password', authLimiter);
 
 // ====== 🚀 GOOGLE LOGIN SETUP (PASSPORT) ======
 const session = require('express-session');
