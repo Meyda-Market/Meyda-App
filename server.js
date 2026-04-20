@@ -83,6 +83,54 @@ const authLimiter = rateLimit({
 app.use('/api/users/login', authLimiter);
 app.use('/api/users/register', authLimiter);
 app.use('/api/users/forgot-password', authLimiter);
+// ======= 🚀 ሓዱሽ: ናይ ሞባይል (React Native) Google Login API =======
+const jwt = require('jsonwebtoken'); // ቶከን ንምስራሕ
+
+app.post('/api/users/google-login', async (req, res) => {
+    try {
+        const { email, name, profilePic, googleId } = req.body;
+
+        // 1. እዚ ኢሜይል ኣብ ዳታቤዝና (Meyda) ድሮ ኣሎ ዶ ንፈትሽ?
+        let user = await User.findOne({ email });
+
+        // 2. እንተዘየለ ሓዱሽ ኣካውንት ንፈጥረሉ
+        if (!user) {
+            user = new User({
+                name,
+                email,
+                password: "Google_Auth_No_Password_" + Date.now(), // ፓስዎርድ ኣየድልዮን
+                profilePic,
+                role: 'user'
+            });
+            await user.save();
+        }
+
+        // 3. ንሞባይል ዝኸውን መእተዊ መፍትሕ (Token) ንሰርሕ
+        // (እታ 'meyda-secret-key' ምስቲ ናይ ኖርማል ሎግ-ኢንካ ትመሳሰል ክትከውን ኣለዋ)
+        const token = jwt.sign(
+            { id: user._id, role: user.role }, 
+            process.env.JWT_SECRET || 'meyda-secret-key', 
+            { expiresIn: '30d' }
+        );
+
+        // 4. ንሞባይል ብዓወት ሎግ-ኢን ጌርካ ኢልና ሓበሬታ ንሰዶ
+        res.status(200).json({
+            token,
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                profilePic: user.profilePic,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error("Mobile Google Login Error:", error);
+        res.status(500).json({ message: "ሰርቨር ጸገም ኣጋጢሙዎ ኣሎ" });
+    }
+});
+// ==========================================================
 
 // ====== 🚀 GOOGLE LOGIN SETUP (PASSPORT) ======
 const session = require('express-session');
