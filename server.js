@@ -84,7 +84,6 @@ app.use('/api/users/login', authLimiter);
 app.use('/api/users/register', authLimiter);
 app.use('/api/users/forgot-password', authLimiter);
 // ======= 🚀 ሓዱሽ: ናይ ሞባይል (React Native) Google Login API =======
-const jwt = require('jsonwebtoken'); // ቶከን ንምስራሕ
 
 app.post('/api/users/google-login', async (req, res) => {
     try {
