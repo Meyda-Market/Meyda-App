@@ -695,18 +695,54 @@ app.get('/api/products/user/:sellerId', async (req, res) => {
     }
 });
 
-// =====================================================================
+// ==========================================================
 // 12. API: ንብረት ንምምሕያሽ (Edit Product)
-// =====================================================================
-app.put('/api/products/:id', async (req, res) => {
+// ==========================================================
+// 💡 ማጂክ: `upload.array('images', 5)` ወሲኽናሉ ኣለና ፋይል ምእንቲ ክቕበል!
+app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
     try {
-        const { title, price } = req.body;
-        const updatedProduct = await Product.findByIdAndUpdate( req.params.id, { title, price }, { new: true } );
-        
-        if (!updatedProduct) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
+        const { title, price, description, existingImages } = req.body;
+
+        // 1. ናይ ቀደም ስእልታት ምድላው (ካብ ሞባይል FormData ብ string ስለ ዝሰድዶ JSON.parse ንገብሮ)
+        let finalImages = [];
+        if (existingImages) {
+            try {
+                finalImages = JSON.parse(existingImages);
+            } catch (e) {
+                // እንተድኣ JSON ዘይኮይኑ (ንኣብነት 1 ስእሊ ጥራሕ ምስ ዝኸውን)
+                finalImages = Array.isArray(existingImages) ? existingImages : [existingImages];
+            }
+        }
+
+        // 2. ሓደስቲ ዝመጹ ስእልታት (ካብ ሞባይል ዝተሰደዱ ሓደስቲ ስእልታት ንውስኸሎም)
+        if (req.files && req.files.length > 0) {
+            // 💡 መዘኻኸሪ: እዚኣ ከምቲ ናይ 'Create Product' ትጥቀመሉ ዝነበርካ path (ንኣብነት /uploads/) ትገብሮ
+            const newImagePaths = req.files.map(file => `/uploads/${file.filename}`); 
+            finalImages = [...finalImages, ...newImagePaths];
+        }
+
+        // 3. ዳታቤዝ ምምሕያሽ (ኩሉ ዳታ ሕጂ ይኣቱ ኣሎ!)
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id, 
+            { 
+                title: title,
+                name: title, // ስም ኣቕሓ (እንተደኣ name ትጥቀም ኔርካ)
+                price: Number(price),
+                description: description,
+                images: finalImages
+            }, 
+            { new: true } 
+        );
+
+        if (!updatedProduct) {
+            return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
+        }
+
         res.status(200).json({ message: "ንብረት ብዓወት ተመሓይሹ!" });
-    } catch (error) { 
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
+
+    } catch (error) {
+        console.log("Edit Product Error:", error); // ጌጋ እንተልዩ ኣብ ተርሚናልካ (CMD) ክትሪኦ
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ። " });
     }
 });
 // =====================================================================
