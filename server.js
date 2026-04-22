@@ -698,35 +698,37 @@ app.get('/api/products/user/:sellerId', async (req, res) => {
 // ==========================================================
 // 12. API: ንብረት ንምምሕያሽ (Edit Product)
 // ==========================================================
-// 💡 ማጂክ: `upload.array('images', 5)` ወሲኽናሉ ኣለና ፋይል ምእንቲ ክቕበል!
 app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
     try {
-        const { title, price, description, existingImages } = req.body;
+        const { title, price, description, existingImages, images } = req.body;
 
-        // 1. ናይ ቀደም ስእልታት ምድላው (ካብ ሞባይል FormData ብ string ስለ ዝሰድዶ JSON.parse ንገብሮ)
         let finalImages = [];
-        if (existingImages) {
+
+        // 1. ናይ ቀደም ስእልታት ምድላው (Handle Existing Images)
+        if (images && Array.isArray(images)) {
+            finalImages = images; // ካብ JSON እንተመጺኡ
+        } else if (existingImages) {
             try {
-                finalImages = JSON.parse(existingImages);
+                finalImages = JSON.parse(existingImages); // ካብ FormData እንተመጺኡ
             } catch (e) {
-                // እንተድኣ JSON ዘይኮይኑ (ንኣብነት 1 ስእሊ ጥራሕ ምስ ዝኸውን)
                 finalImages = Array.isArray(existingImages) ? existingImages : [existingImages];
             }
         }
 
-        // 2. ሓደስቲ ዝመጹ ስእልታት (ካብ ሞባይል ዝተሰደዱ ሓደስቲ ስእልታት ንውስኸሎም)
+        // 2. ሓደስቲ ስእልታት ምውሳኽ (Cloudinary ወይ Local ምዃኑ ይፈልዮ)
         if (req.files && req.files.length > 0) {
-            // 💡 መዘኻኸሪ: እዚኣ ከምቲ ናይ 'Create Product' ትጥቀመሉ ዝነበርካ path (ንኣብነት /uploads/) ትገብሮ
-            const newImagePaths = req.files.map(file => `/uploads/${file.filename}`); 
+            const newImagePaths = req.files.map(file => {
+                return file.path ? file.path : `/uploads/${file.filename}`; 
+            });
             finalImages = [...finalImages, ...newImagePaths];
         }
 
-        // 3. ዳታቤዝ ምምሕያሽ (ኩሉ ዳታ ሕጂ ይኣቱ ኣሎ!)
+        // 3. ዳታቤዝ ምምሕያሽ
         const updatedProduct = await Product.findByIdAndUpdate(
             req.params.id, 
             { 
                 title: title,
-                name: title, // ስም ኣቕሓ (እንተደኣ name ትጥቀም ኔርካ)
+                name: title,
                 price: Number(price),
                 description: description,
                 images: finalImages
@@ -734,15 +736,13 @@ app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
             { new: true } 
         );
 
-        if (!updatedProduct) {
-            return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
-        }
+        if (!updatedProduct) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
 
         res.status(200).json({ message: "ንብረት ብዓወት ተመሓይሹ!" });
 
     } catch (error) {
-        console.log("Edit Product Error:", error); // ጌጋ እንተልዩ ኣብ ተርሚናልካ (CMD) ክትሪኦ
-        res.status(500).json({ message: "ጌጋ ኣጋጢሙ። " });
+        console.log("Edit Product Error:", error);
+        res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" });
     }
 });
 // =====================================================================
