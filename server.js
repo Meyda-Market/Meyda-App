@@ -912,6 +912,26 @@ app.put('/api/messages/user/:userId/readAll', async (req, res) => {
         res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
+// ==========================================================
+// 💡 16.1 ሓዱሽ ማጂክ: ካብ ሓደ ፍሉይ ሰብ ዝመጹ መልእኽትታት ዘንብብ
+// ==========================================================
+app.put('/api/messages/mark-read', async (req, res) => {
+  try {
+    const { senderId, receiverId } = req.body;
+    
+    // እቲ ዓሚል (sender) ዝሰደደለይ፣ ኣነ (receiver) ድማ ዝተቐበልኩዎ... ኩሉ ዘይተነበበ (isRead: false)
+    // ናብ "ተነቢቡ (isRead: true)" ቀይሮ!
+    await Message.updateMany(
+      { senderId: senderId, receiverId: receiverId, isRead: false },
+      { isRead: true } 
+    );
+    
+    res.status(200).json({ message: "መልእኽትታት ብዓወት ተነቢቦም ኣለዉ!" });
+  } catch (error) {
+    console.error("Error marking messages as read:", error);
+    res.status(500).json({ message: "ጌጋ ኣጋጢሙ።" });
+  }
+});
 
 // =====================================================================
 // 17. APIs ን ዜና (News / Posts)
