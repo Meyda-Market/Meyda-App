@@ -5,6 +5,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
+const axios = require('axios'); // 🚀 ሓዱሽ ማጂክ: ምስ ባንኪ ንምዝርራብ
 // 🚀 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (Timekeeper)
 const cron = require('node-cron'); 
 // 🚀 ሓዱሽ ማጂክ: ፓስዋርድ ዝሓብእ ሓያል ማጂክ
@@ -602,6 +603,93 @@ app.post('/api/users/:id/subscribe', async (req, res) => {
     } catch (error) {
         console.error("Subscription Error:", error);
         res.status(500).json({ message: "ፓኬጅ ምሃብ ኣይተኻእለን。" });
+    }
+});
+// =====================================================================
+// 10.6 🚀 API: ሓቀኛ ክፍሊት (Real Payment Gateway - Sandbox/Chapa)
+// =====================================================================
+
+// 1. መበገሲ ክፍሊት (Initialize Payment)
+app.post('/api/payment/init', async (req, res) => {
+    try {
+        const { userId, email, name, amount, packageType } = req.body;
+        
+        // 💡 እዚ ናይ Chapa Sandbox Secret Key እዩ (Test)
+        // ጽባሕ ናይ ሓቂ ኣካውንት ምስ ከፈትካ ነዛ ፊደል ጥራሕ ኢኻ ትቕይራ!
+        const CHAPA_SECRET = process.env.CHAPA_SECRET || "CHASECK_TEST_xKxG0b3v4V3h7X8P9Y1Z2A3B4C5D6E7F"; 
+        
+        // 💡 ፍሉይ መለለዪ ናይዚ ክፍሊት (ID) - ነቲ ፓኬጅ ምስቲ ሰብ ንምትእስሳር
+        const tx_ref = `meyda-${packageType}-${Date.now()}-${userId}`; 
+
+        // 🚀 ናብ ባንኪ (Chapa) ትእዛዝ ንሰድድ
+        const response = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
+            amount: amount,
+            currency: "ETB",
+            email: email || "test@meydamarket.com",
+            first_name: name || "User",
+            tx_ref: tx_ref,
+            callback_url: `https://meyda-app.vercel.app/home.html`, // ምስ ከፈለ ናበይ ይመለስ (ንዌብሳይት)
+            return_url: `meydamobile://home`, // 🚀 ንሞባይል ኣፕሊኬሽንካ መምለሲ ማጂክ
+            customization: {
+                title: "Meyda Premium",
+                description: `Payment for ${packageType} package`
+            }
+        }, {
+            headers: { Authorization: `Bearer ${CHAPA_SECRET}` }
+        });
+
+        // 🚀 ባንኪ "ሕራይ ሊንክ ሒዘ ኣለኹ" ምስ በለና፡ ነታ ሊንክ ናብ ሞባይልካ ንሰዳ
+        if (response.data && response.data.status === 'success') {
+            res.status(200).json({ 
+                paymentUrl: response.data.data.checkout_url, 
+                tx_ref: tx_ref 
+            });
+        } else {
+            res.status(400).json({ message: "ምስ ባንኪ ክንራኸብ ኣይከኣልናን" });
+        }
+    } catch (error) {
+        console.error("Payment Init Error:", error);
+        res.status(500).json({ message: "ክፍሊት ምጅማር ኣይተኻእለን" });
+    }
+});
+
+// 2. መረጋገጺ ካብ ባንኪ (The Webhook - ባንኪ ብድሕሪ መጋረጃ ዝሰዶ)
+app.post('/api/payment/webhook', async (req, res) => {
+    try {
+        // ባንኪ ነዚ ሓበሬታ ይሰደልና (tx_ref, status)
+        const { tx_ref, status } = req.body;
+
+        if (status === 'success') {
+            // ካብቲ tx_ref ነቲ ሓበሬታ ንፈልዮ (meyda-packageType-timestamp-userId)
+            const parts = tx_ref.split('-');
+            const packageType = parts[1];
+            const userId = parts[3];
+
+            let daysToAdd = 0;
+            if (packageType === '1_week') daysToAdd = 7;
+            else if (packageType === '1_month') daysToAdd = 30;
+            else if (packageType === '3_months') daysToAdd = 90;
+            else if (packageType === '6_months') daysToAdd = 180;
+            else if (packageType === '1_year') daysToAdd = 365;
+
+            const expireDate = new Date();
+            expireDate.setDate(expireDate.getDate() + daysToAdd);
+
+            // 🚀 ሓዱሽ ማጂክ: ሰርቨር ባዕሉ ነቲ ተጠቃሚ "ከፊሉ እዩ" ኢሉ ይመዝግቦ! (ሞባይል ኣይኮነትን ትመዝግብ)
+            await User.findByIdAndUpdate(userId, {
+                isSubscribed: true,
+                packageType: packageType,
+                expireDate: expireDate
+            });
+
+            console.log(`✅ [WEBHOOK SUCCESS] ተጠቃሚ ${userId} ን ${packageType} ክፍሊቱ ብዓወት ፈጺሙ!`);
+        }
+        
+        // 🚀 ንባንኪ "መልእኽትኻ በጺሑኒ ኣሎ" ኢልና 200 OK ንመልሰሉ
+        res.status(200).send('OK');
+    } catch (error) {
+        console.error("Webhook Error:", error);
+        res.status(500).send('Error');
     }
 });
 // =====================================================================
