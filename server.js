@@ -451,31 +451,35 @@ app.post('/api/users/login', async (req, res) => {
     try {
         const { email, password } = req.body;
         
-        let searchEmail = email;
-        const isPhoneNumber = /^[0-9+]+$/.test(email); 
+        // 👈 💡 ማጂክ: ኢሜልን ፓስዎርድን ኣብ ሰርቨር እውን ከነጽርዮም (Trim) ኣለና ን Windows!
+        let cleanEmail = email ? email.trim().toLowerCase() : '';
+        let cleanPassword = password ? password.trim() : '';
+
+        let searchEmail = cleanEmail;
+        const isPhoneNumber = /^[0-9+]+$/.test(cleanEmail); 
         
-        if (isPhoneNumber && !email.includes('@')) {
-            const cleanSearchPhone = email.replace('+', '');
+        if (isPhoneNumber && !cleanEmail.includes('@')) {
+            const cleanSearchPhone = cleanEmail.replace('+', '');
             searchEmail = `${cleanSearchPhone}@meydamarket.com`;
         }
 
         const user = await User.findOne({ 
-            $or: [{ email: searchEmail }, { phone: email }, { email: email }] 
+            $or: [{ email: searchEmail }, { phone: cleanEmail }, { email: cleanEmail }] 
         });
         
-        if (!user) return res.status(400).json({ message: "እዚ ሓበሬታ (ስልኪ/ኢሜይል) ኣይተረኽበን ወይ ፓስዋርድ ጌጋ እዩ。" });
-       if (!user) return res.status(400).json({ message: "እዚ ሓበሬታ (ስልኪ/ኢሜይል) ኣይተረኽበን ወይ ፓስዋርድ ጌጋ እዩ。" });
+        // (እታ ክልተ ግዜ ዝነበረት ኣጥፊኤያ ኣለኹ)
+        if (!user) return res.status(400).json({ message: "እዚ ሓበሬታ (ስልኪ/ኢሜይል) ኣይተረኽበን ወይ ፓስዎርድ ጌጋ እዩ。" });
         
-        // 🚀 ሓዱሽ ማጂክ: እቲ ዘእተዎ ፓስዋርድ ምስቲ ኣብ ዳታቤዝ ዘሎ ምስጢር (Hash) ይሰማማዕ ዶ?
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: "ፓስዋርድ ጌጋ እዩ。" });
+        // 🚀 ሓዱሽ ማጂክ: ነቲ ጽፉፍ ፓስዎርድ ነነጻጽሮ
+        const isMatch = await bcrypt.compare(cleanPassword, user.password);
+        if (!isMatch) return res.status(400).json({ message: "ፓስዎርድ ጌጋ እዩ。" });
         
-       // 🚀 ሓዱሽ ማጂክ: JWT ቶከን ምፍጣር (ን 30 መዓልቲ ዝጸንሕ)
+        // 🚀 ሓዱሽ ማጂክ: JWT ቶከን ምፍጣር
         const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: '30d' });
 
         res.status(200).json({ 
             message: "ብዓወት ሎግ-ኢን ጌርኩም!", 
-            token: token, // 🚀 ነዚ ዘይስረቕ ቶከን ናብ ሞባይል ይሰዶ
+            token: token, 
             user: { 
                 id: user._id, name: user.name, email: user.email,
                 profilePic: user.profilePic, phone: user.phone, 
@@ -484,7 +488,6 @@ app.post('/api/users/login', async (req, res) => {
                 isSubscribed: user.isSubscribed || false,
                 packageType: user.packageType || 'none',
                 expireDate: user.expireDate || null,
-                // 🚀 ሓዱሽ ማጂክ: እዚኣ ጠፊኣትና ነይራ (Save State Persistence)
                 savedProducts: user.savedProducts || [] 
             }
         });
@@ -493,7 +496,6 @@ app.post('/api/users/login', async (req, res) => {
         res.status(500).json({ message: "ሎግ-ኢን ምግባር ኣይተኻእለን (Server Error)።" }); 
     }
 });
-
 // =====================================================================
 // 8.5 API: GOOGLE LOGIN ROUTES
 // =====================================================================
