@@ -100,7 +100,7 @@ app.get('/privacy-policy', (req, res) => {
         <p>You have the right to request the deletion of your account and all associated data at any time. To request data deletion, you can use the "Delete Account" option within the app or email us directly.</p>
 
         <h2>5. Contact Us</h2>
-        <p>If you have any questions about this Privacy Policy, please contact us at: <strong>jentra@meyda.com</strong></p>
+        <p>If you have any questions about this Privacy Policy, please contact us at: <strong>mebrahtomhagos16@gmail.com</strong></p>
     </body>
     </html>
   `;
