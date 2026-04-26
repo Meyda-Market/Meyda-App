@@ -62,6 +62,51 @@ const upload = multer({
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+//======================================================================
+// 👈 💡 
+// =====================================================================
+app.get('/privacy-policy', (req, res) => {
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Privacy Policy - Meyda</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+            h1, h2 { color: #029eff; }
+            a { color: #029eff; }
+        </style>
+    </head>
+    <body>
+        <h1>Privacy Policy for Meyda App</h1>
+        <p><strong>Effective Date:</strong> April 2026</p>
+
+        <h2>1. Information We Collect</h2>
+        <p>When you use Meyda, we may collect the following information:</p>
+        <ul>
+            <li><strong>Personal Information:</strong> Name, Email address, and Phone number (+251).</li>
+            <li><strong>App Data:</strong> Images you upload for your products, item descriptions, and location (Region/City) to connect you with buyers.</li>
+        </ul>
+
+        <h2>2. How We Use Your Information</h2>
+        <p>We use your data to provide and improve the Meyda marketplace, facilitate communication between buyers and sellers, and ensure a safe trading environment.</p>
+
+        <h2>3. Data Sharing</h2>
+        <p>We do not sell your personal data to third parties. Your data is securely stored on our servers and only shared with service providers (like cloud hosting and image storage) strictly to operate the app.</p>
+
+        <h2>4. Data Deletion & User Rights</h2>
+        <p>You have the right to request the deletion of your account and all associated data at any time. To request data deletion, you can use the "Delete Account" option within the app or email us directly.</p>
+
+        <h2>5. Contact Us</h2>
+        <p>If you have any questions about this Privacy Policy, please contact us at: <strong>jentra@meyda.com</strong></p>
+    </body>
+    </html>
+  `;
+  res.send(html);
+});
+
 
 
 // =====================================================================
