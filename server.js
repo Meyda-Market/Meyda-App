@@ -107,7 +107,47 @@ app.get('/privacy-policy', (req, res) => {
   res.send(html);
 });
 
+// =====================================================================
+// 🗑️ ሓዱሽ: ኣካውንት ንምድምሳስ ዝሕግዝ ናይ መረዳእታ ገጽ (Delete Account Page)
+// =====================================================================
+app.get('/delete-account', (req, res) => {
+  const html = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Delete Account - Meyda</title>
+        <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; color: #333; }
+            h1 { color: #ff4d4d; }
+            .container { background: #f9f9f9; padding: 20px; border-radius: 8px; border: 1px solid #ddd; text-align: center; }
+            .contact { font-weight: bold; color: #029eff; font-size: 1.2em; }
+            .steps { text-align: left; display: inline-block; margin-top: 20px; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Account Deletion Request</h1>
+            <p>We are sorry to see you go. To delete your Meyda account and all associated data, please choose one of the following options:</p>
+            
+            <div class="steps">
+                <h3>Option 1: In-App Deletion</h3>
+                <p>Open the Meyda App, go to <b>Profile > Settings</b> and select <b>"Delete Account"</b>.</p>
 
+                <h3>Option 2: Email Request</h3>
+                <p>Send an email from your registered email address to:</p>
+                <p class="contact">mebrahtomhagos16@gmail.com</p>
+            </div>
+            
+            <hr>
+            <p><i>Note: Once your account is deleted, all your products, messages, and profile information will be permanently removed from our servers.</i></p>
+        </div>
+    </body>
+    </html>
+  `;
+  res.send(html);
+});
 
 // =====================================================================
 // 2.5 🚀 ሓዱሽ ማጂክ: ሓላው-ኣፍደገ (Rate Limiting & DDoS Protection)
