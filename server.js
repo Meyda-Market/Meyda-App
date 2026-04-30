@@ -6,6 +6,8 @@ const fs = require('fs');
 const path = require('path');
 const cors = require('cors');
 const axios = require('axios'); // 🚀 ሓዱሽ ማጂክ: ምስ ባንኪ ንምዝርራብ
+// 🚀 ሓዱሽ ማጂክ: ናብ ኣድሚን ኢሜል ዝሰድድ መልእኽተኛ
+const nodemailer = require('nodemailer');
 // 🚀 ሓዱሽ ማጂክ: ዲጂታላዊ ዘብዐኛ (Timekeeper)
 const cron = require('node-cron'); 
 // 🚀 ሓዱሽ ማጂክ: ፓስዋርድ ዝሓብእ ሓያል ማጂክ
@@ -317,6 +319,8 @@ const userSchema = new mongoose.Schema({
     followers: [{ type: String }], 
     following: [{ type: String }], 
     savedProducts: [{ type: String }], 
+    // 👈 💡 ሓዱሽ ማጂክ: ዝተኣገዱ ዓማዊል ዝዕቀቡላ ማህደር
+    blockedUsers: [{ type: String }],
     role: { type: String, enum: ['user', 'admin', 'owner'], default: 'user' }, 
     createdAt: { type: Date, default: Date.now },
     
@@ -376,6 +380,17 @@ const settingsSchema = new mongoose.Schema({
     lastUpdatedBy: String
 });
 const Settings = mongoose.model('Settings', settingsSchema);
+// 4.6 🚀 ሓዱሽ ማጂክ: መዋቕር ን ሪፖርት (Report Schema)
+const reportSchema = new mongoose.Schema({
+    reporterId: { type: String, required: true }, // ሪፖርት ዝገበረ ሰብ
+    reportedUserId: { type: String, required: true }, // ሪፖርት ዝተገብረሉ ነጋዳይ
+    productId: { type: String, required: true }, // እቲ ኣቕሓ
+    reason: { type: String, required: true }, // ምኽንያት
+    type: { type: String, default: 'product' }, // ዓይነት
+    status: { type: String, default: 'pending' }, // pending, reviewed, resolved
+    createdAt: { type: Date, default: Date.now }
+});
+const Report = mongoose.model('Report', reportSchema);
 
 // =====================================================================
 // 🤖 ዲጂታላዊ ዘብዐኛ (The Timekeeper - Cron Job) - 🚀 ሓዱሽ: ዜና እውን ይጸርግ!
@@ -921,28 +936,82 @@ app.put('/api/products/:id', upload.array('images', 5), async (req, res) => {
     }
 });
 // =====================================================================
-// 12.5 🚀 ሓዱሽ ማጂክ: API ን ሪፖርት (Report Product)
+// 12.5 🚀 ሓዱሽ ማጂክ: API ን ሪፖርት (Report API & Email Notification) - PRO VERSION
 // =====================================================================
-app.post('/api/products/:id/report', async (req, res) => {
+app.post('/api/reports', async (req, res) => {
     try {
-        const { userId } = req.body;
-        const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
+        const { reporterId, reportedUserId, productId, reason, type } = req.body;
 
-        // 🛡️ Bulletproof: ኣረጊት ንብረት እንተኾይኑ ሳጹን ሪፖርት ባዕሉ ይፍጠር
-        if (!product.reports) product.reports = [];
+        // 1. ኣብ ዳታቤዝ ምዕቃብ (Save to MongoDB 'reports' collection)
+        const newReport = new Report({
+            reporterId, reportedUserId, productId, reason, type
+        });
+        await newReport.save();
 
-        if (!product.reports.includes(userId)) {
-            product.reports.push(userId);
-            await product.save();
-        }
-        res.status(200).json({ message: "ሪፖርትኩም ተቐቢልናዮ ኣለና። የቐንየልና!", reportsCount: product.reports.length });
+        // 2. ናብ ኣድሚን (ካብቴን ጀንትራ) ብቐጥታ ኢሜል ምስዳድ
+        // ማሕንቖ ከይፈጥር (Async) ንገድፎ, እቲ ሪስፖንስ ብቐጥታ ንተጠቃሚ ንመልሰሉ
+        sendAdminReportEmail(newReport).catch(console.error);
+
+        res.status(201).json({ message: "ሪፖርትኩም ተቐቢልናዮ ኣለና። የቐንየልና!" });
     } catch (error) {
         console.error("Report Error:", error);
         res.status(500).json({ message: "ሪፖርት ምግባር ኣይተኻእለን。" });
     }
 });
 
+// 🚀 ሓጋዚት ማጂክ (Helper Function): ኢሜል ናብ ኣድሚን እትሰድድ
+async function sendAdminReportEmail(reportData) {
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER || 'meydamarke.com', // ናትካ ኢሜል
+            pass: process.env.EMAIL_PASS // ⚠️ ኣገዳሲ: ካብ ጎግል 'App Password' ኣውጺእካ ኣብ .env ኣእቱ
+        }
+    });
+
+    const mailOptions = {
+        from: process.env.EMAIL_USER || 'meydamarket@gmail.com',
+        to: 'meydamarket@gmail.com', // ናባኻ (Admin) ክመጽእ
+        subject: '🚨 ሓዱሽ ሪፖርት ኣሎ: Meyda App',
+        html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+                <h2 style="color: #FF3B30;">🚩 ሓዱሽ ሪፖርት መጺኡ ኣሎ!</h2>
+                <p><strong>ምኽንያት:</strong> <span style="color: #555;">${reportData.reason}</span></p>
+                <hr>
+                <p><strong>ዓይነት:</strong> ${reportData.type}</p>
+                <p><strong>ኣቕሓ ID (Product):</strong> ${reportData.productId}</p>
+                <p><strong>ሪፖርት ዝገበረ ሰብ (Reporter ID):</strong> ${reportData.reporterId}</p>
+                <p><strong>ሪፖርት ዝተገብረሉ ሰብ (Reported User ID):</strong> ${reportData.reportedUserId}</p>
+                <br>
+                <p style="background: #f9f9f9; padding: 10px; border-left: 4px solid #029eff;">
+                    በጃኹም ኣብ ዳሽቦርድ ኣቲኹም ነዚ ጥርዓን ጻረዩዎ።
+                </p>
+            </div>
+        `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log("📧 ናይ ሪፖርት ኢሜል ብዓወት ናብ ኣድሚን ተላኢኹ ኣሎ!");
+}
+// 🚀 ሓዱሽ: ን ኣድሚን ዳሽቦርድ ኩሉ ሪፖርታት መምጽኢ (GET)
+app.get('/api/reports', async (req, res) => {
+    try {
+        const reports = await Report.find().sort({ createdAt: -1 });
+        res.status(200).json(reports);
+    } catch (error) { 
+        res.status(500).json({ message: "ጥርዓናት ክመጹ ኣይከኣሉን。" }); 
+    }
+});
+
+// 🚀 ሓዱሽ: ን ኣድሚን ዳሽቦርድ ጥርዓን መዕጸዊ ወይ መደምሰሲ (DELETE)
+app.delete('/api/reports/:id', async (req, res) => {
+    try {
+        await Report.findByIdAndDelete(req.params.id);
+        res.status(200).json({ message: "ጥርዓን ብዓወት ተደምሲሱ!" });
+    } catch (error) { 
+        res.status(500).json({ message: "ጥርዓን ምድምሳስ ኣይተኻእለን。" }); 
+    }
+});
 // =====================================================================
 // 12.6 🚀 ሓዱሽ ማጂክ: API ን ኮሜንት ኣብ ኣቕሑት (Comment on Product)
 // =====================================================================
@@ -1035,12 +1104,18 @@ app.post('/api/users/:userId/save', async (req, res) => {
 });
 
 // =====================================================================
-// 15. API: መልእኽቲ ንምስዳድ (Send Message)
+// 15. API: መልእኽቲ ንምስዳድ (Send Message) - ምስ መከላኸሊ ብሎክ 🛡️
 // =====================================================================
 app.post('/api/messages', async (req, res) => {
     try {
         const { senderId, senderName, receiverId, productId, productTitle, productImage, text, type } = req.body; 
         
+        // 👈 💡 ማጂክ (The Shield): እቲ ተቐባሊ (receiver) ነዚ ዝልእኽ ዘሎ ሰብ (sender) ኣጊዱዎ ዶ ኣሎ ንመርምር!
+        const receiver = await User.findById(receiverId);
+        if (receiver && receiver.blockedUsers && receiver.blockedUsers.includes(senderId)) {
+            return res.status(403).json({ message: "ክልኩል: እዚ ተጠቃሚ ኣጊዱኩም ኣሎ። መልእኽቲ ክትሰዱ ኣይትኽእሉን ኢኹም።" });
+        }
+
         const newMessage = new Message({
             senderId, senderName, receiverId, productId, productTitle, productImage, text, type
         });
@@ -1347,9 +1422,40 @@ app.get('/api/admin/settings/subscription-status', async (req, res) => {
         res.status(200).json({ require: settings ? settings.requireSubscription : false });
     } catch (e) { res.status(200).json({ require: false }); }
 });
+// =====================================================================
+// 20. 🚀 ሓዱሽ ማጂክ: ተጠቃሚ ንምእጋድን (Block) ንምፍታሕን (Unblock)
+// =====================================================================
+app.post('/api/users/:userId/block', async (req, res) => {
+    try {
+        const { userId } = req.params; // ኣነ (እቲ ዝእግድ ዘሎ)
+        const { blockUserId, action } = req.body; // እቲ ዝእገድ ዘሎን፣ እቲ ስጉምቲን (block/unblock)
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን" });
+
+        // ማህደር እንተዘይብሉ ሓዳስ ንፍጠረሉ
+        if (!user.blockedUsers) user.blockedUsers = [];
+
+        if (action === 'block' && !user.blockedUsers.includes(blockUserId)) {
+            user.blockedUsers.push(blockUserId);
+            await user.save();
+            return res.status(200).json({ message: "ተጠቃሚ ብዓወት ተኣጊዱ ኣሎ።", blockedUsers: user.blockedUsers });
+        } 
+        else if (action === 'unblock') {
+            user.blockedUsers = user.blockedUsers.filter(id => id !== blockUserId);
+            await user.save();
+            return res.status(200).json({ message: "ተጠቃሚ ብዓወት ተፈቲሑ ኣሎ።", blockedUsers: user.blockedUsers });
+        }
+
+        res.status(200).json({ message: "ምንም ለውጢ ኣይተገብረን።", blockedUsers: user.blockedUsers });
+    } catch (error) {
+        console.error("Block Error:", error);
+        res.status(500).json({ message: "ስጉምቲ ምውሳድ ኣይተኻእለን。" });
+    }
+});
 
 // =====================================================================
-// 20. ሰርቨር ምጅማር (Start Server)
+// 21. ሰርቨር ምጅማር (Start Server)
 // =====================================================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
