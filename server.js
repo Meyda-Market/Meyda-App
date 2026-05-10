@@ -284,6 +284,8 @@ const productSchema = new mongoose.Schema({
     adType: { type: String, default: 'market' },
     // 🚀 ሓዱሽ: ክንደይ ሰብ ከም ዝፈተዎ (Save ዝገበሮ) ይሕዝ
     savedBy: [{ type: String }],
+    // 🚀 ሓዱሽ ኣልጎሪዝም ማጂክ: ክንደይ ሰብ ርእዩዎ
+    views: { type: Number, default: 0 },
     
     // 🚀 ሓዱሽ ማጂክ: መዋቕር ን ኮሜንትን ሪፖርትን
     reports: [{ type: String }], // መን መን ሪፖርት ከም ዝገበሮ ዝሕዝ (User IDs)
@@ -436,11 +438,33 @@ cron.schedule('0 0 * * *', async () => {
 
 
 // =====================================================================
-// 5. API: ኣቕሑት ካብ ዳታቤዝ ንምምጻእ (GET Products)
+// 5. API: 🚀 MEYDA ALGORITHM (ኣቕሑት ብ ነጥቢ ተሰሪዖም ይመጹ)
 // =====================================================================
 app.get('/api/products', async (req, res) => {
     try { 
-        const products = await Product.find().sort({ createdAt: -1 }); 
+        let products = await Product.find().lean(); // lean() ንቕልጣፈ
+
+        // 🧠 ማጂክ ፎርሙላ: ንነፍሲ ወከፍ ኣቕሓ "ነጥቢ ሜይዳ" ንህቦ
+        products = products.map(p => {
+            const saves = p.savedBy ? p.savedBy.length : 0;
+            const comments = p.comments ? p.comments.length : 0;
+            const views = p.views || 0;
+            const imgCount = p.images ? p.images.length : 0;
+            const isPro = p.isPro ? 100 : 0; // 💎 VIP ነጋዳይ ብቐጥታ 100 ነጥቢ ይረክብ
+
+            // 🧮 ሕሳብ: (Saves*5) + (Comments*3) + (Views*1) + (Images*2) + PRO
+            let score = (saves * 5) + (comments * 3) + views + (imgCount * 2) + isPro;
+
+            // ሓዱሽ ንብረት ንመጀመርታ 3 መዓልቲ ዕድል ንምሃብ 20 ነጥቢ ቦነስ
+            const daysOld = (new Date().getTime() - new Date(p.createdAt).getTime()) / (1000 * 3600 * 24);
+            if (daysOld <= 3) score += 20;
+
+            return { ...p, meydaScore: score };
+        });
+
+        // 🏆 ውድድር: በቲ ዝዓበየ ነጥቢ (Score) ክስራዕ ንገብሮ
+        products.sort((a, b) => b.meydaScore - a.meydaScore);
+
         res.status(200).json(products); 
     } catch (error) { 
         res.status(500).json({ message: "ኣቕሑት ክመጹ ኣይከኣሉን。" }); 
@@ -899,6 +923,17 @@ app.get('/api/products/user/:sellerId', async (req, res) => {
         res.status(200).json(userProducts);
     } catch (error) { 
         res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
+    }
+});
+// =====================================================================
+// 🚀 ALGORITHM MAGIC 1: ንብረት ክኽፈት ከሎ View ይውስኽ
+// =====================================================================
+app.put('/api/products/:id/view', async (req, res) => {
+    try {
+        await Product.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } });
+        res.status(200).send('View Counted');
+    } catch (error) {
+        res.status(500).send('Error');
     }
 });
 
