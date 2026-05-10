@@ -373,10 +373,21 @@ const newsSchema = new mongoose.Schema({
 });
 const News = mongoose.model('News', newsSchema);
 
-// 4.5 መዋቕር ን ማስተር ስዊች (Global Settings Schema)
+// 4.5 መዋቕር ን ማስተር ስዊችን ፓኬጃትን (Global Settings & Packages Schema)
 const settingsSchema = new mongoose.Schema({
-    allowPublicPosting: { type: Boolean, default: true },
-    requireSubscription: { type: Boolean, default: false },
+    // 1. እተን 4 ማስተር ስዊችታት
+    allowNews: { type: Boolean, default: true },
+    requireSellSub: { type: Boolean, default: false },
+    requireProSub: { type: Boolean, default: true },
+    requireAdsSub: { type: Boolean, default: true },
+    
+    // 2. እቶም 3 ዋጋታትን ግዜን ናይ ፓኬጃት (Dynamic Pricing)
+    packages: {
+        sell: { price: { type: String, default: "0" }, days: { type: String, default: "30" } },
+        pro: { price: { type: String, default: "150" }, days: { type: String, default: "7" } },
+        ads: { price: { type: String, default: "300" }, days: { type: String, default: "15" } }
+    },
+    
     lastUpdatedBy: String
 });
 const Settings = mongoose.model('Settings', settingsSchema);
@@ -1350,7 +1361,7 @@ app.get('/api/admin/stats', async (req, res) => {
         
         let settings = await Settings.findOne();
         if (!settings) {
-            settings = new Settings({ allowPublicPosting: true, requireSubscription: false });
+            settings = new Settings(); // ዲፎልት ባዕሉ ክሕዝ እዩ (ካብ Schema)
             await settings.save();
         }
 
@@ -1358,8 +1369,14 @@ app.get('/api/admin/stats', async (req, res) => {
             users: userCount,
             products: productCount,
             news: newsCount,
-            allowPublicPosting: settings.allowPublicPosting,
-            requireSubscription: settings.requireSubscription
+            // 🚀 ሓዱሽ ማጂክ: ን ሞባይል (Dashboard) ዝኸይድ ሓዱሽ ሓበሬታ
+            settings: {
+                allowNews: settings.allowNews,
+                requireSellSub: settings.requireSellSub,
+                requireProSub: settings.requireProSub,
+                requireAdsSub: settings.requireAdsSub
+            },
+            packages: settings.packages
         });
     } catch (e) { res.status(500).json({ message: "Error fetching stats" }); }
 });
@@ -1381,30 +1398,39 @@ app.put('/api/admin/users/:id/role', async (req, res) => {
     } catch (e) { res.status(500).json({ message: "Error updating role" }); }
 });
 
-// 19.4 ማስተር ስዊች ምምሕዳር ን ዜና (Toggle Public Posting)
-app.post('/api/admin/settings/toggle-posting', async (req, res) => {
+// 19.4 🚀 ማጂክ: ማስተር ስዊች ን 4ቲኦም ብሓንሳብ ሴቭ ዝገብር (Toggle Master Switches)
+app.post('/api/admin/settings', async (req, res) => {
     try {
-        const { allow } = req.body;
+        const { allowNews, requireSellSub, requireProSub, requireAdsSub } = req.body;
         let settings = await Settings.findOne();
         if (!settings) settings = new Settings();
         
-        settings.allowPublicPosting = allow;
+        if (allowNews !== undefined) settings.allowNews = allowNews;
+        if (requireSellSub !== undefined) settings.requireSellSub = requireSellSub;
+        if (requireProSub !== undefined) settings.requireProSub = requireProSub;
+        if (requireAdsSub !== undefined) settings.requireAdsSub = requireAdsSub;
+        
         await settings.save();
-        res.status(200).json({ allowPublicPosting: settings.allowPublicPosting });
-    } catch (e) { res.status(500).json({ message: "Error toggling setting" }); }
+        res.status(200).json({ message: "Settings updated successfully", settings });
+    } catch (e) { 
+        res.status(500).json({ message: "Error updating settings" }); 
+    }
 });
 
-// 19.5 🚀 ማስተር ስዊች ን ክፍሊት ፓኬጅ (Toggle Paywall)
-app.post('/api/admin/settings/toggle-subscription', async (req, res) => {
+// 19.5 🚀 ማጂክ: ዋጋን ግዜን ናይ ፓኬጃት ሴቭ ዝገብር (Save Dynamic Packages)
+app.post('/api/admin/packages', async (req, res) => {
     try {
-        const { require } = req.body;
+        const newPackages = req.body; // ካብ ሞባይል {sell: {...}, pro: {...}, ads: {...}} ዝመጽእ
         let settings = await Settings.findOne();
         if (!settings) settings = new Settings();
         
-        settings.requireSubscription = require;
+        settings.packages = newPackages;
         await settings.save();
-        res.status(200).json({ requireSubscription: settings.requireSubscription });
-    } catch (e) { res.status(500).json({ message: "Error toggling subscription requirement" }); }
+        
+        res.status(200).json({ message: "Packages updated successfully", packages: settings.packages });
+    } catch (e) {
+        res.status(500).json({ message: "Error updating packages" });
+    }
 });
 
 // 19.6 ማስተር ስዊች ን ዜና (Check Status)
