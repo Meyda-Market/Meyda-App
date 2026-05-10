@@ -373,7 +373,7 @@ const newsSchema = new mongoose.Schema({
 });
 const News = mongoose.model('News', newsSchema);
 
-// 4.5 መዋቕር ን ማስተር ስዊችን ፓኬጃትን (Global Settings & Packages Schema)
+// 4.5 ማስተር ስዊችን ፓኬጃትን (Global Settings Schema)
 const settingsSchema = new mongoose.Schema({
     // 1. እተን 4 ማስተር ስዊችታት
     allowNews: { type: Boolean, default: true },
@@ -381,11 +381,11 @@ const settingsSchema = new mongoose.Schema({
     requireProSub: { type: Boolean, default: true },
     requireAdsSub: { type: Boolean, default: true },
     
-    // 2. እቶም 3 ዋጋታትን ግዜን ናይ ፓኬጃት (Dynamic Pricing)
+    // 2. 🚀 ዳይናሚክ ዝርዝር (Array) ናይ ፓኬጃት ን ሰለስቲኦም ታብታት
     packages: {
-        sell: { price: { type: String, default: "0" }, days: { type: String, default: "30" } },
-        pro: { price: { type: String, default: "150" }, days: { type: String, default: "7" } },
-        ads: { price: { type: String, default: "300" }, days: { type: String, default: "15" } }
+        sell: [{ name: String, price: Number, days: Number }],
+        pro: [{ name: String, price: Number, days: Number }],
+        ads: [{ name: String, price: Number, days: Number }]
     },
     
     lastUpdatedBy: String
@@ -458,31 +458,21 @@ app.post('/api/products', upload.array('images', 5), async (req, res) => {
         const imagePaths = req.files ? req.files.map(file => file.path) : [];
         
         const seller = await User.findById(sellerId);
-        let daysToLive = 7; // ብዲፎልት 7 መዓልቲ
+       let daysToLive = 7; // ዲፎልት 7 መዓልቲ
         
-        // 🚀 ሓዱሽ ማጂክ: Advert እንተኾይኑ ዋላ ካብ 30 መዓልቲ ንላዕሊ ክጸንሕ ፍቐደሉ
-        const isAdvert = adType === 'advert';
-
-        if (seller && seller.packageType) {
-            if (isAdvert) {
-                // Advert Packages
-                if (seller.packageType === '1_month') daysToLive = 30;
-                else if (seller.packageType === '3_months') daysToLive = 90;
-                else if (seller.packageType === '6_months') daysToLive = 180;
-                else if (seller.packageType === '1_year') daysToLive = 365;
-            } else {
-                // Normal Market Packages
-                if (seller.packageType === '1_week') {
-                    daysToLive = 7; 
-                } else if (seller.packageType !== 'none') {
-                    daysToLive = 30; 
-                }
+        // 🚀 ሓዱሽ ማጂክ: ሰርቨር ባዕሉ ነቲ ናይቲ ሰብ ዝተረፎ መዓልቲ ይርእዮ
+        if (seller && seller.isSubscribed && seller.expireDate) {
+            const now = new Date();
+            const remainingTime = seller.expireDate.getTime() - now.getTime();
+            const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
+            
+            if (remainingDays > 0) {
+                daysToLive = remainingDays; // ዝተረፎ መዓልቲ ይህቦ
             }
         }
 
         const expireDate = new Date();
         expireDate.setDate(expireDate.getDate() + daysToLive);
-
         const newProduct = new Product({ 
             title, price, category, condition, location, description, sellerId, icon, phone, 
             isPro: isPro === 'true',
@@ -730,9 +720,10 @@ app.post('/api/payment/init', async (req, res) => {
         // 💡 እዚ ናይ Chapa Sandbox Secret Key እዩ (Test)
         // ጽባሕ ናይ ሓቂ ኣካውንት ምስ ከፈትካ ነዛ ፊደል ጥራሕ ኢኻ ትቕይራ!
         const CHAPA_SECRET = process.env.CHAPA_SECRET || "CHASECK_TEST_xKxG0b3v4V3h7X8P9Y1Z2A3B4C5D6E7F"; 
-        
-        // 💡 ፍሉይ መለለዪ ናይዚ ክፍሊት (ID) - ነቲ ፓኬጅ ምስቲ ሰብ ንምትእስሳር
-        const tx_ref = `meyda-${packageType}-${Date.now()}-${userId}`; 
+
+        // 💡 ሓዱሽ ማጂክ: ኣብቲ መለለዪ (tx_ref) ነቲ ዝተኸፍለ 'ዋጋ' (amount) ንውስኾ ኣለና!
+        // ቅርጹ: meyda-packageType-amount-timestamp-userId
+        const tx_ref = `meyda-${packageType}-${amount}-${Date.now()}-${userId}`;
 
         // 🚀 ናብ ባንኪ (Chapa) ትእዛዝ ንሰድድ
         const response = await axios.post('https://api.chapa.co/v1/transaction/initialize', {
@@ -773,18 +764,33 @@ app.post('/api/payment/webhook', async (req, res) => {
         const { tx_ref, status } = req.body;
 
         if (status === 'success') {
-            // ካብቲ tx_ref ነቲ ሓበሬታ ንፈልዮ (meyda-packageType-timestamp-userId)
+            // 1. ካብቲ tx_ref ነቲ ሓበሬታ ንፈልዮ (meyda-packageType-amount-timestamp-userId)
             const parts = tx_ref.split('-');
-            const packageType = parts[1];
-            const userId = parts[3];
+            const packageType = parts[1]; // "regular", "market_pro", "advert_pro"
+            const paidAmount = Number(parts[2]); // 👈 💡 እቲ ዋጋ
+            const userId = parts.slice(4).join('-'); // 👈 💡 መለለዪ ተጠቃሚ
 
-            let daysToAdd = 0;
-            if (packageType === '1_week') daysToAdd = 7;
-            else if (packageType === '1_month') daysToAdd = 30;
-            else if (packageType === '3_months') daysToAdd = 90;
-            else if (packageType === '6_months') daysToAdd = 180;
-            else if (packageType === '1_year') daysToAdd = 365;
+            let daysToAdd = 7; // ዲፎልት መዓልቲ
 
+            // 2. 🚀 ሓዱሽ ማጂክ: ካብ ዳታቤዝ (Settings) ነቲ ዝተኸፍለሉ ዋጋ ርኢና መዓልቱ ንደልዮ
+            const settings = await Settings.findOne();
+            if (settings && settings.packages) {
+                let targetArray = [];
+                // ኣየናይ ታብ (Tab) ከምዝኾነ ንፈልዮ
+                if (packageType === 'regular' || packageType === 'sell') targetArray = settings.packages.sell;
+                else if (packageType === 'market_pro' || packageType === 'pro') targetArray = settings.packages.pro;
+                else if (packageType === 'advert_pro' || packageType === 'ads') targetArray = settings.packages.ads;
+
+                // 3. ነቲ ዋጋ (paidAmount) ዘመዓራርዮ ፓኬጅ ኣብቲ Array ንደልዮ
+                if (targetArray && targetArray.length > 0) {
+                    const matchedPkg = targetArray.find(p => Number(p.price) === paidAmount);
+                    if (matchedPkg && matchedPkg.days) {
+                        daysToAdd = Number(matchedPkg.days); // 👈 💡 ዳይናሚክ መዓልቲ ረኺብናዮ!
+                    }
+                }
+            }
+
+            // 4. ነቲ መዓልቲ ኣብ ልዕሊ ሎሚ ንውስኾ
             const expireDate = new Date();
             expireDate.setDate(expireDate.getDate() + daysToAdd);
 
