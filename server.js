@@ -1443,7 +1443,8 @@ app.post('/api/admin/packages', async (req, res) => {
 app.get('/api/admin/settings/posting-status', async (req, res) => {
     try {
         let settings = await Settings.findOne();
-        res.status(200).json({ allow: settings ? settings.allowPublicPosting : true });
+        // 👈 💡 ማጂክ: ነታ ኣረጊት ቃል ብ 'allowNews' ተኪእናያ ኣለና!
+        res.status(200).json({ allow: settings ? settings.allowNews : true });
     } catch (e) { res.status(200).json({ allow: true }); }
 });
 
