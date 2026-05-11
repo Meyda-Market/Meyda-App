@@ -286,7 +286,21 @@ const productSchema = new mongoose.Schema({
     savedBy: [{ type: String }],
     // 🚀 ሓዱሽ ኣልጎሪዝም ማጂክ: ክንደይ ሰብ ርእዩዎ
     views: { type: Number, default: 0 },
+
+    // ==========================================================
+    // 🚀 MEYDA REELS (Version 2.0) - ዓለም-ለኻዊ ማጂክ ቪድዮ
+    // ==========================================================
+    // 1. መኽዘን ቪድዮ (Video URL): ሓደ ነጋዳይ ቪድዮ ምስ ዝጽዕን ኣብ ክላውድ (Cloudinary) ተዓቂቡ እቲ ሊንክ ኣብዚ ይቕመጥ።
+    videoUrl: { type: String, default: "" },
     
+    // 2. መለለዪ ዓይነት (Media Type): እዚ ኣቕሓ ኖርማል 'ስእሊ' ድዩ ወይስ 'ቪድዮ' (Reel)?
+    // እዚ ኣዝዩ ኣገዳሲ እዩ! ጽባሕ ሞባይል "ነቶም ናይ Reels ቪድዮታት ጥራሕ ሃበኒ" ኢላ ክትሓትት ከላ፣
+    // ኣልጎሪዝም ነዚ 'video' ዝብል ቃል ርእዩ ልክዕ ከም ቲክቶክ ፈልዩ የውጽኦም።
+    mediaType: { type: String, enum: ['image', 'video'], default: 'image' },
+    // ==========================================================
+    
+    
+
     // 🚀 ሓዱሽ ማጂክ: መዋቕር ን ኮሜንትን ሪፖርትን
     reports: [{ type: String }], // መን መን ሪፖርት ከም ዝገበሮ ዝሕዝ (User IDs)
     comments: [{
@@ -351,34 +365,11 @@ const messageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', messageSchema);
 
-// 4.4 መዋቕር ን ዜናን ሓበሬታን (News/Post Schema)
-const newsSchema = new mongoose.Schema({
-    authorId: { type: String, required: true },
-    authorName: { type: String, required: true },
-    authorPic: { type: String },
-    title: { type: String, default: "" },
-    description: { type: String, required: true },
-    category: { type: String, default: "ወግዓዊ" }, 
-    mediaUrl: { type: String, default: "" }, 
-    mediaType: { type: String, default: "" }, 
-    isPinned: { type: Boolean, default: false }, 
-    likes: [{ type: String }], 
-    comments: [{
-        userId: String,
-        userName: String,
-        userPic: String,
-        text: String,
-        likes: [{ type: String }],
-        createdAt: { type: Date, default: Date.now }
-    }],
-    createdAt: { type: Date, default: Date.now } // ንዜና እዚኣ እያ መለለዪት ክትኮነና
-});
-const News = mongoose.model('News', newsSchema);
 
 // 4.5 ማስተር ስዊችን ፓኬጃትን (Global Settings Schema)
 const settingsSchema = new mongoose.Schema({
-    // 1. እተን 4 ማስተር ስዊችታት
-    allowNews: { type: Boolean, default: true },
+    // 1. እተን 3 ማስተር ስዊችታት
+   
     requireSellSub: { type: Boolean, default: false },
     requireProSub: { type: Boolean, default: true },
     requireAdsSub: { type: Boolean, default: true },
@@ -422,15 +413,11 @@ cron.schedule('0 0 * * *', async () => {
         // 2. ግዜኦም ዝሓለፉ ኣቕሑት የጥፍእ
         const deletedProducts = await Product.deleteMany({ expiresAt: { $lt: now } });
         
-        // 🚀 3. ሓዱሽ: 6 ወርሒ ዝገበሩ ዜናታት ካብ ዳታቤዝ የጥፍእ!
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6); // ካብ ሎሚ ናብ 6 ወርሒ ንድሕሪት!
-        
-        const deletedNews = await News.deleteMany({ createdAt: { $lt: sixMonthsAgo } });
+       
         
         console.log(`✅ ዲጂታላዊ ዘብዐኛ: ${expiredUsers.modifiedCount} ተጠቀምቲ ፓኬጆም ወዲቑ ኣሎ.`);
         console.log(`🛍️ ዲጂታላዊ ዘብዐኛ: ${deletedProducts.deletedCount} ዝኣረጉ ኣቕሑት ብዓወት ተደምሲሶም.`);
-        console.log(`📰 ዲጂታላዊ ዘብዐኛ: ${deletedNews.deletedCount} ዝኣረጉ ዜናታት (6 ወርሒ ዝገበሩ) ብዓወት ተደምሲሶም.`);
+        
     } catch (error) {
         console.error('❌ ዲጂታላዊ ዘብዐኛ ጌጋ ኣጋጢሙዎ:', error);
     }
@@ -472,36 +459,51 @@ app.get('/api/products', async (req, res) => {
 });
 
 // =====================================================================
-// 6. API: ሓዱሽ ንብረት ንምምዝጋብ (POST Product)
+// 6. API: ሓዱሽ ንብረት ንምምዝጋብ (POST Product) - 🚀 REELS SUPPORTED
 // =====================================================================
-app.post('/api/products', upload.array('images', 5), async (req, res) => {
+// 👈 💡 ማጂክ: ሕጂ 'images' (ክሳብ 5) ከምኡ'ውን 'video' (1 ቪድዮ) ብሓንሳብ ክቕበል ዝኽእል ሓያል ኣፍደገ ጌርናዮ ኣለና!
+app.post('/api/products', upload.fields([{ name: 'images', maxCount: 5 }, { name: 'video', maxCount: 1 }]), async (req, res) => {
     try {
-        // 🚀 ሓዱሽ ማጂክ: adType ተወሲኻ ኣላ 
         const { title, price, category, condition, location, description, sellerId, icon, phone, isPro, adType } = req.body; 
         
-        const imagePaths = req.files ? req.files.map(file => file.path) : [];
+        // 1. ስእልታት እንተመጺኦም ምድላው
+        const imagePaths = req.files && req.files['images'] ? req.files['images'].map(file => file.path) : [];
+        
+        // 2. 🚀 ማጂክ ቪድዮ (Reels): ቪድዮ እንተመጺኡ ፈልዩ የውጽኦ
+        let videoPath = "";
+        let typeOfMedia = "image"; // መጀመርታ ከም 'ስእሊ' ኢና ንቖጽሮ (Default)
+        
+        // ዓሚል ቪድዮ እንተሰዲዱ ግን...
+        if (req.files && req.files['video'] && req.files['video'].length > 0) {
+            videoPath = req.files['video'][0].path; // ሊንክ ናይቲ ቪድዮ ካብ Cloudinary ንወስድ
+            typeOfMedia = "video"; // 👈 💡 መለለዪኡ ናብ 'ቪድዮ' (Reel) ይቕየር!
+        }
         
         const seller = await User.findById(sellerId);
-       let daysToLive = 7; // ዲፎልት 7 መዓልቲ
+        let daysToLive = 7; 
         
-        // 🚀 ሓዱሽ ማጂክ: ሰርቨር ባዕሉ ነቲ ናይቲ ሰብ ዝተረፎ መዓልቲ ይርእዮ
+        // ሰርቨር ባዕሉ ነቲ ናይቲ ሰብ ዝተረፎ መዓልቲ ይርእዮ
         if (seller && seller.isSubscribed && seller.expireDate) {
             const now = new Date();
             const remainingTime = seller.expireDate.getTime() - now.getTime();
             const remainingDays = Math.ceil(remainingTime / (1000 * 60 * 60 * 24));
             
             if (remainingDays > 0) {
-                daysToLive = remainingDays; // ዝተረፎ መዓልቲ ይህቦ
+                daysToLive = remainingDays; 
             }
         }
 
         const expireDate = new Date();
         expireDate.setDate(expireDate.getDate() + daysToLive);
+
+        // 3. ኩሉ ጠርኒፍና ናብ ዳታቤዝ ነእትዎ
         const newProduct = new Product({ 
             title, price, category, condition, location, description, sellerId, icon, phone, 
             isPro: isPro === 'true',
-            adType: adType || 'market', // Advert ድዩ ወይስ Market ኣብ ዳታቤዝ ይምዝገብ
+            adType: adType || 'market', 
             images: imagePaths,
+            videoUrl: videoPath,      // 🚀 ሓዱሽ ማጂክ: ሊንክ ቪድዮ
+            mediaType: typeOfMedia,   // 🚀 ሓዱሽ ማጂክ: Reel ድዩ ኖርማል?
             expiresAt: expireDate 
         });
         
@@ -1235,133 +1237,6 @@ app.put('/api/messages/mark-read', async (req, res) => {
   }
 });
 
-// =====================================================================
-// 17. APIs ን ዜና (News / Posts)
-// =====================================================================
-
-function filterBadWords(text) {
-    const badWords = ['ሕማቕ', 'ጽያፍ', 'ዓሻ', 'ድሕሪት', 'ሌባ', 'badword1', 'badword2'];
-    let filteredText = text;
-    
-    badWords.forEach(word => {
-        const regex = new RegExp(word, 'gi');
-        filteredText = filteredText.replace(regex, '***');
-    });
-    return filteredText;
-}
-
-app.get('/api/news', async (req, res) => {
-    try {
-        const newsList = await News.find().sort({ isPinned: -1, createdAt: -1 });
-        res.status(200).json(newsList);
-    } catch (error) {
-        res.status(500).json({ message: "ዜና ክመጽእ ኣይከኣለን。" });
-    }
-});
-
-app.post('/api/news', upload.single('media'), async (req, res) => {
-    try {
-        const { authorId, authorName, authorPic, title, description, category, isPinned } = req.body;
-        
-        let mediaUrl = ""; let mediaType = "";
-        if (req.file) {
-            mediaUrl = req.file.path; 
-            if (req.file.mimetype.startsWith('video/')) { mediaType = 'video'; } 
-            else { mediaType = 'image'; }
-        }
-
-        const newPost = new News({
-            authorId, authorName, authorPic, title, category, mediaUrl, mediaType,
-            description: filterBadWords(description), 
-            isPinned: isPinned === 'true'
-        });
-
-        await newPost.save();
-        res.status(201).json({ message: "ፖስት ብዓወት ተለጢፉ ኣሎ!", post: newPost });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "ፖስት ምልጣፍ ኣይተኻእለን。" });
-    }
-});
-
-app.delete('/api/news/:id', async (req, res) => {
-    try {
-        await News.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: "ፖስት ብዓወት ተደምሲሱ ኣሎ!" });
-    } catch (error) {
-        res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን。" });
-    }
-});
-
-app.post('/api/news/:id/like', async (req, res) => {
-    try {
-        const { userId, userName } = req.body; 
-        const post = await News.findById(req.params.id);
-        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን。" });
-
-        const likeIndex = post.likes.indexOf(userId);
-        if (likeIndex === -1) {
-            post.likes.push(userId); // Like
-
-            if (userId !== post.authorId) {
-                const newNotif = new Message({
-                    senderId: userId, senderName: userName || "ተጠቃሚ",
-                    receiverId: post.authorId, productId: post._id, productTitle: post.title || "ዜና",
-                    text: "ነቲ ዝለጠፍካዮ ፖስት ላይክ (Like) ገይሩዎ ኣሎ。", type: 'like'
-                });
-                await newNotif.save();
-            }
-        } else {
-            post.likes.splice(likeIndex, 1); // Unlike
-        }
-
-        await post.save();
-        res.status(200).json({ likesCount: post.likes.length, isLiked: likeIndex === -1 });
-    } catch (error) {
-        res.status(500).json({ message: "ላይክ ምግባር ኣይተኻእለን。" });
-    }
-});
-
-app.post('/api/news/:id/comment', async (req, res) => {
-    try {
-        const { userId, userName, userPic, text } = req.body;
-        const post = await News.findById(req.params.id);
-        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን。" });
-
-        const cleanText = filterBadWords(text); 
-
-        const newComment = { userId, userName, userPic, text: cleanText };
-        post.comments.push(newComment);
-        
-        if (userId !== post.authorId) {
-            const newNotif = new Message({
-                senderId: userId, senderName: userName,
-                receiverId: post.authorId, productId: post._id, productTitle: post.title || "ዜና",
-                text: `ኣብ ፖስትካ ርእይቶ ሂቡ ኣሎ:- "${cleanText}"`, type: 'comment'
-            });
-            await newNotif.save();
-        }
-
-        await post.save();
-        res.status(201).json({ message: "ኮሜንት ተለጢፉ ኣሎ!", comments: post.comments });
-    } catch (error) {
-        res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን。" });
-    }
-});
-
-app.delete('/api/news/:postId/comment/:commentId', async (req, res) => {
-    try {
-        const post = await News.findById(req.params.postId);
-        if (!post) return res.status(404).json({ message: "ፖስት ኣይተረኽበን。" });
-
-        post.comments = post.comments.filter(c => c._id.toString() !== req.params.commentId);
-        await post.save();
-
-        res.status(200).json({ message: "ኮሜንት ተደምሲሱ ኣሎ!", comments: post.comments });
-    } catch (error) {
-        res.status(500).json({ message: "ምድምሳስ ኣይተኻእለን。" });
-    }
-});
 
 // =====================================================================
 // 18. API: ሓደ ሰብ ንምስዓብ (Follow / Unfollow User)
@@ -1398,7 +1273,7 @@ app.get('/api/admin/stats', async (req, res) => {
     try {
         const userCount = await User.countDocuments();
         const productCount = await Product.countDocuments();
-        const newsCount = await News.countDocuments();
+        
         
         let settings = await Settings.findOne();
         if (!settings) {
@@ -1409,10 +1284,10 @@ app.get('/api/admin/stats', async (req, res) => {
         res.status(200).json({
             users: userCount,
             products: productCount,
-            news: newsCount,
+            
             // 🚀 ሓዱሽ ማጂክ: ን ሞባይል (Dashboard) ዝኸይድ ሓዱሽ ሓበሬታ
             settings: {
-                allowNews: settings.allowNews,
+               
                 requireSellSub: settings.requireSellSub,
                 requireProSub: settings.requireProSub,
                 requireAdsSub: settings.requireAdsSub
@@ -1439,14 +1314,14 @@ app.put('/api/admin/users/:id/role', async (req, res) => {
     } catch (e) { res.status(500).json({ message: "Error updating role" }); }
 });
 
-// 19.4 🚀 ማጂክ: ማስተር ስዊች ን 4ቲኦም ብሓንሳብ ሴቭ ዝገብር (Toggle Master Switches)
+// 19.4 🚀 ማጂክ: ማስተር ስዊች ን 3ቲኦም ብሓንሳብ ሴቭ ዝገብር (Toggle Master Switches)
 app.post('/api/admin/settings', async (req, res) => {
     try {
-        const { allowNews, requireSellSub, requireProSub, requireAdsSub } = req.body;
+        const {  requireSellSub, requireProSub, requireAdsSub } = req.body;
         let settings = await Settings.findOne();
         if (!settings) settings = new Settings();
         
-        if (allowNews !== undefined) settings.allowNews = allowNews;
+       
         if (requireSellSub !== undefined) settings.requireSellSub = requireSellSub;
         if (requireProSub !== undefined) settings.requireProSub = requireProSub;
         if (requireAdsSub !== undefined) settings.requireAdsSub = requireAdsSub;
@@ -1474,14 +1349,7 @@ app.post('/api/admin/packages', async (req, res) => {
     }
 });
 
-// 19.6 ማስተር ስዊች ን ዜና (Check Status)
-app.get('/api/admin/settings/posting-status', async (req, res) => {
-    try {
-        let settings = await Settings.findOne();
-        // 👈 💡 ማጂክ: ነታ ኣረጊት ቃል ብ 'allowNews' ተኪእናያ ኣለና!
-        res.status(200).json({ allow: settings ? settings.allowNews : true });
-    } catch (e) { res.status(200).json({ allow: true }); }
-});
+
 
 // 19.7 🚀 ማስተር ስዊች ን ክፍሊት (Check Status for sell.html)
 app.get('/api/admin/settings/subscription-status', async (req, res) => {
