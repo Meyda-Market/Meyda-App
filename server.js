@@ -1237,6 +1237,72 @@ app.put('/api/messages/mark-read', async (req, res) => {
   }
 });
 
+// ==========================================================
+// 17. ማጂክ ሼር (Facebook/Telegram Open Graph Preview)
+// ==========================================================
+app.get('/product/:id', async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id); 
+    
+    if (!product) {
+      return res.status(404).send('ኣቕሓ ኣይተረኽበን (Product not found)');
+    }
+
+    const imageUrl = product.images && product.images.length > 0 
+      ? product.images[0] 
+      : product.videoUrl || "https://meyda-app.onrender.com/default-logo.png";
+
+    const fullImageUrl = imageUrl.startsWith('http') ? imageUrl : `https://meyda-app.onrender.com${imageUrl}`;
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="ti">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${product.title} | Meyda Market</title>
+        
+        <!-- 🔗 Facebook / WhatsApp / Telegram Open Graph -->
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="${product.title} - ${product.price} ETB" />
+        <meta property="og:description" content="📍 ቦታ: ${product.location} | ${product.description}" />
+        <meta property="og:image" content="${fullImageUrl}" />
+        <meta property="og:url" content="https://meyda-app.onrender.com/product/${product._id}" />
+        <meta property="og:site_name" content="Meyda - ማሕበራዊ ዕዳጋ" />
+
+        <!-- 🐦 Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="${product.title} - ${product.price} ETB" />
+        <meta name="twitter:description" content="📍 ቦታ: ${product.location}" />
+        <meta name="twitter:image" content="${fullImageUrl}" />
+
+        <style>
+          body { font-family: sans-serif; text-align: center; padding: 50px; background: #f5f8fa; }
+          .loader { border: 4px solid #f3f3f3; border-top: 4px solid #029eff; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+          @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        </style>
+      </head>
+      <body>
+        <h2>ናብ Meyda ኣፕሊኬሽን ንወስደኩም ኣለና...</h2>
+        <div class="loader"></div>
+        <p>ኣፕሊኬሽንኩም ብኣውቶማቲክ እንተዘይተኸፊቱ፡ <a href="meyda://product/${product._id}" style="color: #029eff;">ኣብዚ ጠውቑ</a></p>
+
+        <script>
+          window.location.href = "meyda://product/${product._id}";
+          setTimeout(function() {
+             window.location.href = "https://play.google.com/store/apps/details?id=com.jentra.meyda";
+          }, 3000);
+        </script>
+      </body>
+      </html>
+    `;
+
+    res.send(html);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Server Error');
+  }
+});
 
 // =====================================================================
 // 18. API: ሓደ ሰብ ንምስዓብ (Follow / Unfollow User)
