@@ -346,7 +346,23 @@ const userSchema = new mongoose.Schema({
 
     // 🚀 ሓዱሽ ማጂክ: መቐመጢ ናይ 4 ቁጽሪ OTP ን ግዜኡን (Security)
     resetOTP: { type: String, default: null },
-    resetOTPExpire: { type: Date, default: null }
+    resetOTPExpire: { type: Date, default: null },
+    
+
+    // ==========================================================
+    // 🚀 ሓዱሽ ማጂክ: መኽዘን ቨሪፊኬሽን (Verification Badge System)
+    // ==========================================================
+    isVerified: { type: Boolean, default: false },
+    badgeType: { type: String, enum: ['none', 'blue', 'gold'], default: 'none' },
+    verificationStatus: { type: String, enum: ['idle', 'pending', 'approved', 'rejected'], default: 'idle' },
+    verificationData: {
+        idType: { type: String }, // 'passport', 'national_id', 'business_license'
+        idImage: { type: String }, // ስእሊ መታወቂያ
+        selfieImage: { type: String }, // ቀጥታ ሰልፊ (Live Selfie)
+        tinNumber: { type: String }, // ን ወርቃዊ ባጅ (TIN)
+        businessName: { type: String }, // ስም ትካል
+        submittedAt: { type: Date }
+    }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -1494,6 +1510,33 @@ app.get('/api/admin/settings/subscription-status', async (req, res) => {
         res.status(200).json({ require: settings ? settings.requireSubscription : false });
     } catch (e) { res.status(200).json({ require: false }); }
 });
+// 19.8 🚀 ማጂክ: ኩሎም ዝጽበዩ ዘለዉ ቨሪፊኬሽን ሕቶታት ምምጻእ (Get Pending Verifications)
+app.get('/api/admin/verifications/pending', async (req, res) => {
+    try {
+        const pendingUsers = await User.find({ verificationStatus: 'pending' })
+                                       .select('name email phone profilePic verificationData');
+        res.status(200).json(pendingUsers);
+    } catch (error) {
+        res.status(500).json({ message: "ሕቶታት ክመጹ ኣይከኣሉን።" });
+    }
+});
+
+// 19.9 🚀 ማጂክ: ቨሪፊኬሽን ምጽዳቕ (Approve) ወይ ምንጻግ (Reject)
+app.put('/api/admin/verifications/:id/review', async (req, res) => {
+    try {
+        const { status, badgeType } = req.body; // status: 'approved' ወይ 'rejected', badgeType: 'blue' ወይ 'gold'
+
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, {
+            verificationStatus: status,
+            isVerified: status === 'approved',
+            badgeType: status === 'approved' ? badgeType : 'none'
+        }, { new: true });
+
+        res.status(200).json({ message: `ተጠቃሚ ብዓወት ${status} ኮይኑ ኣሎ!`, user: updatedUser });
+    } catch (error) {
+        res.status(500).json({ message: "ስጉምቲ ምውሳድ ኣይተኻእለን።" });
+    }
+});
 // =====================================================================
 // 20. 🚀 ሓዱሽ ማጂክ: ተጠቃሚ ንምእጋድን (Block) ንምፍታሕን (Unblock)
 // =====================================================================
@@ -1523,6 +1566,39 @@ app.post('/api/users/:userId/block', async (req, res) => {
     } catch (error) {
         console.error("Block Error:", error);
         res.status(500).json({ message: "ስጉምቲ ምውሳድ ኣይተኻእለን。" });
+    }
+});
+// =====================================================================
+// 20.5 🚀 ሓዱሽ ማጂክ: ተጠቃሚ ቨሪፊኬሽን ዝሓተሉ (Request Verification)
+// =====================================================================
+// 💡 ማጂክ: ክልተ ስእልታት ብሓንሳብ ይቕበል (idImage ን selfieImage ን)
+app.post('/api/users/:id/request-verification', upload.fields([{ name: 'idImage', maxCount: 1 }, { name: 'selfieImage', maxCount: 1 }]), async (req, res) => {
+    try {
+        const { idType, tinNumber, businessName } = req.body;
+        
+        let idImagePath = req.files && req.files['idImage'] ? req.files['idImage'][0].path : "";
+        let selfieImagePath = req.files && req.files['selfieImage'] ? req.files['selfieImage'][0].path : "";
+
+        if (!idImagePath || !selfieImagePath) {
+            return res.status(400).json({ message: "ስእሊ መታወቂያን ላይቭ ሰልፊን ግድን እዩ።" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, {
+            verificationStatus: 'pending',
+            verificationData: {
+                idType,
+                idImage: idImagePath,
+                selfieImage: selfieImagePath,
+                tinNumber: tinNumber || "",
+                businessName: businessName || "",
+                submittedAt: new Date()
+            }
+        }, { new: true });
+
+        res.status(200).json({ message: "ሕቶኹም ብዓወት ተቐቢልናዮ ኣለና! ኣድሚን ምስ ረኣዮ መልሲ ክንህበኩም ኢና።" });
+    } catch (error) {
+        console.error("Verification Request Error:", error);
+        res.status(500).json({ message: "ሕቶኹም ክለኣኽ ኣይከኣለን።" });
     }
 });
 
