@@ -575,6 +575,76 @@ app.post('/api/products', upload.fields([{ name: 'images', maxCount: 5 }, { name
     }
 });
 // =====================================================================
+// 6.5 API: ሓንቲ ፍልይቲ ኣቕሓ ብ ID ንምምጻእ (Get Single Product) - 🚀 ሓዱሽ ማጂክ ን ፐርፎርማንስ
+// =====================================================================
+app.get('/api/products/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id).lean();
+        if (!product) {
+            return res.status(404).json({ message: "እዚ ኣቕሓ ኣይተረኽበን።" });
+        }
+
+        // 💡 ማጂክ: ልክዕ ከምቲ ኣብ ኩሎም ኣቕሑት ዝገበርናዮ፣ ኣብዚ እውን ን ኮሜንታት ራይት ባጅ ክንሰኽዓሎም ኢና
+        if (product.comments && product.comments.length > 0) {
+            const userIds = new Set();
+            product.comments.forEach(c => {
+                if (c.userId) userIds.add(c.userId);
+                if (c.replies) {
+                    c.replies.forEach(r => { if (r.userId) userIds.add(r.userId); });
+                }
+            });
+
+            const validIds = Array.from(userIds).filter(id => mongoose.Types.ObjectId.isValid(id));
+            const usersWithBadges = await User.find({ _id: { $in: validIds } }, 'badgeType');
+            
+            const badgeMap = {};
+            usersWithBadges.forEach(u => {
+                badgeMap[u._id.toString()] = u.badgeType || 'none';
+            });
+
+            product.comments = product.comments.map(c => {
+                c.userBadge = badgeMap[c.userId] || 'none';
+                if (c.replies) {
+                    c.replies = c.replies.map(r => {
+                        r.userBadge = badgeMap[r.userId] || 'none';
+                        return r;
+                    });
+                }
+                return c;
+            });
+        }
+
+        res.status(200).json(product);
+    } catch (error) {
+        console.error("Single Product Fetch Error:", error);
+        res.status(500).json({ message: "ኣቕሓ መምጻእ ኣይተኻእለን።" });
+    }
+});
+
+// =====================================================================
+// 6.6 API: ተመሳሰልቲ ኣቕሑት ንምምጻእ (Get Related Products) - 🚀 ሓዱሽ ማጂክ ን ፐርፎርማንስ
+// =====================================================================
+app.get('/api/products/:id/related', async (req, res) => {
+    try {
+        const currentProduct = await Product.findById(req.params.id);
+        if (!currentProduct) return res.status(404).json({ message: "ኣቕሓ ኣይተረኽበን" });
+
+        // 💡 ማጂክ: ሕደ ካተጎሪ (Category) ዘለዎም 10 ኣቕሑት ጥራሕ ይደሊ (ነቲ ባዕሉ ግን ይገድፎ)
+        const related = await Product.find({
+            _id: { $ne: currentProduct._id }, // ነዚ ኣቕሓ ኣይተእትዎ
+            category: currentProduct.category
+        })
+        .sort({ meydaScore: -1, createdAt: -1 }) // ብነጥብን ብግዜን የቐድሞም
+        .limit(10) // 10 ጥራሕ!
+        .lean();
+
+        res.status(200).json(related);
+    } catch (error) {
+        console.error("Related Products Fetch Error:", error);
+        res.status(500).json({ message: "ተመሳሰልቲ ኣቕሑት ክመጹ ኣይከኣሉን።" });
+    }
+});
+// =====================================================================
 // 7. API: ሓዱሽ ተጠቃሚ ንምምዝጋብ (Sign Up)
 // =====================================================================
 app.post('/api/users/register', async (req, res) => {
@@ -964,15 +1034,16 @@ app.delete('/api/users/:id', async (req, res) => {
         // 2. ኩሉ ኣቕሑቱ ደምስስ
         await Product.deleteMany({ sellerId: userId });
 
-        // 3. ኩሉ ዜናታቱ ደምስስ
-        await News.deleteMany({ authorId: userId });
+        // 💡 ማጂክ ምትዕርራይ: ናይ 'News' ምድምሳስ ኮድ ኣጥፊእናዮ ኣለና ምኽንያቱ News Schema የለን!
 
-        // 4. ዝለኣኾ ወይ ዝተቐበሎ መልእኽትታት ደምስስ
+        // 3. ዝለኣኾ ወይ ዝተቐበሎ መልእኽትታት ደምስስ
         await Message.deleteMany({ $or: [{ senderId: userId }, { receiverId: userId }] });
 
         res.status(200).json({ message: "ኣካውንትኩምን ኩሉ ሓበሬታኹምን ብዓወት ተደምሲሱ ኣሎ!" });
     } catch (error) {
-        res.status(500).json({ message: "ኣካውንት ምድምሳስ ኣይተኻእለን。" });
+        // 💡 ማጂክ: ጌጋ እንተመጺኡ ኣብ ሰርቨር ምእንቲ ክንሪኦ console.log ወሲኽናሉ ኣለና
+        console.error("Delete Account Error:", error);
+        res.status(500).json({ message: "ኣካውንት ምድምሳስ ኣይተኻእለን።" });
     }
 });
 
@@ -1078,12 +1149,14 @@ async function sendAdminReportEmail(reportData) {
     const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-            user: process.env.EMAIL_USER || 'meydamarke.com', // ናትካ ኢሜል
+            // 💡 ማጂክ ምትዕርራይ: 'meydamarke.com' ዝነበረ ናብ ትኽክለኛ 'meydamarket@gmail.com' ተቐይሩ ኣሎ
+            user: process.env.EMAIL_USER || 'meydamarket@gmail.com', 
             pass: process.env.EMAIL_PASS // ⚠️ ኣገዳሲ: ካብ ጎግል 'App Password' ኣውጺእካ ኣብ .env ኣእቱ
         }
     });
 
     const mailOptions = {
+        // 💡 ማጂክ ምትዕርራይ: ኣብዚ እውን ትኽክለኛ ኢሜል ኣእቲና ኣለና
         from: process.env.EMAIL_USER || 'meydamarket@gmail.com',
         to: 'meydamarket@gmail.com', // ናባኻ (Admin) ክመጽእ
         subject: '🚨 ሓዱሽ ሪፖርት ኣሎ: Meyda App',
@@ -1260,7 +1333,8 @@ app.post('/api/users/:userId/save', async (req, res) => {
 // =====================================================================
 app.post('/api/messages', async (req, res) => {
     try {
-        const { senderId, senderName, receiverId, productId, productTitle, productImage, text, type } = req.body; 
+        // 💡 ማጂክ ምትዕርራይ: ካብ ሞባይል 'productName' እዩ ዝመጽእ ዘሎ፣ ስለዚ productName እውን ተቐበል ኢልናዮ ኣለና!
+        const { senderId, senderName, receiverId, productId, productTitle, productName, productImage, text, type } = req.body; 
         
         // 👈 💡 ማጂክ (The Shield): እቲ ተቐባሊ (receiver) ነዚ ዝልእኽ ዘሎ ሰብ (sender) ኣጊዱዎ ዶ ኣሎ ንመርምር!
         const receiver = await User.findById(receiverId);
@@ -1268,8 +1342,13 @@ app.post('/api/messages', async (req, res) => {
             return res.status(403).json({ message: "ክልኩል: እዚ ተጠቃሚ ኣጊዱኩም ኣሎ። መልእኽቲ ክትሰዱ ኣይትኽእሉን ኢኹም።" });
         }
 
+        // 💡 ማጂክ ምትዕርራይ: productTitle እንተዘይመጺኡ ነቲ productName ከም Title ይጥቀመሉ
+        const finalProductTitle = productTitle || productName || "";
+
         const newMessage = new Message({
-            senderId, senderName, receiverId, productId, productTitle, productImage, text, type
+            senderId, senderName, receiverId, productId, 
+            productTitle: finalProductTitle, // 👈 ኣብዚ እታ ምትዕርራይ ትኣቱ
+            productImage, text, type
         });
         
         await newMessage.save();
