@@ -308,14 +308,16 @@ const productSchema = new mongoose.Schema({
         userName: String,
         userPic: String,
         text: String,
-        userBadge: { type: String, default: 'none' }, // 👈 💡 ማጂክ: ባጅ ኣብ ኮሜንት
+        userBadge: { type: String, default: 'none' },
+        likes: [{ type: String }], // 👈 💡 ማጂክ: መኽዘን ላይክ ን ዋና ኮሜንት
         createdAt: { type: Date, default: Date.now },
-        replies: [{ // 🚀 ሓዱሽ: ን ኮሜንት ሪፕላይ (Reply) መግበሪ
+        replies: [{ 
             userId: String,
             userName: String,
             userPic: String,
             text: String,
-            userBadge: { type: String, default: 'none' }, // 👈 💡 ማጂክ: ባጅ ኣብ ሪፕለይ
+            userBadge: { type: String, default: 'none' },
+            likes: [{ type: String }], // 👈 💡 ማጂክ: መኽዘን ላይክ ን ሪፕለይ
             createdAt: { type: Date, default: Date.now }
         }]
     }],
@@ -1176,6 +1178,39 @@ app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
     } catch (error) {
         console.error("Reply Error:", error);
         res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን።" });
+    }
+});
+// =====================================================================
+// 12.8 🚀 ሓዱሽ ማጂክ: ኮሜንት ወይ ሪፕለይ ላይክ መግበሪ (Like Comment/Reply)
+// =====================================================================
+app.put('/api/products/:id/comment/:commentId/like', async (req, res) => {
+    try {
+        const { userId, replyId } = req.body;
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: "ኣቕሓ ኣይተረኽበን" });
+
+        const comment = product.comments.id(req.params.commentId);
+        if (!comment) return res.status(404).json({ message: "ኮሜንት ኣይተረኽበን" });
+
+        let target = comment;
+        if (replyId) { // ሪፕለይ እንተኾይኑ ነቲ ሪፕለይ ንረኽቦ
+            target = comment.replies.id(replyId);
+            if (!target) return res.status(404).json({ message: "ሪፕለይ ኣይተረኽበን" });
+        }
+
+        // 💡 ማጂክ: ላይክ ጌሩዎ እንተኔሩ የጥፍኦ (Unlike)፣ እንተዘይኮይኑ ይውስኾ (Like)
+        const index = target.likes.indexOf(userId);
+        if (index === -1) {
+            target.likes.push(userId);
+        } else {
+            target.likes.splice(index, 1);
+        }
+
+        await product.save();
+        res.status(200).json({ comments: product.comments });
+    } catch (error) {
+        console.error("Like Error:", error);
+        res.status(500).json({ message: "ላይክ ምግባር ኣይተኻእለን።" });
     }
 });
 // =====================================================================
