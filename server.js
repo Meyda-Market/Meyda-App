@@ -301,19 +301,21 @@ const productSchema = new mongoose.Schema({
     
     
 
-    // 🚀 ሓዱሽ ማጂክ: መዋቕር ን ኮሜንትን ሪፖርትን
+// 🚀 ሓዱሽ ማጂክ: መዋቕር ን ኮሜንትን ሪፖርትን
     reports: [{ type: String }], // መን መን ሪፖርት ከም ዝገበሮ ዝሕዝ (User IDs)
     comments: [{
         userId: String,
         userName: String,
         userPic: String,
         text: String,
+        userBadge: { type: String, default: 'none' }, // 👈 💡 ማጂክ: ባጅ ኣብ ኮሜንት
         createdAt: { type: Date, default: Date.now },
         replies: [{ // 🚀 ሓዱሽ: ን ኮሜንት ሪፕላይ (Reply) መግበሪ
             userId: String,
             userName: String,
             userPic: String,
             text: String,
+            userBadge: { type: String, default: 'none' }, // 👈 💡 ማጂክ: ባጅ ኣብ ሪፕለይ
             createdAt: { type: Date, default: Date.now }
         }]
     }],
@@ -1091,17 +1093,20 @@ app.post('/api/products/:id/comment', async (req, res) => {
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
 
-        // 🛡️ Bulletproof: ኣረጊት ንብረት እንተኾይኑ ሳጹን ኮሜንት ባዕሉ ይፍጠር
+        // 👈 💡 ማጂክ: ራይት ባጅ ናይዚ ኮሜንት ዝገብር ዘሎ ሰብ ካብ ዳታቤዝ ነምጽእ
+        const commentUser = await User.findById(userId);
+        const userBadge = commentUser ? commentUser.badgeType : 'none';
+
         if (!product.comments) product.comments = [];
 
-        const newComment = { userId, userName, userPic, text };
+        const newComment = { userId, userName, userPic, text, userBadge };
         product.comments.push(newComment);
         await product.save();
 
         res.status(201).json({ message: "ኮሜንትኩም ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
         console.error("Comment Error:", error);
-        res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን。" });
+        res.status(500).json({ message: "ኮሜንት ምጽሓፍ ኣይተኻእለን።" });
     }
 });
 
@@ -1117,20 +1122,22 @@ app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
         const comment = product.comments.id(req.params.commentId);
         if (!comment) return res.status(404).json({ message: "ኮሜንት ኣይተረኽበን" });
 
-        // 🛡️ Bulletproof: ኣረጊት ኮሜንት እንተኾይኑ ሳጹን ሪፕላይ ባዕሉ ይፍጠር
+        // 👈 💡 ማጂክ: ራይት ባጅ ናይዚ ሪፕለይ ዝገብር ዘሎ ሰብ ካብ ዳታቤዝ ነምጽእ
+        const replyUser = await User.findById(userId);
+        const userBadge = replyUser ? replyUser.badgeType : 'none';
+
         if (!comment.replies) comment.replies = [];
 
-        const newReply = { userId, userName, userPic, text };
+        const newReply = { userId, userName, userPic, text, userBadge };
         comment.replies.push(newReply);
         await product.save();
 
         res.status(201).json({ message: "ሪፕላይ ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
         console.error("Reply Error:", error);
-        res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን。" });
+        res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን።" });
     }
 });
-
 // =====================================================================
 // 13. API: ንብረት ንምድምሳስ (Delete Product)
 // =====================================================================
