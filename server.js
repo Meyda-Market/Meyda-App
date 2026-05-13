@@ -449,15 +449,54 @@ app.get('/api/products', async (req, res) => {
     try { 
         let products = await Product.find().lean(); // lean() ንቕልጣፈ
 
-        // 🧠 ማጂክ ፎርሙላ: ንነፍሲ ወከፍ ኣቕሓ "ነጥቢ ሜይዳ" ንህቦ
+        // 🚀 ሓዱሽ ማጂክ (Dynamic Badges): ናይ ቀደም ይኹን ናይ ሕጂ ኮሜንታት ብኣውቶማቲክ ራይት ባጅ ክሕዙ!
+        // 1. መጀመርታ ናይ ኩሎም ኮሜንት ዝጸሓፉ ሰባት ID ነኻክብ
+        const userIds = new Set();
+        products.forEach(p => {
+            if(p.comments) {
+                p.comments.forEach(c => {
+                    if (c.userId) userIds.add(c.userId);
+                    if (c.replies) {
+                        c.replies.forEach(r => {
+                            if (r.userId) userIds.add(r.userId);
+                        });
+                    }
+                });
+            }
+        });
+
+        // 2. ናይዞም ኩሎም ሰባት ራይት ባጅ (badgeType) ብሓንሳብ ካብ ዳታቤዝ ነምጽእ
+        const validIds = Array.from(userIds).filter(id => mongoose.Types.ObjectId.isValid(id));
+        const usersWithBadges = await User.find({ _id: { $in: validIds } }, 'badgeType');
+        
+        const badgeMap = {};
+        usersWithBadges.forEach(u => {
+            badgeMap[u._id.toString()] = u.badgeType || 'none';
+        });
+
+        // 3. 🧠 ማጂክ ፎርሙላን: ራይት ባጅ ምትካልን
         products = products.map(p => {
+            // 👈 💡 ማጂክ: ነታ ባጅ ኣብ ነፍሲወከፍ ኮሜንትን ሪፕለይን ንሰኽዓያ
+            if (p.comments) {
+                p.comments = p.comments.map(c => {
+                    c.userBadge = badgeMap[c.userId] || 'none';
+                    if (c.replies) {
+                        c.replies = c.replies.map(r => {
+                            r.userBadge = badgeMap[r.userId] || 'none';
+                            return r;
+                        });
+                    }
+                    return c;
+                });
+            }
+
+            // 🧮 ሕሳብ (Algorithm): (Saves*5) + (Comments*3) + (Views*1) + (Images*2) + PRO
             const saves = p.savedBy ? p.savedBy.length : 0;
             const comments = p.comments ? p.comments.length : 0;
             const views = p.views || 0;
             const imgCount = p.images ? p.images.length : 0;
-            const isPro = p.isPro ? 100 : 0; // 💎 VIP ነጋዳይ ብቐጥታ 100 ነጥቢ ይረክብ
+            const isPro = p.isPro ? 100 : 0; 
 
-            // 🧮 ሕሳብ: (Saves*5) + (Comments*3) + (Views*1) + (Images*2) + PRO
             let score = (saves * 5) + (comments * 3) + views + (imgCount * 2) + isPro;
 
             // ሓዱሽ ንብረት ንመጀመርታ 3 መዓልቲ ዕድል ንምሃብ 20 ነጥቢ ቦነስ
@@ -472,6 +511,7 @@ app.get('/api/products', async (req, res) => {
 
         res.status(200).json(products); 
     } catch (error) { 
+        console.log("Products Fetch Error:", error);
         res.status(500).json({ message: "ኣቕሑት ክመጹ ኣይከኣሉን。" }); 
     }
 });
