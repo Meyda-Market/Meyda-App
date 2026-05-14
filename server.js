@@ -1718,55 +1718,54 @@ app.put('/api/admin/verifications/:id/review', async (req, res) => {
 // ==========================================================
 // 19.9 🚀 API: ቨሪፊኬሽን ምልዓልን ብስም Meyda መልእኽቲ ምስዳድን (Revoke Badge)
 // ==========================================================
+
 app.post('/api/admin/users/:id/revoke-badge', async (req, res) => {
   try {
     const userId = req.params.id;
     const { reason } = req.body;
 
-    // 1. ነቲ ሕጊ ዝጠሓሰ ተጠቃሚ ፈልዮ
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን!" });
     }
 
-    // 2. ቨሪፊኬሽን ኣልዕል (ባጅ ደምስስ)
+    // 💡 1. ፍታሕ ናይቲ "Get Verified" በተን ንኽትምለስ
     user.badgeType = "none";
     user.isVerified = false;
+    user.verificationStatus = "none"; // 👈 እዚኣ እያ እታ ዳግማይ ንኽሓትት እተፍቅድ ማጂክ!
     await user.save();
 
-    // 3. 💡 ማጂክ: ብስም "Meyda" ንኽለኣኽ፣ ናይ Meyda Owner ኣካውንት ምድላይ
-    // ኣብ ዳታቤዝካ "owner" ዝኾነ ወይ ስሙ "Meyda" ዝኾነ ኣካውንት የናዲ
+    // ናይ Meyda Owner ኣካውንት ምድላይ
     const meydaAdmin = await User.findOne({ role: "owner" }) || await User.findOne({ name: "Meyda" });
     const senderId = meydaAdmin ? meydaAdmin._id : null; 
 
-    const messageText = `ሰላም ${user.name}፣\n\nብሕግታትን ደንብታትን Meyda Market መሰረት፡ ናይ ቨሪፊኬሽን ባጅኩም ተላዒሉ ኣሎ።\n\nምኽንያት:\n"${reason}"\n\nተወሳኺ ሓበሬታ እንተደሊኹም ወይ ጌጋ እዩ ኢልኩም እንተኣሚንኩም፡ ናብ ሰርቪስና (Support) ክትውከሱ ትኽእሉ ኢኹም።\n\n- Meyda Team`;
+    const messageText = `ሰላም ${user.name}፣\n\nብሕግታትን ደንብታትን Meyda Market መሰረት፡ ናይ ቨሪፊኬሽን ባጅኩም ተላዒሉ ኣሎ።\n\nምኽንያት:\n"${reason}"\n\nተወሳኺ ሓበሬታ እንተደሊኹም ወይ ጌጋ እዩ ኢልኩም እንተኣሚንኩም፡ ዳግማይ ሕቶ (Get Verified) ክትልእኩ ትኽእሉ ኢኹም።\n\n- Meyda Team`;
 
-    // 4. 🚀 ናብ ኖቲፊኬሽን (Notification) ምልኣኽ
-    // መዘኻኸሪ: ስም ናይ ኖቲፊኬሽን ሞዴልካ 'Notification' እንተኾይኑ
-    if (typeof Notification !== 'undefined') {
-      const newNotification = new Notification({
-        userId: user._id,
-        title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
-        message: messageText,
-        type: "system",
-        isRead: false,
-      });
-      await newNotification.save();
-    }
+    // 💡 2. ፍታሕ ናይ Notification
+    const newNotification = new Notification({
+      userId: user._id,
+      title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
+      message: messageText,
+      type: "system",
+      isRead: false,
+    });
+    await newNotification.save();
 
-    // 5. 🚀 ናብ ሜሰጅ (Inbox/Chat) ምልኣኽ (ካብ Meyda)
-    // መዘኻኸሪ: ስም ናይ መልእኽቲ ሞዴልካ 'Message' እንተኾይኑ ወይ 'Chat' ከከም ኣጸዋውዓኻ ቀይሮ
-    if (typeof Chat !== 'undefined' && senderId) {
+    // 💡 3. ፍታሕ ናይ Chat (Inbox)
+    if (senderId) {
       const systemMessage = new Chat({
-        senderId: senderId, // 👈 መልእኽቲ ካብቲ Meyda ዝብል ኣካውንት ይኸይድ
+        senderId: senderId,
         receiverId: user._id,
         text: messageText,
         createdAt: new Date(),
       });
       await systemMessage.save();
+    } else {
+      // ⚠️ Meyda ዝብል ኣካውንት እንተዘይተረኺቡ ኣብ ተርሚናልካ (Terminal) ጌጋ ከርእየካ እዩ
+      console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ዝብል ኣካውንት ኣብ ዳታቤዝ ኣይተረኽበን፡ ስለዚ ናብ Chat ኣይተላእከን።");
     }
 
-    res.status(200).json({ message: "ብዓወት ተላዒሉን መልእኽቲ ብስም Meyda ተላኢኹን ኣሎ!" });
+    res.status(200).json({ message: "ብዓወት ተላዒሉን መልእኽቲ ተላኢኹን ኣሎ!" });
   } catch (error) {
     console.error("Revoke Badge Error:", error);
     res.status(500).json({ message: "ጸገም ኣጋጢሙ ኣሎ።" });
