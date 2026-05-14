@@ -515,22 +515,21 @@ app.get('/api/products', async (req, res) => {
 
         // 🏆 ውድድር: በቲ ዝዓበየ ነጥቢ (Score) ክስራዕ ንገብሮ
         products.sort((a, b) => b.meydaScore - a.meydaScore);
-// 🚀 ማጂክ ሸያጢ: ነቲ ዝመጸ ናይ ሸያጢ ባጅ ምስቲ ኣቕሓ ከምዝጣበቕ ምግባር (ን Home Screen)
+// 🚀 ማጂክ ሸያጢ (Manual Lookup): ሰርቨር ከይዕንቀፍ ብኣውቶማቲክ ሸየጥቲ የናዲ
+      const sellerIds = [...new Set(products.map(p => p.sellerId || p.vendorId || p.userId).filter(id => id && mongoose.Types.ObjectId.isValid(id)))];
+      
+      const sellers = await User.find({ _id: { $in: sellerIds } }, 'badgeType isVerified').lean();
+      
+      const sellerMap = {};
+      sellers.forEach(s => { sellerMap[s._id.toString()] = s; });
+      
       products = products.map(p => {
-          const seller = p.sellerId || p.vendorId || p.userId;
+          const sId = p.sellerId || p.vendorId || p.userId;
+          const seller = sId ? sellerMap[sId.toString()] : null;
           
-          if (seller && typeof seller === 'object') {
-              p.vendorBadge = seller.badgeType || "none";
-              p.isVerified = seller.isVerified || false;
-              
-              // ንሞባይል ከየደናግር ነቲ መለለዪ (ID) ናብ ንቡር ቁጽሪ (String) ንመልሶ
-              if (p.sellerId) p.sellerId = seller._id;
-              if (p.vendorId) p.vendorId = seller._id;
-              if (p.userId) p.userId = seller._id;
-          } else {
-              p.vendorBadge = "none";
-              p.isVerified = false;
-          }
+          p.vendorBadge = seller ? (seller.badgeType || "none") : "none";
+          p.isVerified = seller ? (seller.isVerified || false) : false;
+          
           return p;
       });
         res.status(200).json(products); 
