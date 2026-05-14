@@ -449,12 +449,8 @@ cron.schedule('0 0 * * *', async () => {
 // =====================================================================
 app.get('/api/products', async (req, res) => {
     try { 
-        // 💡 ማጂክ ሸያጢ: ሓበሬታ ኣቕሓ ክመጽእ ከሎ፣ ባጅ ናይቲ ሸያጢ እውን ብሓንሳብ ሒዙ ይመጽእ (populate)
-      let products = await Product.find()
-        .populate('sellerId', 'badgeType isVerified')
-        .populate('vendorId', 'badgeType isVerified')
-        .populate('userId', 'badgeType isVerified')
-        .lean();
+      // 💡 ማጂክ ሸያጢ: ሓበሬታ ኣቕሓ ይመጽእ
+      let products = await Product.find().lean();
 
         // 🚀 ሓዱሽ ማጂክ (Dynamic Badges): ናይ ቀደም ይኹን ናይ ሕጂ ኮሜንታት ብኣውቶማቲክ ራይት ባጅ ክሕዙ!
         // 1. መጀመርታ ናይ ኩሎም ኮሜንት ዝጸሓፉ ሰባት ID ነኻክብ
