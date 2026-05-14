@@ -1681,14 +1681,14 @@ app.post('/api/admin/packages', async (req, res) => {
 
 
 
-// 19.7 🚀 ማስተር ስዊች ን ክፍሊት (Check Status for sell.html)
+// 19.6 🚀 ማስተር ስዊች ን ክፍሊት (Check Status for sell.html)
 app.get('/api/admin/settings/subscription-status', async (req, res) => {
     try {
         let settings = await Settings.findOne();
         res.status(200).json({ require: settings ? settings.requireSubscription : false });
     } catch (e) { res.status(200).json({ require: false }); }
 });
-// 19.8 🚀 ማጂክ: ኩሎም ዝጽበዩ ዘለዉ ቨሪፊኬሽን ሕቶታት ምምጻእ (Get Pending Verifications)
+// 19.7 🚀 ማጂክ: ኩሎም ዝጽበዩ ዘለዉ ቨሪፊኬሽን ሕቶታት ምምጻእ (Get Pending Verifications)
 app.get('/api/admin/verifications/pending', async (req, res) => {
     try {
         const pendingUsers = await User.find({ verificationStatus: 'pending' })
@@ -1699,7 +1699,7 @@ app.get('/api/admin/verifications/pending', async (req, res) => {
     }
 });
 
-// 19.9 🚀 ማጂክ: ቨሪፊኬሽን ምጽዳቕ (Approve) ወይ ምንጻግ (Reject)
+// 19.8 🚀 ማጂክ: ቨሪፊኬሽን ምጽዳቕ (Approve) ወይ ምንጻግ (Reject)
 app.put('/api/admin/verifications/:id/review', async (req, res) => {
     try {
         const { status, badgeType } = req.body; // status: 'approved' ወይ 'rejected', badgeType: 'blue' ወይ 'gold'
@@ -1714,6 +1714,63 @@ app.put('/api/admin/verifications/:id/review', async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "ስጉምቲ ምውሳድ ኣይተኻእለን።" });
     }
+});
+// ==========================================================
+// 19.9 🚀 API: ቨሪፊኬሽን ምልዓልን ብስም Meyda መልእኽቲ ምስዳድን (Revoke Badge)
+// ==========================================================
+app.post('/api/admin/users/:id/revoke-badge', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const { reason } = req.body;
+
+    // 1. ነቲ ሕጊ ዝጠሓሰ ተጠቃሚ ፈልዮ
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን!" });
+    }
+
+    // 2. ቨሪፊኬሽን ኣልዕል (ባጅ ደምስስ)
+    user.badgeType = "none";
+    user.isVerified = false;
+    await user.save();
+
+    // 3. 💡 ማጂክ: ብስም "Meyda" ንኽለኣኽ፣ ናይ Meyda Owner ኣካውንት ምድላይ
+    // ኣብ ዳታቤዝካ "owner" ዝኾነ ወይ ስሙ "Meyda" ዝኾነ ኣካውንት የናዲ
+    const meydaAdmin = await User.findOne({ role: "owner" }) || await User.findOne({ name: "Meyda" });
+    const senderId = meydaAdmin ? meydaAdmin._id : null; 
+
+    const messageText = `ሰላም ${user.name}፣\n\nብሕግታትን ደንብታትን Meyda Market መሰረት፡ ናይ ቨሪፊኬሽን ባጅኩም ተላዒሉ ኣሎ።\n\nምኽንያት:\n"${reason}"\n\nተወሳኺ ሓበሬታ እንተደሊኹም ወይ ጌጋ እዩ ኢልኩም እንተኣሚንኩም፡ ናብ ሰርቪስና (Support) ክትውከሱ ትኽእሉ ኢኹም።\n\n- Meyda Team`;
+
+    // 4. 🚀 ናብ ኖቲፊኬሽን (Notification) ምልኣኽ
+    // መዘኻኸሪ: ስም ናይ ኖቲፊኬሽን ሞዴልካ 'Notification' እንተኾይኑ
+    if (typeof Notification !== 'undefined') {
+      const newNotification = new Notification({
+        userId: user._id,
+        title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
+        message: messageText,
+        type: "system",
+        isRead: false,
+      });
+      await newNotification.save();
+    }
+
+    // 5. 🚀 ናብ ሜሰጅ (Inbox/Chat) ምልኣኽ (ካብ Meyda)
+    // መዘኻኸሪ: ስም ናይ መልእኽቲ ሞዴልካ 'Message' እንተኾይኑ ወይ 'Chat' ከከም ኣጸዋውዓኻ ቀይሮ
+    if (typeof Chat !== 'undefined' && senderId) {
+      const systemMessage = new Chat({
+        senderId: senderId, // 👈 መልእኽቲ ካብቲ Meyda ዝብል ኣካውንት ይኸይድ
+        receiverId: user._id,
+        text: messageText,
+        createdAt: new Date(),
+      });
+      await systemMessage.save();
+    }
+
+    res.status(200).json({ message: "ብዓወት ተላዒሉን መልእኽቲ ብስም Meyda ተላኢኹን ኣሎ!" });
+  } catch (error) {
+    console.error("Revoke Badge Error:", error);
+    res.status(500).json({ message: "ጸገም ኣጋጢሙ ኣሎ።" });
+  }
 });
 // =====================================================================
 // 20. 🚀 ሓዱሽ ማጂክ: ተጠቃሚ ንምእጋድን (Block) ንምፍታሕን (Unblock)
