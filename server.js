@@ -449,7 +449,12 @@ cron.schedule('0 0 * * *', async () => {
 // =====================================================================
 app.get('/api/products', async (req, res) => {
     try { 
-        let products = await Product.find().lean(); // lean() ንቕልጣፈ
+        // 💡 ማጂክ ሸያጢ: ሓበሬታ ኣቕሓ ክመጽእ ከሎ፣ ባጅ ናይቲ ሸያጢ እውን ብሓንሳብ ሒዙ ይመጽእ (populate)
+      let products = await Product.find()
+        .populate('sellerId', 'badgeType isVerified')
+        .populate('vendorId', 'badgeType isVerified')
+        .populate('userId', 'badgeType isVerified')
+        .lean();
 
         // 🚀 ሓዱሽ ማጂክ (Dynamic Badges): ናይ ቀደም ይኹን ናይ ሕጂ ኮሜንታት ብኣውቶማቲክ ራይት ባጅ ክሕዙ!
         // 1. መጀመርታ ናይ ኩሎም ኮሜንት ዝጸሓፉ ሰባት ID ነኻክብ
@@ -510,7 +515,24 @@ app.get('/api/products', async (req, res) => {
 
         // 🏆 ውድድር: በቲ ዝዓበየ ነጥቢ (Score) ክስራዕ ንገብሮ
         products.sort((a, b) => b.meydaScore - a.meydaScore);
-
+// 🚀 ማጂክ ሸያጢ: ነቲ ዝመጸ ናይ ሸያጢ ባጅ ምስቲ ኣቕሓ ከምዝጣበቕ ምግባር (ን Home Screen)
+      products = products.map(p => {
+          const seller = p.sellerId || p.vendorId || p.userId;
+          
+          if (seller && typeof seller === 'object') {
+              p.vendorBadge = seller.badgeType || "none";
+              p.isVerified = seller.isVerified || false;
+              
+              // ንሞባይል ከየደናግር ነቲ መለለዪ (ID) ናብ ንቡር ቁጽሪ (String) ንመልሶ
+              if (p.sellerId) p.sellerId = seller._id;
+              if (p.vendorId) p.vendorId = seller._id;
+              if (p.userId) p.userId = seller._id;
+          } else {
+              p.vendorBadge = "none";
+              p.isVerified = false;
+          }
+          return p;
+      });
         res.status(200).json(products); 
     } catch (error) { 
         console.log("Products Fetch Error:", error);
