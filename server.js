@@ -1741,35 +1741,38 @@ app.post('/api/admin/users/:id/revoke-badge', async (req, res) => {
 
     const messageText = `ሰላም ${user.name}፣\n\nብሕግታትን ደንብታትን Meyda Market መሰረት፡ ናይ ቨሪፊኬሽን ባጅኩም ተላዒሉ ኣሎ።\n\nምኽንያት:\n"${reason}"\n\nተወሳኺ ሓበሬታ እንተደሊኹም ወይ ጌጋ እዩ ኢልኩም እንተኣሚንኩም፡ ዳግማይ ሕቶ (Get Verified) ክትልእኩ ትኽእሉ ኢኹም።\n\n- Meyda Team`;
 
-    // 💡 2. ኖቲፊኬሽን ብቐጥታ ንኽሰድድ (መከላኸሊ ኣልዒልናዮ ኣለና)
+    // 💡 2. ፍታሕ ናይ Notification (ብትኽክል ንኽምዝገብ)
     try {
         const newNotification = new Notification({
           userId: user._id,
           title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
           message: messageText,
-          type: "system",
+          type: "system", 
           isRead: false,
+          createdAt: new Date(), // 👈 እዚኣ ክትጎድል ትኽእል እያ
         });
         await newNotification.save();
     } catch (notifErr) {
-        console.log("⚠️ ጌጋ ኣብ ኖቲፊኬሽን ምስዳድ:", notifErr.message);
+        console.log("⚠️ ጌጋ ኣብ ኖቲፊኬሽን:", notifErr.message);
     }
 
-    // 💡 3. ሜሰጅ (Chat) ብቐጥታ ንኽሰድድ
+    // 💡 3. ፍታሕ ናይ Chat (Inbox) - senderName ወሲኽናሉ ኣለና!
     if (senderId) {
         try {
           const systemMessage = new Chat({
             senderId: senderId,
+            senderName: "Meyda Market", // 👈 💡 ማጂክ: ስም ሸያጢ የድልዮ ይኸውን እዩ
             receiverId: user._id,
             text: messageText,
+            type: "message", // 👈 💡 ማጂክ: type የድልዮ ይኸውን እዩ
             createdAt: new Date(),
           });
           await systemMessage.save();
         } catch (chatErr) {
-          console.log("⚠️ ጌጋ ኣብ Chat (መልእኽቲ) ምስዳድ:", chatErr.message);
+          console.log("⚠️ ጌጋ ኣብ Chat:", chatErr.message);
         }
     } else {
-        console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ዝብል ኣካውንት ኣብ ዳታቤዝ ኣይተረኽበን።");
+        console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ኣይተረኽበን።");
     }
 
     res.status(200).json({ message: "ብዓወት ተላዒሉን መልእኽቲ ተላኢኹን ኣሎ!" });
