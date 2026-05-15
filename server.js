@@ -1217,6 +1217,35 @@ app.delete('/api/reports/:id', async (req, res) => {
     }
 });
 // =====================================================================
+// 12.5.5 🚀 ሓዱሽ ማጂክ: ኖቲፊኬሽን ዝሰድድን ሜንሽን (@) ዝደልን ሞተር
+// =====================================================================
+const sendNotification = async (senderId, senderName, receiverId, type, text, productId = null, productImage = null) => {
+    // ሰብ ንባዕሉ ላይክ/ኮሜንት እንተገይሩ ኖቲፊኬሽን ከይመጾ ይኽልክል
+    if (String(senderId) === String(receiverId)) return; 
+    try {
+        const newNotif = new Message({
+            senderId, senderName, receiverId, type, text, productId, productImage, isRead: false, createdAt: new Date()
+        });
+        await newNotif.save();
+    } catch (err) { console.error("Notification Engine Error:", err); }
+};
+
+const handleMentions = async (text, senderId, senderName, productId, productImage) => {
+    if (!text) return;
+    // 💡 ማጂክ: ዝኾነ "@ስም" ዝብል ጽሑፍ ይደሊ
+    const mentions = text.match(/@([^\s]+)/g); 
+    if (mentions) {
+        for (let mention of mentions) {
+            const username = mention.substring(1); // ነታ '@' የጥፍኣ
+            // ነቲ ሰብ ብስሙ ኣብ ዳታቤዝ ይደልዮ (Case-insensitive)
+            const mentionedUser = await User.findOne({ name: { $regex: new RegExp(`^${username}$`, "i") } });
+            if (mentionedUser) {
+                 await sendNotification(senderId, senderName, mentionedUser._id, "mention", text, productId, productImage);
+            }
+        }
+    }
+};
+// =====================================================================
 // 12.6 🚀 ሓዱሽ ማጂክ: API ን ኮሜንት ኣብ ኣቕሑት (Comment on Product)
 // =====================================================================
 app.post('/api/products/:id/comment', async (req, res) => {
@@ -1225,7 +1254,6 @@ app.post('/api/products/:id/comment', async (req, res) => {
         const product = await Product.findById(req.params.id);
         if (!product) return res.status(404).json({ message: "ንብረት ኣይተረኽበን" });
 
-        // 👈 💡 ማጂክ: ራይት ባጅ ናይዚ ኮሜንት ዝገብር ዘሎ ሰብ ካብ ዳታቤዝ ነምጽእ
         const commentUser = await User.findById(userId);
         const userBadge = commentUser ? commentUser.badgeType : 'none';
 
@@ -1234,6 +1262,13 @@ app.post('/api/products/:id/comment', async (req, res) => {
         const newComment = { userId, userName, userPic, text, userBadge };
         product.comments.push(newComment);
         await product.save();
+
+        // 👈 💡 ማጂክ ኖቲፊኬሽን: ንዋና ሸያጢ ኖቲፊኬሽን ስደደሉ!
+        const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
+        await sendNotification(userId, userName, product.sellerId, "comment", text, product._id, productImg);
+        
+        // 👈 💡 ማጂክ ሜንሽን: ኣብቲ ኮሜንት '@ስም' እንተሃልዩ ነቲ ሰብ ኖቲፊኬሽን ስደደሉ!
+        await handleMentions(text, userId, userName, product._id, productImg);
 
         res.status(201).json({ message: "ኮሜንትኩም ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
@@ -1254,7 +1289,6 @@ app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
         const comment = product.comments.id(req.params.commentId);
         if (!comment) return res.status(404).json({ message: "ኮሜንት ኣይተረኽበን" });
 
-        // 👈 💡 ማጂክ: ራይት ባጅ ናይዚ ሪፕለይ ዝገብር ዘሎ ሰብ ካብ ዳታቤዝ ነምጽእ
         const replyUser = await User.findById(userId);
         const userBadge = replyUser ? replyUser.badgeType : 'none';
 
@@ -1263,6 +1297,13 @@ app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
         const newReply = { userId, userName, userPic, text, userBadge };
         comment.replies.push(newReply);
         await product.save();
+
+        // 👈 💡 ማጂክ ኖቲፊኬሽን: ነቲ ዋና ኮሜንት ዝጸሓፈ ሰብ ኖቲፊኬሽን ስደደሉ!
+        const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
+        await sendNotification(userId, userName, comment.userId, "reply", text, product._id, productImg);
+        
+        // 👈 💡 ማጂክ ሜንሽን: ኣብቲ ሪፕለይ '@ስም' እንተሃልዩ ነቲ ሰብ ኖቲፊኬሽን ስደደሉ!
+        await handleMentions(text, userId, userName, product._id, productImg);
 
         res.status(201).json({ message: "ሪፕላይ ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
@@ -1283,17 +1324,25 @@ app.put('/api/products/:id/comment/:commentId/like', async (req, res) => {
         if (!comment) return res.status(404).json({ message: "ኮሜንት ኣይተረኽበን" });
 
         let target = comment;
-        if (replyId) { // ሪፕለይ እንተኾይኑ ነቲ ሪፕለይ ንረኽቦ
+        if (replyId) { 
             target = comment.replies.id(replyId);
             if (!target) return res.status(404).json({ message: "ሪፕለይ ኣይተረኽበን" });
         }
 
-        // 💡 ማጂክ: ላይክ ጌሩዎ እንተኔሩ የጥፍኦ (Unlike)፣ እንተዘይኮይኑ ይውስኾ (Like)
         const index = target.likes.indexOf(userId);
         if (index === -1) {
             target.likes.push(userId);
+            
+            // 👈 💡 ማጂክ ኖቲፊኬሽን: ላይክ ምስ ተገብረ ኖቲፊኬሽን ንሰድድ
+            const liker = await User.findById(userId);
+            if (liker) {
+                const notifType = replyId ? "reply_like" : "comment_like";
+                const textMsg = replyId ? "ንሪፕለይካ ላይክ ገይሩዎ ኣሎ።" : "ንኮሜንትካ ላይክ ገይሩዎ ኣሎ።";
+                const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
+                await sendNotification(userId, liker.name, target.userId, notifType, textMsg, product._id, productImg);
+            }
         } else {
-            target.likes.splice(index, 1);
+            target.likes.splice(index, 1); // ላይክ ምጥፋእ (Unlike)
         }
 
         await product.save();
@@ -1318,20 +1367,27 @@ app.delete('/api/products/:id', async (req, res) => {
 });
 
 // =====================================================================
-// 14. API: ንብረት ሴቭ (Save) ወይ ኣንሴቭ (Unsave) ንምግባር
+// 14. API: ንብረት ሴቭ (Save) ወይ ኣንሴቭ (Unsave) ንምግባር (Product Like)
 // =====================================================================
 app.post('/api/users/:userId/save', async (req, res) => {
     try {
         const { productId, action } = req.body;
         const user = await User.findById(req.params.userId);
-        const product = await Product.findById(productId); // 🚀 ሓዱሽ: ንብረት እውን ንደልዮ
+        const product = await Product.findById(productId); 
 
         if (!user || !product) return res.status(404).json({ message: "ኣይተረኽበን" });
-        if (!product.savedBy) product.savedBy = []; // Bulletproof
+        if (!product.savedBy) product.savedBy = []; 
 
         if (action === 'add' && !user.savedProducts.includes(productId)) {
             user.savedProducts.push(productId);
-            if (!product.savedBy.includes(user._id.toString())) product.savedBy.push(user._id.toString());
+            if (!product.savedBy.includes(user._id.toString())) {
+                product.savedBy.push(user._id.toString());
+            }
+            
+            // 👈 💡 ማጂክ ኖቲፊኬሽን: ንብረት ላይክ ምስ ተገብረ ንዋና ሸያጢ ነፍልጦ
+            const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
+            await sendNotification(user._id, user.name, product.sellerId, "like", "ኣቕሓኻ ሴቭ (Like) ጌሩዎ ኣሎ።", product._id, productImg);
+
         } else if (action === 'remove') {
             user.savedProducts = user.savedProducts.filter(id => id !== productId);
             product.savedBy = product.savedBy.filter(id => id !== user._id.toString());
