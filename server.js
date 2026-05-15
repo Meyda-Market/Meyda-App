@@ -1729,51 +1729,39 @@ app.post('/api/admin/users/:id/revoke-badge', async (req, res) => {
       return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን!" });
     }
 
-    // 💡 1. ፍታሕ: ናይ "Get Verified" በተን ንኽትምለስ
+    // 💡 1. ቨሪፊኬሽን ምልዓል (Get Verified በተን ንኽትምለስ)
     user.badgeType = "none";
     user.isVerified = false;
-    user.verificationStatus = "rejected"; // 👈 ማጂክ: ናብ "rejected" ቀይርናያ ኣለና
+    user.verificationStatus = "rejected"; 
     await user.save();
 
-    // ናይ Meyda Owner ኣካውንት ምድላይ
+    // 💡 2. ናይ Meyda Owner ኣካውንት ምድላይ (መልእኽቲ ዝሰድድ)
     const meydaAdmin = await User.findOne({ role: "owner" }) || await User.findOne({ name: "Meyda" });
     const senderId = meydaAdmin ? meydaAdmin._id : null; 
 
     const messageText = `ሰላም ${user.name}፣\n\nብሕግታትን ደንብታትን Meyda Market መሰረት፡ ናይ ቨሪፊኬሽን ባጅኩም ተላዒሉ ኣሎ።\n\nምኽንያት:\n"${reason}"\n\nተወሳኺ ሓበሬታ እንተደሊኹም ወይ ጌጋ እዩ ኢልኩም እንተኣሚንኩም፡ ዳግማይ ሕቶ (Get Verified) ክትልእኩ ትኽእሉ ኢኹም።\n\n- Meyda Team`;
 
-    // 💡 2. ፍታሕ ናይ Notification (ብትኽክል ንኽምዝገብ)
-    try {
-        const newNotification = new Notification({
-          userId: user._id,
-          title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
-          message: messageText,
-          type: "system", 
-          isRead: false,
-          createdAt: new Date(), // 👈 እዚኣ ክትጎድል ትኽእል እያ
-        });
-        await newNotification.save();
-    } catch (notifErr) {
-        console.log("⚠️ ጌጋ ኣብ ኖቲፊኬሽን:", notifErr.message);
-    }
-
-    // 💡 3. ፍታሕ ናይ Chat (Inbox) - senderName ወሲኽናሉ ኣለና!
+    // 💡 3. ፍታሕ ናይ መልእኽቲ (Message) 
     if (senderId) {
         try {
-          const systemMessage = new Chat({
+          // ⚠️ ማጂክ: ሞዴልካ 'Message' እዩ ዝብል፣ 'Chat' ኣይኮነን!
+          const systemMessage = new Message({
             senderId: senderId,
-            senderName: "Meyda Market", // 👈 💡 ማጂክ: ስም ሸያጢ የድልዮ ይኸውን እዩ
+            senderName: "Meyda Market", // 👈 💡 ሞዴልካ senderName ግድን ይደሊ እዩ!
             receiverId: user._id,
             text: messageText,
-            type: "message", // 👈 💡 ማጂክ: type የድልዮ ይኸውን እዩ
+            type: "system", // ስርዓታዊ መልእኽቲ ንምፍላይ
             createdAt: new Date(),
           });
           await systemMessage.save();
-        } catch (chatErr) {
-          console.log("⚠️ ጌጋ ኣብ Chat:", chatErr.message);
+        } catch (msgErr) {
+          console.log("⚠️ ጌጋ ኣብ Message:", msgErr.message);
         }
     } else {
-        console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ኣይተረኽበን።");
+        console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ኣካውንት ኣብ ዳታቤዝ ኣይተረኽበን።");
     }
+
+    // መዘኻኸሪ: Notification ሞዴል ኣብ server.js ስለዘየለ ንግዚኡ ኣውጺእናዮ ኣለና። (ኣድለይነቱ እውን የለን መልእኽቲ ብ Inbox ስለዝኸይድ)
 
     res.status(200).json({ message: "ብዓወት ተላዒሉን መልእኽቲ ተላኢኹን ኣሎ!" });
   } catch (error) {
