@@ -381,6 +381,10 @@ const messageSchema = new mongoose.Schema({
     productImage: { type: String, default: "" },
     isRead: { type: Boolean, default: false },
     type: { type: String, default: 'message' }, 
+    // 👇 💡 እዘን ክልተ ሓደስቲ ማጂክ ወስኸለን
+    mediaType: { type: String, default: 'image' }, 
+    targetCommentId: { type: String, default: null }, 
+    // 👆
     createdAt: { type: Date, default: Date.now }
 });
 const Message = mongoose.model('Message', messageSchema);
@@ -1219,12 +1223,12 @@ app.delete('/api/reports/:id', async (req, res) => {
 // =====================================================================
 // 12.5.5 🚀 ሓዱሽ ማጂክ: ኖቲፊኬሽን ዝሰድድን ሜንሽን (@) ዝደልን ሞተር
 // =====================================================================
-const sendNotification = async (senderId, senderName, receiverId, type, text, productId = null, productImage = null) => {
-    // ሰብ ንባዕሉ ላይክ/ኮሜንት እንተገይሩ ኖቲፊኬሽን ከይመጾ ይኽልክል
+// 👈 💡 ማጂክ: mediaType ን targetCommentId ን ተወሲኹዎ ኣሎ
+const sendNotification = async (senderId, senderName, receiverId, type, text, productId = null, productImage = null, mediaType = 'image', targetCommentId = null) => {
     if (String(senderId) === String(receiverId)) return; 
     try {
         const newNotif = new Message({
-            senderId, senderName, receiverId, type, text, productId, productImage, isRead: false, createdAt: new Date()
+            senderId, senderName, receiverId, type, text, productId, productImage, mediaType, targetCommentId, isRead: false, createdAt: new Date()
         });
         await newNotif.save();
     } catch (err) { console.error("Notification Engine Error:", err); }
@@ -1263,9 +1267,11 @@ app.post('/api/products/:id/comment', async (req, res) => {
         product.comments.push(newComment);
         await product.save();
 
-        // 👈 💡 ማጂክ ኖቲፊኬሽን: ንዋና ሸያጢ ኖቲፊኬሽን ስደደሉ!
+        // 👈 💡 ማጂክ: mediaType ን ናይዛ ሓዳስ ኮሜንት ID ን ንሰድድ ኣለና
         const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
-        await sendNotification(userId, userName, product.sellerId, "comment", text, product._id, productImg);
+        const newSavedComment = product.comments[product.comments.length - 1]; // እታ ሕጂ ዝኣተወት ኮሜንት
+        
+        await sendNotification(userId, userName, product.sellerId, "comment", text, product._id, productImg, product.mediaType, newSavedComment._id);
         
         // 👈 💡 ማጂክ ሜንሽን: ኣብቲ ኮሜንት '@ስም' እንተሃልዩ ነቲ ሰብ ኖቲፊኬሽን ስደደሉ!
         await handleMentions(text, userId, userName, product._id, productImg);
@@ -1298,17 +1304,19 @@ app.post('/api/products/:id/comment/:commentId/reply', async (req, res) => {
         comment.replies.push(newReply);
         await product.save();
 
-        // 👈 💡 ማጂክ ኖቲፊኬሽን: ነቲ ዋና ኮሜንት ዝጸሓፈ ሰብ ኖቲፊኬሽን ስደደሉ!
+        // 👈 💡 ማጂክ ኖቲፊኬሽን ጂ-ፒ-ኤስ: mediaType ን targetCommentId ን (ናይዛ ሓዳስ ሪፕለይ ID) ንሰድድ
         const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
-        await sendNotification(userId, userName, comment.userId, "reply", text, product._id, productImg);
+        const savedReply = comment.replies[comment.replies.length - 1]; // እታ ሕጂ ዝኣተወት ሪፕለይ
         
-        // 👈 💡 ማጂክ ሜንሽን: ኣብቲ ሪፕለይ '@ስም' እንተሃልዩ ነቲ ሰብ ኖቲፊኬሽን ስደደሉ!
+        await sendNotification(userId, userName, comment.userId, "reply", text, product._id, productImg, product.mediaType, savedReply._id);
+        
+        // 👈 💡 ማጂክ ሜንሽን
         await handleMentions(text, userId, userName, product._id, productImg);
 
         res.status(201).json({ message: "ሪፕላይ ተለጢፉ ኣሎ!", comments: product.comments });
     } catch (error) {
         console.error("Reply Error:", error);
-        res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን።" });
+        res.status(500).json({ message: "ሪፕላይ ምጽሓፍ ኣይተኻእለን。" });
     }
 });
 // =====================================================================
@@ -1333,23 +1341,24 @@ app.put('/api/products/:id/comment/:commentId/like', async (req, res) => {
         if (index === -1) {
             target.likes.push(userId);
             
-            // 👈 💡 ማጂክ ኖቲፊኬሽን: ላይክ ምስ ተገብረ ኖቲፊኬሽን ንሰድድ
+            // 👈 💡 ማጂክ ኖቲፊኬሽን ጂ-ፒ-ኤስ: mediaType ን targetCommentId ን (ናይዛ ላይክ ዝተገብረት ኮሜንት ወይ ሪፕለይ ID) ንሰድድ
             const liker = await User.findById(userId);
             if (liker) {
                 const notifType = replyId ? "reply_like" : "comment_like";
                 const textMsg = replyId ? "ንሪፕለይካ ላይክ ገይሩዎ ኣሎ።" : "ንኮሜንትካ ላይክ ገይሩዎ ኣሎ።";
                 const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
-                await sendNotification(userId, liker.name, target.userId, notifType, textMsg, product._id, productImg);
+                
+                await sendNotification(userId, liker.name, target.userId, notifType, textMsg, product._id, productImg, product.mediaType, target._id);
             }
         } else {
-            target.likes.splice(index, 1); // ላይክ ምጥፋእ (Unlike)
+            target.likes.splice(index, 1);
         }
 
         await product.save();
         res.status(200).json({ comments: product.comments });
     } catch (error) {
         console.error("Like Error:", error);
-        res.status(500).json({ message: "ላይክ ምግባር ኣይተኻእለን።" });
+        res.status(500).json({ message: "ላይክ ምግባር ኣይተኻእለን。" });
     }
 });
 // =====================================================================
@@ -1367,7 +1376,7 @@ app.delete('/api/products/:id', async (req, res) => {
 });
 
 // =====================================================================
-// 14. API: ንብረት ሴቭ (Save) ወይ ኣንሴቭ (Unsave) ንምግባር (Product Like)
+// 14. API: ንብረት ሴቭ (Save) ወይ ኣንሴቭ (Unsave) ንምግባር
 // =====================================================================
 app.post('/api/users/:userId/save', async (req, res) => {
     try {
@@ -1384,9 +1393,9 @@ app.post('/api/users/:userId/save', async (req, res) => {
                 product.savedBy.push(user._id.toString());
             }
             
-            // 👈 💡 ማጂክ ኖቲፊኬሽን: ንብረት ላይክ ምስ ተገብረ ንዋና ሸያጢ ነፍልጦ
+            // 👈 💡 ማጂክ ኖቲፊኬሽን ጂ-ፒ-ኤስ: mediaType ይሰድድ (ኮሜንት ስለዘይኮነ targetCommentId ባዶ ወይ null ይኸውን)
             const productImg = product.images && product.images.length > 0 ? product.images[0] : product.videoUrl;
-            await sendNotification(user._id, user.name, product.sellerId, "like", "ኣቕሓኻ ሴቭ (Like) ጌሩዎ ኣሎ።", product._id, productImg);
+            await sendNotification(user._id, user.name, product.sellerId, "like", "ኣቕሓኻ ሴቭ (Like) ጌሩዎ ኣሎ።", product._id, productImg, product.mediaType, null);
 
         } else if (action === 'remove') {
             user.savedProducts = user.savedProducts.filter(id => id !== productId);
@@ -1400,7 +1409,6 @@ app.post('/api/users/:userId/save', async (req, res) => {
         res.status(500).json({ message: "ጌጋ ኣጋጢሙ。" }); 
     }
 });
-
 // =====================================================================
 // 15. API: መልእኽቲ ንምስዳድ (Send Message) - ምስ መከላኸሊ ብሎክ 🛡️
 // =====================================================================
