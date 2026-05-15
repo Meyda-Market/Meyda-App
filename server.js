@@ -1729,10 +1729,10 @@ app.post('/api/admin/users/:id/revoke-badge', async (req, res) => {
       return res.status(404).json({ message: "ተጠቃሚ ኣይተረኽበን!" });
     }
 
-    // 💡 1. ፍታሕ ናይቲ "Get Verified" በተን ንኽትምለስ
+    // 💡 1. ፍታሕ: ናይ "Get Verified" በተን ንኽትምለስ
     user.badgeType = "none";
     user.isVerified = false;
-    user.verificationStatus = "none"; // 👈 እዚኣ እያ እታ ዳግማይ ንኽሓትት እተፍቅድ ማጂክ!
+    user.verificationStatus = "rejected"; // 👈 ማጂክ: ናብ "rejected" ቀይርናያ ኣለና
     await user.save();
 
     // ናይ Meyda Owner ኣካውንት ምድላይ
@@ -1741,28 +1741,35 @@ app.post('/api/admin/users/:id/revoke-badge', async (req, res) => {
 
     const messageText = `ሰላም ${user.name}፣\n\nብሕግታትን ደንብታትን Meyda Market መሰረት፡ ናይ ቨሪፊኬሽን ባጅኩም ተላዒሉ ኣሎ።\n\nምኽንያት:\n"${reason}"\n\nተወሳኺ ሓበሬታ እንተደሊኹም ወይ ጌጋ እዩ ኢልኩም እንተኣሚንኩም፡ ዳግማይ ሕቶ (Get Verified) ክትልእኩ ትኽእሉ ኢኹም።\n\n- Meyda Team`;
 
-    // 💡 2. ፍታሕ ናይ Notification
-    const newNotification = new Notification({
-      userId: user._id,
-      title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
-      message: messageText,
-      type: "system",
-      isRead: false,
-    });
-    await newNotification.save();
+    // 💡 2. ኖቲፊኬሽን ብቐጥታ ንኽሰድድ (መከላኸሊ ኣልዒልናዮ ኣለና)
+    try {
+        const newNotification = new Notification({
+          userId: user._id,
+          title: "⚠️ ቨሪፊኬሽን ተላዒሉ",
+          message: messageText,
+          type: "system",
+          isRead: false,
+        });
+        await newNotification.save();
+    } catch (notifErr) {
+        console.log("⚠️ ጌጋ ኣብ ኖቲፊኬሽን ምስዳድ:", notifErr.message);
+    }
 
-    // 💡 3. ፍታሕ ናይ Chat (Inbox)
+    // 💡 3. ሜሰጅ (Chat) ብቐጥታ ንኽሰድድ
     if (senderId) {
-      const systemMessage = new Chat({
-        senderId: senderId,
-        receiverId: user._id,
-        text: messageText,
-        createdAt: new Date(),
-      });
-      await systemMessage.save();
+        try {
+          const systemMessage = new Chat({
+            senderId: senderId,
+            receiverId: user._id,
+            text: messageText,
+            createdAt: new Date(),
+          });
+          await systemMessage.save();
+        } catch (chatErr) {
+          console.log("⚠️ ጌጋ ኣብ Chat (መልእኽቲ) ምስዳድ:", chatErr.message);
+        }
     } else {
-      // ⚠️ Meyda ዝብል ኣካውንት እንተዘይተረኺቡ ኣብ ተርሚናልካ (Terminal) ጌጋ ከርእየካ እዩ
-      console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ዝብል ኣካውንት ኣብ ዳታቤዝ ኣይተረኽበን፡ ስለዚ ናብ Chat ኣይተላእከን።");
+        console.log("⚠️ ጌጋ: 'owner' ወይ 'Meyda' ዝብል ኣካውንት ኣብ ዳታቤዝ ኣይተረኽበን።");
     }
 
     res.status(200).json({ message: "ብዓወት ተላዒሉን መልእኽቲ ተላኢኹን ኣሎ!" });
