@@ -14,6 +14,9 @@ const cron = require('node-cron');
 const bcrypt = require('bcrypt');
 // 🚀 ሓዱሽ ማጂክ: መከላኸሊ ቦትን መጥቃዕቲ DDoS (Rate Limiter)
 const rateLimit = require('express-rate-limit');
+// 👈 💡 ሓዱሽ ማጂክ: Expo ፖስተኛ (Push Notifications Engine)
+const { Expo } = require('expo-server-sdk');
+let expo = new Expo();
 
 // 🚀 ሓዱሽ ማጂክ: JWT (JSON Web Token) ን ዘይስረቕ ዲጂታላዊ መንነት
 const jwt = require('jsonwebtoken');
@@ -351,7 +354,10 @@ const userSchema = new mongoose.Schema({
     // 🚀 ሓዱሽ ማጂክ: መቐመጢ ናይ 4 ቁጽሪ OTP ን ግዜኡን (Security)
     resetOTP: { type: String, default: null },
     resetOTPExpire: { type: Date, default: null },
-    
+
+    // 👈 💡 ሓዱሽ ማጂክ (Push & Alerts): ቶከን መዕቀቢን ናይ ቢልዮን ዶላር ኣልጎሪዝምን!
+    pushToken: { type: String, default: null }, 
+    searchAlerts: [{ type: String }], // ንኣብነት: ["toyota", "iphone 15", "house"]
 
     // ==========================================================
     // 🚀 ሓዱሽ ማጂክ: መኽዘን ቨሪፊኬሽን (Verification Badge System)
@@ -446,7 +452,31 @@ cron.schedule('0 0 * * *', async () => {
         console.error('❌ ዲጂታላዊ ዘብዐኛ ጌጋ ኣጋጢሙዎ:', error);
     }
 });
+// ==========================================================
+// 4.7 🚀 ሓዱሽ ማጂክ: Push Token ካብ ሞባይል ተቐቢሉ ይዕቅብ
+// ==========================================================
+app.put('/api/users/:id/push-token', async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.params.id, { pushToken: req.body.pushToken });
+        res.status(200).send('Token Saved');
+    } catch (e) { res.status(500).send('Error'); }
+});
 
+// 🚀 የ ቢልዮን ዶላር ማጂክ (Search Alert API): ተጠቃሚ ዝደልዮ ኣቕሓ ይምዝግብ (ንኣብነት "toyota")
+app.post('/api/users/:id/search-alerts', async (req, res) => {
+    try {
+        const { keyword } = req.body;
+        const user = await User.findById(req.params.id);
+        if (user && keyword) {
+            const lowerKeyword = keyword.toLowerCase().trim();
+            if (!user.searchAlerts.includes(lowerKeyword)) {
+                user.searchAlerts.push(lowerKeyword);
+                await user.save();
+            }
+        }
+        res.status(200).json({ message: "ኣለርት ተመዝጊቡ ኣሎ!" });
+    } catch (e) { res.status(500).send('Error'); }
+});
 
 // =====================================================================
 // 5. API: 🚀 MEYDA ALGORITHM (ኣቕሑት ብ ነጥቢ ተሰሪዖም ይመጹ)
@@ -589,8 +619,33 @@ app.post('/api/products', upload.fields([{ name: 'images', maxCount: 5 }, { name
         });
         
         await newProduct.save(); 
+
+        // 👈 💡 የ ቢልዮን ዶላር ማጂክ: ሓዱሽ ኣቕሓ ምስ ኣተወ፣ "Search Alert" ዝገበሩ ሰባት ይደሊ
+        try {
+            const lowerTitle = title.toLowerCase();
+            const lowerDesc = description.toLowerCase();
+            
+            // 1. ኣብ ዳታቤዝ ኣለርት (searchAlerts) ዘለዎም ሰባት የናዲ
+            const interestedUsers = await User.find({ searchAlerts: { $exists: true, $not: { $size: 0 } } });
+            
+            for (let u of interestedUsers) {
+                // 2. እቲ ሰብ ባዕሉ ነቲ ኣቕሓ ፖስት ዝገበረ እንተኾይኑ ንገድፎ
+                if (String(u._id) === String(sellerId)) continue;
+
+                // 3. ቃላት ነነጻጽር (Match)
+                const isMatch = u.searchAlerts.some(alert => lowerTitle.includes(alert) || lowerDesc.includes(alert));
+                
+                if (isMatch) {
+                    const productImg = imagePaths.length > 0 ? imagePaths[0] : videoPath;
+                    const alertMsg = `ዝደለኹምዎ ኣቕሓ (${title}) ናብ ዕዳጋ ወሪዱ ኣሎ! ቀልጢፍኩም ርኣዩዎ።`;
+                    // 4. 🚀 ኖቲፊኬሽን ብቐጥታ ናብ ሞባይሉ ንሰድድ!
+                    await sendNotification("Meyda_System", "Meyda Alerts", u._id, "alert", alertMsg, newProduct._id, productImg, typeOfMedia, null);
+                }
+            }
+        } catch (alertErr) { console.error("Search Alert Error:", alertErr); }
+
         res.status(201).json({ message: "ንብረትኩም ብዓወት ንዕዳጋ ቀሪቡ ኣሎ!" });
-    } catch (error) { 
+    } catch (error) {
         console.error("Product Upload Error:", error);
         res.status(500).json({ message: "ንብረት ምምዝጋብ ኣይተኻእለን。" }); 
     }
@@ -1223,14 +1278,34 @@ app.delete('/api/reports/:id', async (req, res) => {
 // =====================================================================
 // 12.5.5 🚀 ሓዱሽ ማጂክ: ኖቲፊኬሽን ዝሰድድን ሜንሽን (@) ዝደልን ሞተር
 // =====================================================================
-// 👈 💡 ማጂክ: mediaType ን targetCommentId ን ተወሲኹዎ ኣሎ
 const sendNotification = async (senderId, senderName, receiverId, type, text, productId = null, productImage = null, mediaType = 'image', targetCommentId = null) => {
     if (String(senderId) === String(receiverId)) return; 
     try {
+        // 1. ኣብ ዳታቤዝ (Inbox) ንዕቅቦ
         const newNotif = new Message({
             senderId, senderName, receiverId, type, text, productId, productImage, mediaType, targetCommentId, isRead: false, createdAt: new Date()
         });
         await newNotif.save();
+
+        // 2. 👈 💡 ማጂክ ፖስተኛ (Push Notification): ናብታ ሞባይል ብቐጥታ ንሰዶ!
+        const receiver = await User.findById(receiverId);
+        if (receiver && receiver.pushToken && Expo.isExpoPushToken(receiver.pushToken)) {
+            let pushTitle = "Meyda Market";
+            if (type === 'like' || type === 'comment_like' || type === 'reply_like') pushTitle = `❤️ ${senderName}`;
+            else if (type === 'comment' || type === 'reply') pushTitle = `💬 ${senderName}`;
+            else if (type === 'mention') pushTitle = `🔔 ${senderName} ጠቒሱካ ኣሎ`;
+            else if (type === 'alert') pushTitle = `🎉 ሓዱሽ ኣቕሓ ኣትዩ ኣሎ!`; // ናይ ቢልዮን ዶላር ማጂክ ርእስቲ
+
+            let messages = [{
+                to: receiver.pushToken,
+                sound: 'default',
+                title: pushTitle,
+                body: text,
+                data: { productId, mediaType, targetCommentId, type }, // ጂ-ፒ-ኤስ መሐበሪ
+            }];
+
+            await expo.sendPushNotificationsAsync(messages);
+        }
     } catch (err) { console.error("Notification Engine Error:", err); }
 };
 
